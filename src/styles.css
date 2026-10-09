@@ -252,3 +252,18 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 @keyframes promoRise{from{opacity:0;transform:translateY(15px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:480px){.welcome-promo{padding:25px 20px 19px;border-radius:20px}.welcome-promo-crown{margin-top:13px}.welcome-promo-copy{font-size:12px}.welcome-promo-badge{font-size:9px;letter-spacing:1.2px}.welcome-promo-note{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.welcome-promo-backdrop,.welcome-promo{animation:none}}
+
+/* Free-spin reward balance */
+.free-spins-panel{position:relative;overflow:hidden;padding:18px;border:1px solid #a987ed55;border-radius:16px;background:radial-gradient(ellipse at 100% 0%,#9560e526,transparent 52%),linear-gradient(135deg,#21183b,#111426 70%);color:#f6f1ff}
+.free-spins-heading{display:flex;align-items:center;gap:11px}
+.free-spins-icon{display:grid;place-items:center;width:42px;height:42px;border:1px solid #d4b3ff55;border-radius:12px;background:#a67bff19;color:#e0c4ff}
+.free-spins-heading>div{flex:1}
+.free-spins-heading small{display:block;color:#c4a4ff;font-size:9px;font-weight:900;letter-spacing:1.6px}
+.free-spins-heading h3{margin:3px 0 0;font-size:17px}
+.free-spins-heading>strong{color:#f6d17c;font-size:34px;line-height:1;text-shadow:0 0 18px #f6d17c25}
+.free-spins-desc{margin:13px 0;color:#c2bfd6;font-size:12px;line-height:1.6}
+.free-spins-next{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #ffffff12;color:#aaa6c5;font-size:11px}
+.free-spins-next b{color:#f1d99c;text-align:right}
+.free-spins-claim{width:100%;margin:7px 0 10px;padding:11px 12px;border-radius:10px}
+.free-spins-claim:disabled{opacity:.5;cursor:not-allowed}
+.free-spins-panel .auth-note{display:block;font-size:10px;line-height:1.5}
