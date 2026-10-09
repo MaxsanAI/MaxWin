@@ -31,6 +31,8 @@ function App() {
   const [modal, setModal] = useState<"signin" | "register" | "deposit" | "withdraw" | "game" | "profile" | null>(null);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authCheckDone, setAuthCheckDone] = useState(false);
+  const [welcomePromoOpen, setWelcomePromoOpen] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authUsername, setAuthUsername] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -97,8 +99,23 @@ function App() {
     fetch("/api/auth/me", { credentials: "same-origin" })
       .then(async response => response.ok ? response.json() : null)
       .then(data => { if (data?.authenticated && data.user) setAuthUser(data.user as AuthUser); })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => setAuthCheckDone(true));
   }, []);
+  useEffect(() => {
+    if (!authCheckDone || authUser) return;
+    try { if (sessionStorage.getItem("maxwin-welcome-promo-seen") === "1") return; } catch { /* show promo for this visit */ }
+    const timer = window.setTimeout(() => setWelcomePromoOpen(true), 1200);
+    return () => window.clearTimeout(timer);
+  }, [authCheckDone, authUser?.id]);
+  const closeWelcomePromo = () => {
+    setWelcomePromoOpen(false);
+    try { sessionStorage.setItem("maxwin-welcome-promo-seen", "1"); } catch { /* dismissal still works */ }
+  };
+  const registerFromPromo = () => {
+    closeWelcomePromo();
+    openAuth("register");
+  };
   const openAuth = (kind: "signin" | "register") => {
     setAuthError("");
     setAuthEmail("");
@@ -197,6 +214,21 @@ function App() {
       <section className="profile-bonuses"><h3>Bonuses</h3>{profileData?.bonuses?.length ? profileData.bonuses.map(bonus => <div className="bonus-row" key={bonus.id}><span><b>{bonus.title}</b><small>{new Date(bonus.created_at).toLocaleDateString()}</small></span><strong>{bonus.amount}</strong><em>{bonus.status}</em>{bonus.status === "available" && <button className="bonus-claim" disabled={bonusBusy !== null} onClick={() => void requestBonus(bonus.id)}>{bonusBusy === bonus.id ? "Requesting…" : "Request bonus"}</button>}</div>) : <p>Your bonus offers and rewards will appear here when they are added to your account.</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("not found") || profileMessage.toLowerCase().includes("already") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}</section>
       <small className="auth-note">Wallet balances and transaction history are loaded from the wallet service. Deposits and withdrawals remain unavailable until their secure processing services are active.</small>
     </div> : <><p>{selectedGame ? "This is a visual catalogue preview, not a playable or certified real-money game. Game-provider integration is pending." : authUser ? "You are signed in. Your account is active, but financial features remain disabled." : "Authentication, real-money payments, certified game outcomes, and financial transactions are not yet implemented. MAXWIN will not accept wagers or claim to process payments at this stage."}</p>{authUser && modal === "game" && !selectedGame && <div className="modal-status"><span className="status-dot"/><span><b>{authUser.username}</b><small>{authUser.email}</small></span></div>}<div className="modal-status"><span className="status-dot"/><span><b>Real-money play disabled</b><small>No funds are being accepted or transferred.</small></span></div><button className="btn btn-gold modal-done" onClick={() => setModal(null)}>Understood</button></>}</section></div>}
+    {welcomePromoOpen && !authUser && <div className="welcome-promo-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) closeWelcomePromo(); }}>
+      <section className="welcome-promo" role="dialog" aria-modal="true" aria-labelledby="welcome-promo-title">
+        <button className="welcome-promo-close" type="button" aria-label="Close welcome offer" onClick={closeWelcomePromo}><X size={19}/></button>
+        <div className="welcome-promo-orbit promo-orbit-one"/><div className="welcome-promo-orbit promo-orbit-two"/>
+        <div className="welcome-promo-badge"><Sparkles size={14}/> EXCLUSIVE WELCOME OFFER</div>
+        <div className="welcome-promo-crown"><Crown size={43}/><span>MAXWIN</span></div>
+        <p className="welcome-promo-kicker">YOUR FIRST SPIN STARTS HERE</p>
+        <h2 id="welcome-promo-title">GET <strong>25</strong><br/><em>FREE SPINS</em></h2>
+        <p className="welcome-promo-copy">A royal welcome for new members. Your promotional spin balance is designed to stay with your account when you switch between supported slots.</p>
+        <div className="welcome-promo-perks"><span><ShieldCheck size={15}/> One welcome offer per account</span><span><Gem size={15}/> Bonus rules shown before activation</span></div>
+        <button className="welcome-promo-cta" type="button" onClick={registerFromPromo}>REGISTER NOW <span>↗</span></button>
+        <button className="welcome-promo-later" type="button" onClick={closeWelcomePromo}>Maybe later</button>
+        <small className="welcome-promo-note">Promotional offer preview. Free spins activate only when bonus-enabled games and server-side bonus tracking are live. 18+ · Terms apply.</small>
+      </section>
+    </div>}
     <div className="bottom-dock"><button onClick={() => authUser ? setModal("profile") : openAuth("signin")}><Wallet size={18}/> Account</button><button onClick={() => document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" })}><Gamepad2 size={18}/> Casino</button><button onClick={() => authUser ? setModal("profile") : openAuth("signin")}>Bonuses</button><button onClick={() => authUser ? setModal("profile") : openAuth("register")}><Crown size={18}/> Join</button></div>
   </div>;
 }
