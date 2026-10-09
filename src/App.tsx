@@ -62,7 +62,7 @@ function App() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setAuthError(typeof data.error === "string" ? data.error : "Could not complete that request.");
+        setAuthError([typeof data.error === "string" ? data.error : "Could not complete that request.", typeof data.diagnostic === "string" ? "Details: " + data.diagnostic : ""].filter(Boolean).join(" "));
         return;
       }
       setAuthUser(data.user as AuthUser);
