@@ -7,7 +7,7 @@ export interface Env {
   SOLANA_RPC_URL?: string;
   TON_API_URL?: string;
   TON_API_KEY?: string;
-  WITHDRAWALS_ENABLED?: string;
+  WITHDRAWALS_ENABLED?: string;\n  MAXWIN_ADMIN_KEY?: string;
 }
 
 export interface PublicUser {
