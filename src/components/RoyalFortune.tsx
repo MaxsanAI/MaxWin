@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Crown, Gem, Shield, Coins, Star, Flame, Zap, CircleDollarSign, Sparkles, LockKeyhole, Volume2, Maximize2 } from "lucide-react";
+import { Crown, Gem, Shield, Coins, Star, Flame, Zap, CircleDollarSign, Sparkles, LockKeyhole, Volume2 } from "lucide-react";
 
 type SymbolName = "crown" | "gem" | "shield" | "coins" | "star" | "flame" | "zap" | "coin";
 type SpinResult = { id: string; symbols: SymbolName[]; outcome: string; bet: number; payout: number; balance: number; mode: "spin" | "buyBonus"; bonusSpins?: number; winningPositions?: number[]; wins?: { line: number; symbol: SymbolName; count: number; payout: number; positions: number[] }[] };
