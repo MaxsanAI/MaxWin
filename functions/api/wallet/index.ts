@@ -36,7 +36,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       },
       withdrawals: {
         requestsEnabled: true,
-        automaticSendingEnabled: env.WITHDRAWALS_ENABLED === "true"
+        automaticSendingEnabled: false
       },
       transactions: txResult.results || [],
       withdrawalRequests: withdrawalResult.results || [],
