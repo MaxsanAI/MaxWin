@@ -30,9 +30,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (asset !== "SOL" && asset !== "TON") return json({ error: "Choose SOL or TON." }, 400);
   if (!amount || amount <= 0n) return json({ error: "Enter a valid amount greater than zero (up to 9 decimal places)." }, 400);
   if (!validAddress(asset, address)) return json({ error: "The destination address format is not valid for the selected network." }, 400);
-  if (env.WITHDRAWALS_ENABLED !== "true") {
-    return json({ error: "Withdrawals are not enabled yet. No funds have been sent. The secure signing service must be configured first." }, 503);
-  }
+  // Fail closed until an actual signer/broadcaster is implemented. A boolean
+  // environment flag alone must never enable fund-reserving withdrawal requests.
+  return json({ error: "Withdrawals are not enabled yet. No funds have been reserved or sent; secure signing and transaction broadcasting are still being implemented." }, 503);
 
   try {
     await ensureWalletSchema(env.DB);
