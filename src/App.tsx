@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Bell, CircleHelp, Crown, Gamepad2, Gem, Menu, Search, ShieldCheck, Sparkles, Star, Trophy, Wallet, X } from "lucide-react";
+import { Bell, CircleHelp, Crown, Gamepad2, Gem, Menu, Moon, Search, ShieldCheck, Sparkles, Star, Sun, Trophy, Wallet, X } from "lucide-react";
 
 type Game = { title: string; category: string; art: string; tag?: string; provider: string; };
 type AuthUser = { id: string; username: string; email: string; createdAt: string };
@@ -15,6 +15,14 @@ const games: Game[] = [
 ];
 const categories = ["All Games", "Slots", "Jackpots", "Classic"];
 function App() {
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    try { return localStorage.getItem("maxwin-theme") === "light" ? "light" : "dark"; }
+    catch { return "dark"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("maxwin-theme", theme); } catch { /* theme still works for this session */ }
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
   const [active, setActive] = useState("All Games");
   const [search, setSearch] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -73,7 +81,7 @@ function App() {
   };
   const filtered = useMemo(() => games.filter(g => (active === "All Games" || g.category === active) && g.title.toLowerCase().includes(search.toLowerCase())), [active, search]);
   const openGame = (game: Game) => { setSelectedGame(game); setModal("game"); };
-  return <div className="app-shell">
+  return <div className={theme === "light" ? "app-shell theme-light" : "app-shell"}>
     <div className="topline"><span><Sparkles size={13}/> MAXWIN ORIGINALS · A NEW ERA OF PLAY</span><span className="topline-right"><ShieldCheck size={13}/> Security-first platform <i /> 18+ only</span></div>
     <header className="header">
       <button className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? <X/> : <Menu/>}</button>
@@ -83,7 +91,7 @@ function App() {
         <a href="#featured" onClick={() => setMobileMenu(false)}><Trophy size={16}/> Featured</a>
         <a href="#responsible" onClick={() => setMobileMenu(false)}><ShieldCheck size={16}/> Play responsibly</a>
       </nav>
-      <div className="header-actions"><button className="btn btn-ghost" onClick={() => { if (authUser) { setSelectedGame(null); setModal("game"); } else openAuth("signin"); }}>{authUser ? authUser.username : "Log in"}</button>{!authUser && <button className="btn btn-gold" onClick={() => openAuth("register")}>Create account</button>}{authUser && <button className="btn btn-gold" onClick={logout}>Log out</button>}</div>
+      <div className="header-actions"><button className="theme-toggle" type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} title={theme === "dark" ? "Light theme" : "Dark theme"}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}<span>{theme === "dark" ? "Light" : "Dark"}</span></button><button className="btn btn-ghost" onClick={() => { if (authUser) { setSelectedGame(null); setModal("game"); } else openAuth("signin"); }}>{authUser ? authUser.username : "Log in"}</button>{!authUser && <button className="btn btn-gold" onClick={() => openAuth("register")}>Create account</button>}{authUser && <button className="btn btn-gold" onClick={logout}>Log out</button>}</div>
     </header>
     <main>
       <section className="hero" id="featured">
