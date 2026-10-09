@@ -12,7 +12,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
     return json({ error: "Username must be 3–24 characters using letters, numbers, or underscores." }, 400);
   }
-  if (email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  // In a regex literal, use \s to detect whitespace. A doubled backslash here
+  // would incorrectly reject normal addresses such as name@gmail.com.
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json({ error: "Enter a valid email address." }, 400);
   }
   if (password.length < 10 || password.length > 128) {
