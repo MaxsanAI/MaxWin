@@ -82,7 +82,7 @@ export async function ensureWalletSchema(db: D1Database): Promise<void> {
 
 export async function getUser(request: Request, db: D1Database): Promise<PublicUser | null> {
   const rawCookie = request.headers.get("Cookie") || "";
-  const match = rawCookie.match(/(?:^|;\\s*)maxwin_session=([a-f0-9]{64})(?:;|$)/);
+  const match = rawCookie.match(/(?:^|;\s*)maxwin_session=([a-f0-9]{64})(?:;|$)/);
   if (!match) return null;
   const tokenHash = await sha256(match[1]);
   const row = await db.prepare(
