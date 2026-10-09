@@ -21,9 +21,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const expectedBytes = encoder.encode(env.MAXWIN_ADMIN_KEY);
   const suppliedBytes = encoder.encode(supplied);
   if (expectedBytes.length !== suppliedBytes.length) return json({ error: "Unauthorized." }, 401);
-  let equal = true;
-  for (let i = 0; i < expectedBytes.length; i++) equal = equal && expectedBytes[i] === suppliedBytes[i];
-  if (!equal) return json({ error: "Unauthorized." }, 401);
+  let mismatch = 0;
+  for (let i = 0; i < expectedBytes.length; i++) mismatch |= expectedBytes[i] ^ suppliedBytes[i];
+  if (mismatch !== 0) return json({ error: "Unauthorized." }, 401);
 
   const body = await readJson(request);
   const username = typeof body?.username === "string" ? body.username.trim() : "";
