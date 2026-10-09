@@ -1,3 +1,5 @@
+export const SESSION_COOKIE = "maxwin_session";
+
 export interface Env {
   DB: D1Database;
   SOL_DEPOSIT_ADDRESS?: string;
