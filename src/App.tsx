@@ -3,7 +3,7 @@ import { Bell, CircleHelp, Crown, Gamepad2, Gem, Menu, Moon, Search, ShieldCheck
 
 type Game = { title: string; category: string; art: string; tag?: string; provider: string; };
 type AuthUser = { id: string; username: string; email: string; createdAt: string };
-type ProfileData = { avatarDataUrl: string | null; bonuses: Array<{ id: string; title: string; amount: string; status: string; created_at: string }> };
+type ProfileData = { avatarDataUrl: string | null; bonuses: Array<{ id: string; title: string; amount: string; status: string; created_at: string }>; freeSpins?: { available: number; totalAwarded: number; nextRecurringAt: string | null; grants: Array<{ id: string; grantType: string; spins: number; createdAt: string }> } };
 const games: Game[] = [
   { title: "Royal Fortune", category: "Slots", art: "royal", tag: "HOT", provider: "MAXWIN Originals" },
   { title: "Neon Dynasty", category: "Slots", art: "neon", tag: "NEW", provider: "MAXWIN Originals" },
@@ -43,6 +43,7 @@ function App() {
   const [profileBusy, setProfileBusy] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [bonusBusy, setBonusBusy] = useState<string | null>(null);
+  const [freeSpinBusy, setFreeSpinBusy] = useState(false);
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletError, setWalletError] = useState("");
   const [walletAsset, setWalletAsset] = useState<"SOL" | "TON">("SOL");
@@ -74,6 +75,19 @@ function App() {
       if (refreshed.ok) setProfileData(refreshedData.profile);
     } catch (error) { setProfileMessage(error instanceof Error ? error.message : "Could not request bonus."); }
     finally { setBonusBusy(null); }
+  };
+  const claimRecurringSpins = async () => {
+    setFreeSpinBusy(true); setProfileMessage("");
+    try {
+      const response = await fetch("/api/profile/free-spins", { method: "POST", credentials: "same-origin" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || data.error || "Could not claim free spins.");
+      setProfileMessage(data.message || "30 free spins added.");
+      const refreshed = await fetch("/api/profile", { credentials: "same-origin", cache: "no-store" });
+      const refreshedData = await refreshed.json().catch(() => ({}));
+      if (refreshed.ok) setProfileData(refreshedData.profile);
+    } catch (error) { setProfileMessage(error instanceof Error ? error.message : "Could not claim free spins."); }
+    finally { setFreeSpinBusy(false); }
   };
   const uploadAvatar = async (file?: File) => {
     if (!file || !authUser) return;
@@ -210,6 +224,7 @@ function App() {
       {profileBusy && <p>Saving photo…</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("choose") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}
       <div className="profile-account-info"><span>Email</span><b>{authUser.email}</b><span>Account created</span><b>{new Date(authUser.createdAt).toLocaleDateString()}</b></div>
       <section className="profile-wallet"><h3>Wallet balances</h3>{walletLoading && <p>Loading balances…</p>}{walletError && <p className="auth-error">{walletError}</p>}<div className="profile-balance-grid">{(["SOL", "TON"] as const).map(asset => <div key={asset}><span>{asset}</span><b>{(Number(walletData?.balances?.[asset]?.availableUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })}</b><small>Available</small></div>)}</div>{walletData?.transactions?.length ? <div className="profile-transactions"><b>Recent wallet activity</b>{walletData.transactions.slice(0, 4).map((tx: any) => <div key={tx.id}><span>{tx.kind} · {tx.asset}<small>{tx.status} · {new Date(tx.created_at).toLocaleDateString()}</small></span><strong>{(Number(tx.amount_units || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })}</strong></div>)}</div> : <p className="profile-muted">Deposits and transactions appear here after verified processing is active.</p>}</section>
+      <section className="free-spins-panel"><div className="free-spins-heading"><span className="free-spins-icon"><Sparkles size={20}/></span><div><small>MAXWIN REWARDS</small><h3>Free Spins</h3></div><strong>{profileData?.freeSpins?.available ?? 0}</strong></div><p className="free-spins-desc">Welcome spins are awarded once after registration. Claim 30 more every 15 days. Your balance is stored on your account; playable spins require the game engine integration to be enabled.</p><div className="free-spins-next"><span>Next 30-spin reward</span><b>{profileData?.freeSpins?.nextRecurringAt ? new Date(profileData.freeSpins.nextRecurringAt).toLocaleDateString() : "Pending setup"}</b></div><button type="button" className="bonus-claim free-spins-claim" disabled={freeSpinBusy || !profileData?.freeSpins?.nextRecurringAt || new Date(profileData.freeSpins.nextRecurringAt).getTime() > Date.now()} onClick={() => void claimRecurringSpins()}>{freeSpinBusy ? "Claiming…" : "Claim 30 Free Spins"}</button><small className="auth-note">Total awarded: {profileData?.freeSpins?.totalAwarded ?? 0} · Free spins cannot currently be wagered or redeemed.</small></section>
       <div className="profile-actions"><button className="btn btn-gold" onClick={() => setModal("deposit")}>Deposit</button><button className="btn btn-outline" onClick={() => setModal("withdraw")}>Withdraw</button></div>
       <section className="profile-bonuses"><h3>Bonuses</h3>{profileData?.bonuses?.length ? profileData.bonuses.map(bonus => <div className="bonus-row" key={bonus.id}><span><b>{bonus.title}</b><small>{new Date(bonus.created_at).toLocaleDateString()}</small></span><strong>{bonus.amount}</strong><em>{bonus.status}</em>{bonus.status === "available" && <button className="bonus-claim" disabled={bonusBusy !== null} onClick={() => void requestBonus(bonus.id)}>{bonusBusy === bonus.id ? "Requesting…" : "Request bonus"}</button>}</div>) : <p>Your bonus offers and rewards will appear here when they are added to your account.</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("not found") || profileMessage.toLowerCase().includes("already") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}</section>
       <small className="auth-note">Wallet balances and transaction history are loaded from the wallet service. Deposits and withdrawals remain unavailable until their secure processing services are active.</small>
