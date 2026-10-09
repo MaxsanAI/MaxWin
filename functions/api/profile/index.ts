@@ -1,4 +1,4 @@
-import { Env, getUser, json, readJson } from "../auth/_shared";
+import { Env, getUser, json } from "../auth/_shared";
 
 async function ensureProfileSchema(db: D1Database): Promise<void> {
   await db.prepare(`CREATE TABLE IF NOT EXISTS user_profiles (
