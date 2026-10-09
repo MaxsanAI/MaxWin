@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, ArrowUpFromLine, Bell, ChevronDown, CircleHelp, Crown, Gamepad2, Gem, Menu, Search, ShieldCheck, Sparkles, Star, Trophy, Wallet, X } from "lucide-react";
 
-type Game = { title: string; category: string; art: string; tag?: string; provider: string; };\ntype AuthUser = { id: string; username: string; email: string; createdAt: string };
+type Game = { title: string; category: string; art: string; tag?: string; provider: string; };
+type AuthUser = { id: string; username: string; email: string; createdAt: string };
 const games: Game[] = [
   { title: "Royal Fortune", category: "Slots", art: "royal", tag: "HOT", provider: "MAXWIN Originals" },
   { title: "Neon Dynasty", category: "Slots", art: "neon", tag: "NEW", provider: "MAXWIN Originals" },
