@@ -20,9 +20,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const encoder = new TextEncoder();
   const expectedBytes = encoder.encode(env.MAXWIN_ADMIN_KEY);
   const suppliedBytes = encoder.encode(supplied);
-  if (expectedBytes.length !== suppliedBytes.length || !crypto.subtle.timingSafeEqual) {
-    return json({ error: "Unauthorized." }, 401);
-  }
+  if (expectedBytes.length !== suppliedBytes.length) return json({ error: "Unauthorized." }, 401);
   let equal = true;
   for (let i = 0; i < expectedBytes.length; i++) equal = equal && expectedBytes[i] === suppliedBytes[i];
   if (!equal) return json({ error: "Unauthorized." }, 401);
