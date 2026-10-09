@@ -40,8 +40,15 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Profile service is not configured." }, 503);
   const user = await getUser(request, env.DB);
   if (!user) return json({ error: "Please log in to update your profile." }, 401);
-  const body = await readJson(request);
-  if (!body || typeof body.avatarDataUrl !== "string") return json({ error: "Choose a profile image to upload." }, 400);
+  let body: Record<string, unknown> | null = null;
+  try {
+    const raw = await request.text();
+    if (raw.length <= 210_000) {
+      const parsed: unknown = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) body = parsed as Record<string, unknown>;
+    }
+  } catch { /* handled as invalid input below */ }
+  if (!body || typeof body.avatarDataUrl !== "string") return json({ error: "Choose a valid profile image to upload." }, 400);
   const avatar = body.avatarDataUrl;
   if (avatar.length > 200_000) return json({ error: "That image is too large. Choose a smaller photo." }, 413);
   if (!/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(avatar)) {
