@@ -1,4 +1,4 @@
-import { createSession, cookie, Env, hashPassword, json, readJson, SESSION_MAX_AGE } from "./_shared";
+import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, readJson, SESSION_MAX_AGE } from "./_shared";
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Account service is not configured yet." }, 503);
@@ -9,6 +9,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!email || !password || password.length > 128) return json({ error: "Email or password is incorrect." }, 401);
 
   try {
+    await ensureAuthSchema(env.DB);
     const user = await env.DB.prepare("SELECT id, username, email, password_hash, password_salt, created_at AS createdAt FROM users WHERE email = ? LIMIT 1")
       .bind(email).first<{ id: string; username: string; email: string; password_hash: string; password_salt: string; createdAt: string }>();
     if (!user) return json({ error: "Email or password is incorrect." }, 401);
@@ -18,7 +19,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ authenticated: true, user: { id: user.id, username: user.username, email: user.email, createdAt: user.createdAt } }, 200, {
       "Set-Cookie": cookie(token, SESSION_MAX_AGE)
     });
-  } catch {
+  } catch (error) {
+    console.error("[MAXWIN auth/login] Login failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not log in right now. Please try again." }, 500);
   }
 };
