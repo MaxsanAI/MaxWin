@@ -524,3 +524,101 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 .modal-slot .rf-reel-window{display:grid!important;grid-auto-flow:column!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;grid-auto-columns:minmax(0,1fr);height:clamp(255px,38vh,330px);min-height:255px;max-height:330px;align-content:stretch;align-items:stretch;justify-items:stretch;overflow:visible}
 .modal-slot .rf-reel{min-height:0;height:100%;width:100%}
 @media(max-width:720px){.modal-slot .rf-reel-window{height:clamp(210px,31vh,260px);min-height:210px;max-height:260px}.modal-slot .rf-reel{min-height:0}}
+
+
+/* Royal Fortune premium 5 × 4 cabinet refresh */
+.rf-cabinet{padding:clamp(10px,1.5vw,18px);background:radial-gradient(ellipse at 50% 0,#75509c55,transparent 52%),linear-gradient(145deg,#30213f,#14101f 56%,#090a13)}
+.rf-cabinet-header{font-size:clamp(10px,.9vw,12px);letter-spacing:1px}
+.rf-cabinet-header span:last-child{font-size:clamp(9px,.8vw,11px);letter-spacing:.6px}
+.modal-slot .rf-reel-window,.rf-reel-window{display:grid!important;grid-auto-flow:column!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(4,minmax(0,1fr))!important;grid-auto-columns:minmax(0,1fr);height:clamp(340px,49vh,490px);min-height:340px;max-height:490px;gap:clamp(4px,.55vw,8px);padding:clamp(5px,.7vw,9px);margin:12px 0;border:1px solid #f3cf7b8a;background:linear-gradient(180deg,#090710,#21162d 50%,#090710);box-shadow:inset 0 0 32px #000d,0 0 28px #bd8b4328;align-content:stretch;align-items:stretch;justify-items:stretch;overflow:hidden}
+.modal-slot .rf-reel,.rf-reel{min-width:0;min-height:0;height:100%;width:100%;gap:clamp(2px,.35vw,5px);border-radius:clamp(5px,.6vw,9px);background:linear-gradient(155deg,#443051,#241a31 62%,#17101f);box-shadow:inset 0 1px #ffffff20,inset 0 -9px 15px #0003;transition:border-color .2s,filter .2s}
+.rf-reel>svg{width:clamp(25px,3.4vw,47px);height:clamp(25px,3.4vw,47px);filter:drop-shadow(0 0 9px currentColor);flex:0 0 auto}
+.rf-reel small{font-size:clamp(9px,.85vw,12px);line-height:1.05;letter-spacing:.15px;padding:0 1px;overflow-wrap:anywhere}
+.rf-symbol-wild{color:#fff0a0!important;background:radial-gradient(circle at 50% 35%,#a66c25,#35213e 70%)!important;border-color:#f8dc7b55}
+.rf-symbol-wild>svg{filter:drop-shadow(0 0 10px #ffe36e)!important}
+.rf-symbol-scatter{color:#f2c5ff!important;background:radial-gradient(circle at 50% 35%,#6c398a,#261b3b 72%)!important;border-color:#d99cff70}
+.rf-symbol-scatter>svg{filter:drop-shadow(0 0 10px #d28aff)!important}
+.rf-reel-spinning{animation:rf-reel-roll .19s linear infinite;animation-delay:var(--reel-delay,0s)}
+.rf-speed-slow .rf-reel-spinning{animation-duration:.36s}
+.rf-speed-turbo .rf-reel-spinning{animation-duration:.1s}
+@keyframes rf-reel-roll{0%{transform:translateY(-5px);filter:brightness(.7);background-position:0 0}50%{filter:brightness(1.45)}100%{transform:translateY(5px);filter:brightness(.8);background-position:0 24px}}
+.rf-speed-panel{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid #ffffff19;border-radius:11px;background:linear-gradient(100deg,#191429,#11101d);color:#cfc0e7}
+.rf-speed-panel>span{display:flex;align-items:center;gap:7px;font-size:clamp(11px,.95vw,13px);font-weight:900;letter-spacing:.6px;white-space:nowrap}
+.rf-speed-panel>div{display:flex;gap:5px}
+.rf-speed-panel button{min-height:36px;padding:7px 13px;border:1px solid #ffffff20;border-radius:7px;background:#ffffff06;color:#c4b6dc;font-size:clamp(10px,.85vw,12px);font-weight:900;cursor:pointer}
+.rf-speed-panel button.active{border-color:#f1cd7b;background:linear-gradient(135deg,#f1cd7b30,#9d70d62b);color:#ffe5a2;box-shadow:inset 0 0 12px #f1cd7b0c}
+.rf-speed-panel button:disabled{opacity:.55}
+.rf-free-spin-banner{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e1a2ff88;border-radius:11px;background:linear-gradient(100deg,#8d43bd32,#f4ce7912);color:#f0c5ff;box-shadow:0 0 22px #a653e31a}
+.rf-free-spin-banner>span{display:grid;gap:3px}
+.rf-free-spin-banner b{font-size:clamp(12px,1vw,14px);letter-spacing:.6px}
+.rf-free-spin-banner small{font-size:clamp(10px,.8vw,12px);color:#d2bddf}
+.rf-speed-panel button:focus-visible,.rf-spin-button:focus-visible,.rf-buy-button:focus-visible,.rf-bet-control button:focus-visible{outline:2px solid #ffe5a2;outline-offset:2px}
+.rf-balance-row span,.rf-bet-control label,.rf-credit-panel>span{font-size:clamp(10px,.8vw,12px);letter-spacing:.7px}
+.rf-credit-panel small,.rf-bet-control>small{font-size:clamp(10px,.75vw,12px)}
+.rf-credit-panel strong{font-size:clamp(25px,2.3vw,34px)}
+.rf-bet-control strong{font-size:clamp(17px,1.4vw,21px)}
+.rf-bet-control button{width:34px;height:34px;font-size:22px}
+.rf-spin-button,.rf-buy-button{min-height:62px;font-size:clamp(13px,1.05vw,16px);letter-spacing:.8px}
+.rf-spin-button small,.rf-buy-button small{font-size:clamp(10px,.8vw,12px)}
+.rf-machine-footer{font-size:clamp(9px,.75vw,11px);letter-spacing:.35px;flex-wrap:wrap}
+.rf-paytable summary{display:flex;align-items:center;gap:8px;font-size:clamp(12px,.95vw,14px)}
+.rf-paytable>div>div span{font-size:clamp(10px,.85vw,12px)}
+.rf-paytable>div>div b{font-size:clamp(10px,.8vw,12px)}
+.rf-paytable p,.rf-demo-disclaimer{font-size:clamp(10px,.75vw,12px);line-height:1.55}
+@media(max-width:720px){
+ .modal-backdrop:has(.modal-slot){padding:4px}
+ .modal-slot{width:calc(100vw - 8px);height:calc(100dvh - 8px);max-height:calc(100dvh - 8px);padding:12px 8px 8px}
+ .modal-slot>.rf-game{gap:9px;padding:0 1px 5px}
+ .rf-game-top{padding-right:30px}
+ .rf-eyebrow{font-size:9px;letter-spacing:.6px}
+ .rf-title-lockup h3{font-size:clamp(19px,5vw,24px)}
+ .rf-title-lockup p{font-size:11px}
+ .rf-status{font-size:9px;padding:6px}
+ .rf-icon-button{padding:7px}
+ .rf-icon-button small{font-size:9px}
+ .rf-cabinet{padding:9px 6px 8px}
+ .rf-cabinet-header{font-size:9px;letter-spacing:.2px}
+ .rf-cabinet-header span:last-child{font-size:8px;letter-spacing:0}
+ .modal-slot .rf-reel-window,.rf-reel-window{height:clamp(310px,43vh,400px);min-height:310px;max-height:400px;gap:3px;padding:4px;margin:8px 0}
+ .modal-slot .rf-reel,.rf-reel{border-radius:5px}
+ .rf-reel>svg{width:clamp(24px,6.2vw,35px);height:clamp(24px,6.2vw,35px)}
+ .rf-reel small{font-size:clamp(8px,2.3vw,10px);letter-spacing:0}
+ .rf-machine-footer{gap:7px;font-size:9px}
+ .rf-speed-panel{padding:8px;gap:6px}
+ .rf-speed-panel>span{font-size:10px;letter-spacing:0}
+ .rf-speed-panel>div{gap:3px}
+ .rf-speed-panel button{min-height:34px;padding:6px 9px;font-size:10px}
+ .rf-balance-row{padding:10px;gap:8px}
+ .rf-credit-panel>span,.rf-bet-control label{font-size:10px;letter-spacing:.1px}
+ .rf-credit-panel strong{font-size:clamp(23px,6vw,28px)}
+ .rf-credit-panel small,.rf-bet-control>small{font-size:10px}
+ .rf-bet-control>div{gap:7px}
+ .rf-bet-control button{width:30px;height:30px}
+ .rf-bet-control strong{font-size:17px}
+ .rf-action-row{grid-template-columns:1.15fr 1fr;gap:7px}
+ .rf-spin-button,.rf-buy-button{min-height:53px;gap:5px;font-size:12px;letter-spacing:.2px}
+ .rf-spin-button small,.rf-buy-button small{font-size:9px}
+ .rf-buy-button>span{font-size:11px}
+ .rf-info-grid span{font-size:9px;letter-spacing:.2px}
+ .rf-info-grid b{font-size:13px}
+ .rf-last-result strong{font-size:17px}
+ .rf-last-result>span{font-size:10px}
+ .rf-last-result small{font-size:9px}
+ .rf-paytable summary{font-size:12px}
+ .rf-paytable>div>div span,.rf-paytable>div>div b{font-size:11px}
+ .rf-paytable p,.rf-demo-disclaimer{font-size:10px}
+}
+@media(max-width:380px){
+ .rf-game-top{gap:4px}
+ .rf-title-lockup{gap:6px}
+ .rf-emblem{width:33px;height:33px}
+ .rf-status{font-size:8px}
+ .rf-icon-button small{font-size:8px}
+ .rf-cabinet-header span:last-child{font-size:7px}
+ .modal-slot .rf-reel-window,.rf-reel-window{height:300px;min-height:300px}
+ .rf-reel>svg{width:23px;height:23px}
+ .rf-reel small{font-size:8px}
+ .rf-speed-panel>span{font-size:9px}
+ .rf-speed-panel button{padding:5px 7px;font-size:9px}
+ .rf-action-row{grid-template-columns:1fr 1fr}
+}
