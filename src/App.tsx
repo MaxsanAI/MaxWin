@@ -44,6 +44,12 @@ function App() {
   const [profileMessage, setProfileMessage] = useState("");
   const [bonusBusy, setBonusBusy] = useState<string | null>(null);
   const [freeSpinBusy, setFreeSpinBusy] = useState(false);
+  const [spinBusy, setSpinBusy] = useState(false);
+  const [spinError, setSpinError] = useState("");
+  const [spinNotice, setSpinNotice] = useState("");
+  const [spinRound, setSpinRound] = useState<{ id: string; gameTitle: string; symbols: string[]; outcome: string; createdAt: string } | null>(null);
+  const [spinHistory, setSpinHistory] = useState<Array<{ id: string; gameTitle: string; symbols: string[]; outcome: string; createdAt: string }>>([]);
+  const [spinBalance, setSpinBalance] = useState<number | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletError, setWalletError] = useState("");
   const [walletAsset, setWalletAsset] = useState<"SOL" | "TON">("SOL");
@@ -89,6 +95,51 @@ function App() {
     } catch (error) { setProfileMessage(error instanceof Error ? error.message : "Could not claim free spins."); }
     finally { setFreeSpinBusy(false); }
   };
+  const playFreeSpin = async () => {
+    if (!authUser) { setModal("signin"); return; }
+    if (!selectedGame || spinBusy || (spinBalance ?? profileData?.freeSpins?.available ?? 0) < 1) return;
+    setSpinBusy(true); setSpinError(""); setSpinNotice("");
+    try {
+      const requestId = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join("");
+      const response = await fetch("/api/games/spin", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gameTitle: selectedGame.title, requestId })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not complete the free spin.");
+      if (data.spin) {
+        setSpinRound(data.spin);
+        setSpinNotice(data.message || (data.spin.outcome === "triple-match" ? "Three matching symbols!" : data.spin.outcome === "pair-match" ? "Two matching symbols!" : "No match this time."));
+      }
+      if (typeof data.availableSpins === "number") setSpinBalance(data.availableSpins);
+      else setSpinBalance(current => Math.max(0, (current ?? profileData?.freeSpins?.available ?? 0) - (data.replayed ? 0 : 1)));
+      setSpinHistory(current => data.spin && !current.some(round => round.id === data.spin.id) ? [data.spin, ...current].slice(0, 12) : current);
+      const refreshed = await fetch("/api/profile", { credentials: "same-origin", cache: "no-store" });
+      const refreshedData = await refreshed.json().catch(() => ({}));
+      if (refreshed.ok) setProfileData(refreshedData.profile);
+    } catch (error) {
+      setSpinError(error instanceof Error ? error.message : "Could not complete the free spin.");
+    } finally { setSpinBusy(false); }
+  };
+  useEffect(() => {
+    if (modal !== "game" || !selectedGame || !authUser) {
+      setSpinRound(null); setSpinNotice(""); setSpinError(""); setSpinBalance(null); setSpinHistory([]);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/games/spin", { credentials: "same-origin", cache: "no-store" })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Could not load free spins.");
+        if (!cancelled) {
+          setSpinBalance(Number(data.availableSpins || 0));
+          setSpinHistory(Array.isArray(data.history) ? data.history : []);
+        }
+      })
+      .catch(error => { if (!cancelled) setSpinError(error instanceof Error ? error.message : "Could not load free spins."); });
+    return () => { cancelled = true; };
+  }, [modal, selectedGame?.title, authUser?.id]);
   const uploadAvatar = async (file?: File) => {
     if (!file || !authUser) return;
     if (!file.type.startsWith("image/")) { setProfileMessage("Choose an image file."); return; }
@@ -228,7 +279,18 @@ function App() {
       <div className="profile-actions"><button className="btn btn-gold" onClick={() => setModal("deposit")}>Deposit</button><button className="btn btn-outline" onClick={() => setModal("withdraw")}>Withdraw</button></div>
       <section className="profile-bonuses"><h3>Bonuses</h3>{profileData?.bonuses?.length ? profileData.bonuses.map(bonus => <div className="bonus-row" key={bonus.id}><span><b>{bonus.title}</b><small>{new Date(bonus.created_at).toLocaleDateString()}</small></span><strong>{bonus.amount}</strong><em>{bonus.status}</em>{bonus.status === "available" && <button className="bonus-claim" disabled={bonusBusy !== null} onClick={() => void requestBonus(bonus.id)}>{bonusBusy === bonus.id ? "Requesting…" : "Request bonus"}</button>}</div>) : <p>Your bonus offers and rewards will appear here when they are added to your account.</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("not found") || profileMessage.toLowerCase().includes("already") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}</section>
       <small className="auth-note">Wallet balances and transaction history are loaded from the wallet service. Deposits and withdrawals remain unavailable until their secure processing services are active.</small>
-    </div> : <><p>{selectedGame ? "This is a visual catalogue preview, not a playable or certified real-money game. Game-provider integration is pending." : authUser ? "You are signed in. Your account is active, but financial features remain disabled." : "Authentication, real-money payments, certified game outcomes, and financial transactions are not yet implemented. MAXWIN will not accept wagers or claim to process payments at this stage."}</p>{authUser && modal === "game" && !selectedGame && <div className="modal-status"><span className="status-dot"/><span><b>{authUser.username}</b><small>{authUser.email}</small></span></div>}<div className="modal-status"><span className="status-dot"/><span><b>Real-money play disabled</b><small>No funds are being accepted or transferred.</small></span></div><button className="btn btn-gold modal-done" onClick={() => setModal(null)}>Understood</button></>}</section></div>}
+    </div> : selectedGame ? <div className="auth-form spin-game-panel">
+      <div className="spin-game-provider"><span className={"game-art spin-mini-art art-" + selectedGame.art}><span className="art-symbol">{selectedGame.art === "royal" ? "♛" : selectedGame.art === "neon" ? "✦" : selectedGame.art === "vault" ? "◈" : selectedGame.art === "moon" ? "☾" : selectedGame.art === "lucky" ? "7" : selectedGame.art === "cosmic" ? "✧" : selectedGame.art === "crown" ? "♕" : "✺"}</span></span><span><b>{selectedGame.title}</b><small>MAXWIN promotional slot · Demo mode</small></span></div>
+      {!authUser ? <><p>Log in to use free spins stored on your MAXWIN account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></> : <>
+        <div className="spin-balance-bar"><span>FREE SPINS AVAILABLE</span><strong>{spinBalance ?? profileData?.freeSpins?.available ?? "…"}</strong></div>
+        <div className="spin-reels" aria-live="polite" aria-label="Slot result">{(spinRound?.symbols || ["✦", "♛", "✦"]).map((symbol, index) => <div className={"spin-reel" + (spinRound ? " spin-reel-result" : "")} key={spinRound?.id + "-" + index}>{symbol}</div>)}</div>
+        {spinNotice && <p className={"spin-result-message " + (spinRound?.outcome === "triple-match" ? "spin-result-win" : "")} role="status">{spinNotice}</p>}
+        {spinError && <p className="auth-error" role="alert">{spinError}</p>}
+        <button className="btn btn-gold modal-done spin-play-button" type="button" onClick={() => void playFreeSpin()} disabled={spinBusy || (spinBalance ?? profileData?.freeSpins?.available ?? 0) < 1}>{spinBusy ? "Spinning…" : (spinBalance ?? profileData?.freeSpins?.available ?? 0) < 1 ? "No free spins left" : "SPIN · USE 1 FREE SPIN"}</button>
+        <small className="auth-note spin-demo-note">Promotional demo only. Results have no cash value, no monetary payout, and cannot be redeemed. Each spin is generated and recorded server-side. Switching slots does not reset your balance.</small>
+        {spinHistory.length > 0 && <section className="spin-history"><h3>Recent spins</h3>{spinHistory.slice(0,5).map(round => <div key={round.id}><span>{round.gameTitle}<small>{new Date(round.createdAt).toLocaleString()}</small></span><strong>{round.symbols.join(" ")}</strong></div>)}</section>}
+      </>}
+    </div> : <><p>{authUser ? "You are signed in. Your account is active, but financial features remain disabled." : "Authentication, real-money payments, certified game outcomes, and financial transactions are not yet implemented. MAXWIN will not accept wagers or claim to process payments at this stage."}</p>{authUser && modal === "game" && !selectedGame && <div className="modal-status"><span className="status-dot"/><span><b>{authUser.username}</b><small>{authUser.email}</small></span></div>}<div className="modal-status"><span className="status-dot"/><span><b>Real-money play disabled</b><small>No funds are being accepted or transferred.</small></span></div><button className="btn btn-gold modal-done" onClick={() => setModal(null)}>Understood</button></>}</section></div>}
     {welcomePromoOpen && !authUser && <div className="welcome-promo-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) closeWelcomePromo(); }}>
       <section className="welcome-promo" role="dialog" aria-modal="true" aria-labelledby="welcome-promo-title">
         <button className="welcome-promo-close" type="button" aria-label="Close welcome offer" onClick={closeWelcomePromo}><X size={19}/></button>
