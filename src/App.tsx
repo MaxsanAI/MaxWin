@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDownToLine, ArrowUpFromLine, Bell, ChevronDown, CircleHelp, Crown, Gamepad2, Gem, Menu, Search, ShieldCheck, Sparkles, Star, Trophy, Wallet, X } from "lucide-react";
 
-type Game = { title: string; category: string; art: string; tag?: string; provider: string; };
+type Game = { title: string; category: string; art: string; tag?: string; provider: string; };\ntype AuthUser = { id: string; username: string; email: string; createdAt: string };
 const games: Game[] = [
   { title: "Royal Fortune", category: "Slots", art: "royal", tag: "HOT", provider: "MAXWIN Originals" },
   { title: "Neon Dynasty", category: "Slots", art: "neon", tag: "NEW", provider: "MAXWIN Originals" },
@@ -19,6 +19,57 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [modal, setModal] = useState<"signin" | "register" | "deposit" | "withdraw" | "game" | null>(null);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authUsername, setAuthUsername] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "same-origin" })
+      .then(async response => response.ok ? response.json() : null)
+      .then(data => { if (data?.authenticated && data.user) setAuthUser(data.user as AuthUser); })
+      .catch(() => undefined);
+  }, []);
+  const openAuth = (kind: "signin" | "register") => {
+    setAuthError("");
+    setAuthEmail("");
+    setAuthUsername("");
+    setAuthPassword("");
+    setModal(kind);
+  };
+  const submitAuth = async () => {
+    setAuthBusy(true);
+    setAuthError("");
+    try {
+      const response = await fetch(modal === "register" ? "/api/auth/register" : "/api/auth/login", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(modal === "register"
+          ? { username: authUsername, email: authEmail, password: authPassword }
+          : { email: authEmail, password: authPassword })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setAuthError(typeof data.error === "string" ? data.error : "Could not complete that request.");
+        return;
+      }
+      setAuthUser(data.user as AuthUser);
+      setAuthPassword("");
+      setAuthError("");
+      setModal(null);
+    } catch {
+      setAuthError("Account API is not available yet. Check the Cloudflare deployment and database binding.");
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+  const logout = async () => {
+    try { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* clear local account view regardless */ }
+    setAuthUser(null);
+    setModal(null);
+  };
   const filtered = useMemo(() => games.filter(g => (active === "All Games" || g.category === active) && g.title.toLowerCase().includes(search.toLowerCase())), [active, search]);
   const openGame = (game: Game) => { setSelectedGame(game); setModal("game"); };
   return <div className="app-shell">
@@ -31,12 +82,12 @@ function App() {
         <a href="#featured" onClick={() => setMobileMenu(false)}><Trophy size={16}/> Featured</a>
         <a href="#responsible" onClick={() => setMobileMenu(false)}><ShieldCheck size={16}/> Play responsibly</a>
       </nav>
-      <div className="header-actions"><button className="btn btn-ghost" onClick={() => setModal("signin")}>Log in</button><button className="btn btn-gold" onClick={() => setModal("register")}>Create account <span>→</span></button></div>
+      <div className="header-actions"><button className="btn btn-ghost" onClick={() => authUser ? setModal("game") : openAuth("signin")}>{authUser ? authUser.username : "Log in"}</button>{!authUser && <button className="btn btn-gold" onClick={() => openAuth("register")}>Create account <span>→</span></button>}{authUser && <button className="btn btn-gold" onClick={logout}>Log out</button>}</div>
     </header>
     <main>
       <section className="hero" id="featured">
         <div className="hero-glow" />
-        <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot"/> THE NEXT LEVEL STARTS HERE</div><h1>Make your<br/>next move <em>legendary.</em></h1><p>Step into a world of bold originals, royal jackpots, and a casino experience built around you.</p><div className="hero-actions"><button className="btn btn-gold btn-large" onClick={() => document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" })}>Explore games <span>→</span></button><button className="btn btn-outline btn-large" onClick={() => setModal("register")}>Join MAXWIN</button></div><div className="hero-trust"><span><ShieldCheck size={16}/> Security-focused</span><span><Gem size={16}/> Crypto-ready design</span><span><Crown size={16}/> MAXWIN Originals</span></div></div>
+        <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot"/> THE NEXT LEVEL STARTS HERE</div><h1>Make your<br/>next move <em>legendary.</em></h1><p>Step into a world of bold originals, royal jackpots, and a casino experience built around you.</p><div className="hero-actions"><button className="btn btn-gold btn-large" onClick={() => document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" })}>Explore games <span>→</span></button><button className="btn btn-outline btn-large" onClick={() => openAuth("register")}>Join MAXWIN</button></div><div className="hero-trust"><span><ShieldCheck size={16}/> Security-focused</span><span><Gem size={16}/> Crypto-ready design</span><span><Crown size={16}/> MAXWIN Originals</span></div></div>
         <div className="hero-art" aria-label="Original royal casino artwork"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="hero-crown"><Crown size={88} strokeWidth={1.2}/></div><div className="hero-coin coin-a">M</div><div className="hero-coin coin-b">✦</div><div className="hero-coin coin-c">7</div><div className="hero-art-label"><span className="live-dot"/> THE HOUSE OF BIG MOMENTS <small>YOUR STORY. YOUR PLAY.</small></div></div>
         <div className="hero-bottom"><div><strong>01</strong><span>Discover originals</span></div><div><strong>02</strong><span>Find your favourite</span></div><div><strong>03</strong><span>Play responsibly</span></div></div>
       </section>
@@ -50,8 +101,8 @@ function App() {
       <section className="responsible" id="responsible"><div className="responsible-icon"><ShieldCheck size={24}/></div><div><div className="eyebrow">PLAY WITH A PLAN</div><h3>Entertainment should stay in your control.</h3><p>MAXWIN is being built with responsible-gambling controls in mind. Real-money play must remain unavailable until age checks, jurisdiction restrictions, licensing, and required safeguards are verified.</p></div><a href="#responsible" onClick={e => { e.preventDefault(); setModal("game"); setSelectedGame(null); }}>Platform status <span>→</span></a></section>
     </main>
     <footer><a className="brand footer-brand" href="#"><span className="brand-mark"><Crown size={19}/></span><span>MAX<span className="brand-gold">WIN</span><small>CRYPTO CASINO</small></span></a><span>© 2026 MAXWIN. Play responsibly. 18+.</span><div><a href="#responsible">Responsible play</a><a href="#responsible">Privacy</a><a href="#responsible">Terms</a></div></footer>
-    {modal && <div className="modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setModal(null); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close" onClick={() => setModal(null)} aria-label="Close dialog"><X size={19}/></button><div className="modal-mark"><Crown size={25}/></div><div className="eyebrow">MAXWIN PLATFORM STATUS</div><h2 id="modal-title">{modal === "signin" ? "Log in" : modal === "register" ? "Create your account" : modal === "deposit" ? "Deposit crypto" : modal === "withdraw" ? "Withdraw crypto" : selectedGame ? selectedGame.title : "Real-money features are not active"}</h2><p>{modal === "signin" || modal === "register" ? "Account services are not connected yet. No account will be created and no credentials will be submitted." : modal === "deposit" || modal === "withdraw" ? "Blockchain payment processing is not connected. No deposit address or withdrawal transaction is available yet." : selectedGame ? "This is a visual catalogue preview, not a playable or certified real-money game. Game-provider integration is pending." : "Authentication, real-money payments, certified game outcomes, and financial transactions are not yet implemented. MAXWIN will not accept wagers or claim to process payments at this stage."}</p><div className="modal-status"><span className="status-dot"/><span><b>Integration pending</b><small>No funds or personal information are being collected.</small></span></div><button className="btn btn-gold modal-done" onClick={() => setModal(null)}>Understood</button></section></div>}
-    <div className="bottom-dock"><button onClick={() => setModal("signin")}><Wallet size={18}/> Account</button><button onClick={() => setModal("deposit")}><ArrowDownToLine size={18}/> Deposit</button><button onClick={() => setModal("withdraw")}><ArrowUpFromLine size={18}/> Withdraw</button><button onClick={() => setModal("register")}><Crown size={18}/> Join</button></div>
+    {modal && <div className="modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setModal(null); }}><section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close" onClick={() => setModal(null)} aria-label="Close dialog"><X size={19}/></button><div className="modal-mark"><Crown size={25}/></div><div className="eyebrow">{modal === "signin" || modal === "register" ? "YOUR MAXWIN ACCOUNT" : "MAXWIN PLATFORM STATUS"}</div><h2 id="modal-title">{modal === "signin" ? "Log in" : modal === "register" ? "Create your account" : modal === "deposit" ? "Deposit crypto" : modal === "withdraw" ? "Withdraw crypto" : selectedGame ? selectedGame.title : authUser ? "Your account" : "Real-money features are not active"}</h2>{(modal === "signin" || modal === "register") ? <form className="auth-form" onSubmit={e => { e.preventDefault(); void submitAuth(); }}><p>{modal === "register" ? "Create your MAXWIN login. Use an email you can access and a unique password." : "Sign in to your MAXWIN account."}</p>{modal === "register" && <label>Username<input autoComplete="username" minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" required value={authUsername} onChange={e => setAuthUsername(e.target.value)} placeholder="Choose a username"/></label>}<label>Email address<input type="email" autoComplete="email" maxLength={254} required value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com"/></label><label>Password<input type="password" autoComplete={modal === "register" ? "new-password" : "current-password"} minLength={modal === "register" ? 10 : 1} maxLength={128} required value={authPassword} onChange={e => setAuthPassword(e.target.value)} placeholder={modal === "register" ? "At least 10 characters" : "Your password"}/></label>{authError && <p className="auth-error" role="alert">{authError}</p>}<button className="btn btn-gold modal-done" type="submit" disabled={authBusy}>{authBusy ? "Please wait…" : modal === "register" ? "Create account" : "Log in"}</button><button className="auth-switch" type="button" onClick={() => openAuth(modal === "register" ? "signin" : "register")}>{modal === "register" ? "Already have an account? Log in" : "New to MAXWIN? Create an account"}</button><small className="auth-note">Account access only. Deposits, withdrawals, and real-money games are not enabled.</small></form> : <><p>{modal === "deposit" || modal === "withdraw" ? "Blockchain payment processing is not connected. No deposit address or withdrawal transaction is available yet." : selectedGame ? "This is a visual catalogue preview, not a playable or certified real-money game. Game-provider integration is pending." : authUser ? "You are signed in. Your account is active, but financial features remain disabled." : "Authentication, real-money payments, certified game outcomes, and financial transactions are not yet implemented. MAXWIN will not accept wagers or claim to process payments at this stage."}</p>{authUser && modal === "game" && !selectedGame && <div className="modal-status"><span className="status-dot"/><span><b>{authUser.username}</b><small>{authUser.email}</small></span></div>}<div className="modal-status"><span className="status-dot"/><span><b>{modal === "deposit" || modal === "withdraw" ? "Payments not connected" : "Real-money play disabled"}</b><small>No funds are being accepted or transferred.</small></span></div><button className="btn btn-gold modal-done" onClick={() => setModal(null)}>Understood</button></>}</section></div>}
+    <div className="bottom-dock"><button onClick={() => authUser ? setModal("game") : openAuth("signin")}><Wallet size={18}/> Account</button><button onClick={() => setModal("deposit")}><ArrowDownToLine size={18}/> Deposit</button><button onClick={() => setModal("withdraw")}><ArrowUpFromLine size={18}/> Withdraw</button><button onClick={() => openAuth("register")}><Crown size={18}/> Join</button></div>
   </div>;
 }
 export default App;
