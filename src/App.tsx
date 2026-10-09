@@ -22,6 +22,7 @@ function App() {
   useEffect(() => {
     try { localStorage.setItem("maxwin-theme", theme); } catch { /* theme still works for this session */ }
     document.documentElement.style.colorScheme = theme;
+    document.body.dataset.theme = theme;
   }, [theme]);
   const [active, setActive] = useState("All Games");
   const [search, setSearch] = useState("");
