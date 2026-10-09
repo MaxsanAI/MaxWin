@@ -372,3 +372,148 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 .rf-paytable>p{margin:8px 11px 12px;color:#8f849f;font-size:9px;line-height:1.6}
 .rf-demo-disclaimer{padding:10px;border:1px solid #ffffff10;border-radius:8px;color:#8e849e;font-size:8px;font-weight:800;letter-spacing:.6px;line-height:1.55;text-align:center}
 @media(max-width:420px){.rf-game{gap:11px}.rf-status{font-size:7px;padding:6px}.rf-reel-window{gap:5px;padding:6px}.rf-reel{min-height:94px}.rf-reel>svg{width:37px;height:37px}.rf-reel small{font-size:7px}.rf-action-row{grid-template-columns:1fr}.rf-balance-row>div:first-child strong{font-size:22px}}
+
+
+/* Royal Fortune: dedicated responsive game stage */
+.modal-backdrop:has(.modal-slot){padding:12px}
+.modal-slot{width:min(1160px,calc(100vw - 24px));max-width:none;height:min(900px,calc(100dvh - 24px));max-height:calc(100dvh - 24px);padding:24px 28px 18px;display:flex;flex-direction:column;overflow:hidden;background:radial-gradient(ellipse at 50% 0,#38224f 0,transparent 55%),linear-gradient(145deg,#111022,#090b16 70%);border-color:#c8a15c7a}
+.modal-slot>.modal-mark,.modal-slot>.eyebrow,.modal-slot>#modal-title{display:none}
+.modal-slot>.modal-close{z-index:10;top:13px;right:13px;background:#090914bd;border:1px solid #ffffff1c;color:#f6dfaa}
+.modal-slot>.rf-game{flex:1;min-height:0;width:100%;overflow:auto;overscroll-behavior:contain;padding:0 3px 8px;scrollbar-width:thin;scrollbar-color:#66517d #0c0b18}
+.rf-game{--rf-gold:#f4ca72;--rf-ink:#100c20;display:flex;flex-direction:column;gap:13px;color:#f9f3e6}
+.rf-game-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-right:40px}
+.rf-title-lockup{display:flex;align-items:center;gap:12px;min-width:0}
+.rf-emblem{width:48px;height:48px;flex:0 0 auto;display:grid;place-items:center;position:relative;border:1px solid #e9c97883;border-radius:13px;background:linear-gradient(145deg,#60452d,#1e1732);color:#ffe2a0;box-shadow:inset 0 1px #fff4c53d,0 0 24px #d9a84b17}
+.rf-emblem span{position:absolute;right:3px;top:1px;color:#fff1b6;font-size:11px}
+.rf-eyebrow{font-size:9px;font-weight:900;letter-spacing:1.8px;color:#b9a5df}
+.rf-title-lockup h3{font:900 clamp(19px,2.4vw,29px)/1 Manrope,sans-serif;letter-spacing:1.4px;margin:5px 0;color:#fff8e8}
+.rf-title-lockup h3 em{font-style:normal;color:#f4ca72}
+.rf-title-lockup p{margin:5px 0 0;font-size:11px;color:#aaa1bc}
+.rf-top-actions{display:flex;align-items:center;gap:8px}
+.rf-status{display:flex;align-items:center;gap:6px;white-space:nowrap;padding:7px 9px;border:1px solid #7bc6a72d;border-radius:7px;color:#a6dfbd;font-size:9px;font-weight:900;letter-spacing:1px}
+.rf-status>span{width:6px;height:6px;border-radius:50%;background:#70d69b;box-shadow:0 0 8px #70d69b}
+.rf-icon-button{display:flex;align-items:center;gap:5px;border:1px solid #ffffff1a;background:#ffffff07;color:#bcb3d2;border-radius:7px;padding:7px}
+.rf-icon-button small{font-size:8px}
+.rf-mode-tabs{display:flex;gap:5px;padding:4px;border:1px solid #ffffff12;border-radius:9px;background:#0506119c}
+.rf-mode-tabs button{flex:1;display:flex;justify-content:center;align-items:center;gap:9px;border:1px solid transparent;border-radius:6px;padding:9px 10px;background:transparent;color:#9d94b7;font-size:10px;font-weight:900;letter-spacing:1px}
+.rf-mode-tabs button.active{border-color:#c49c4d66;background:linear-gradient(100deg,#9a6e322b,#f4ca7218);color:#ffdf9a}
+.rf-mode-tabs small{font-size:8px;letter-spacing:.8px;color:#b6a9ce}
+.rf-real-tab small{display:flex;align-items:center;gap:3px;color:#b0a7c5}
+.rf-locked-notice{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid #e3b65c55;border-radius:9px;background:#b9811a12;color:#f4d18b;font-size:11px}
+.rf-locked-notice span{display:flex;flex-direction:column;gap:3px}
+.rf-locked-notice small{font-size:10px;line-height:1.5;color:#c8bbd8}
+.rf-cabinet{position:relative;overflow:hidden;padding:15px 17px 11px;border:1px solid #e4bd6b8c;border-radius:17px;background:radial-gradient(ellipse at 50% -20%,#8e5bc64d,transparent 55%),linear-gradient(145deg,#30213f,#171322 50%,#0b0b15);box-shadow:inset 0 1px #fff3c51c,0 12px 28px #0003}
+.rf-cabinet:before{content:"";position:absolute;inset:5px;pointer-events:none;border:1px solid #f4ca721b;border-radius:12px}
+.rf-cabinet-header{position:relative;display:flex;justify-content:space-between;align-items:center;gap:8px;color:#d4b978;font-size:9px;font-weight:900;letter-spacing:1.5px}
+.rf-cabinet-header span{display:flex;align-items:center;gap:6px}
+.rf-cabinet-header span:last-child{color:#bda9e2;font-size:8px;letter-spacing:1px}
+.rf-cabinet-header i{width:3px;height:3px;border-radius:50%;background:#796492}
+.rf-reel-window{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(3,minmax(76px,1fr));gap:5px;margin:12px 0 9px;padding:8px;border:1px solid #e9c56a70;border-radius:13px;background:linear-gradient(180deg,#080811,#17101f 50%,#080811);box-shadow:inset 0 0 25px #000b,0 0 22px #c58c3020}
+.rf-reel{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:76px;overflow:hidden;border:1px solid #ffffff12;border-radius:8px;background:linear-gradient(155deg,#352747,#1d1729 60%,#17111e);color:#f8d889;box-shadow:inset 0 1px #ffffff12;transition:transform .18s,border-color .18s,background .18s}
+.rf-reel>svg{z-index:1;width:clamp(24px,3vw,38px);height:clamp(24px,3vw,38px);filter:drop-shadow(0 0 8px currentColor)}
+.rf-reel small{z-index:1;color:#cfc3dd;font-size:clamp(6px,.7vw,8px);font-weight:900;letter-spacing:.4px;text-transform:uppercase;text-align:center}
+.rf-reel-glow{position:absolute;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,currentColor,transparent 68%);opacity:.1}
+.rf-symbol-crown{color:#ffd76f;background:linear-gradient(145deg,#493c28,#211a2b)}
+.rf-symbol-gem{color:#79e8ff;background:linear-gradient(145deg,#163d54,#1d1934)}
+.rf-symbol-shield{color:#c7a4ff;background:linear-gradient(145deg,#38275a,#1d172c)}
+.rf-symbol-coins{color:#ffcf78;background:linear-gradient(145deg,#594027,#21192b)}
+.rf-symbol-star{color:#fff0a0;background:linear-gradient(145deg,#544624,#21192b)}
+.rf-symbol-flame{color:#ff9b76;background:linear-gradient(145deg,#612c30,#21172a)}
+.rf-symbol-zap{color:#a3f1c8;background:linear-gradient(145deg,#21463f,#1b192e)}
+.rf-symbol-coin{color:#ffdf91;background:linear-gradient(145deg,#59451e,#21192b)}
+.rf-reel-win{border-color:#ffe39a;box-shadow:inset 0 0 18px #ffcf5940,0 0 12px #f3c85d50;animation:rf-win-glow .8s ease-in-out infinite alternate}
+.rf-reel-spinning{animation:rf-reel-pulse .16s ease-in-out infinite alternate}
+.rf-machine-footer{position:relative;display:flex;justify-content:center;gap:clamp(9px,2vw,25px);color:#a99ab8;font-size:8px;font-weight:800;letter-spacing:1px;text-align:center}
+.rf-balance-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border:1px solid #ffffff12;border-radius:11px;background:linear-gradient(100deg,#17152a,#101321)}
+.rf-credit-panel,.rf-bet-control{display:flex;flex-direction:column;gap:5px}
+.rf-credit-panel>span,.rf-bet-control label{font-size:9px;color:#a69bbd;font-weight:900;letter-spacing:1.1px}
+.rf-credit-panel strong{font:800 27px/1.1 Manrope;color:#f6d88f;font-variant-numeric:tabular-nums}
+.rf-credit-panel small,.rf-bet-control>small{font-size:9px;color:#817b9c}
+.rf-bet-control{text-align:right}
+.rf-bet-control>div{display:flex;align-items:center;gap:12px}
+.rf-bet-control button{width:27px;height:27px;border:1px solid #a68bcb4a;border-radius:7px;background:#a58bce12;color:#e6d6ff;font-size:17px}
+.rf-bet-control strong{min-width:22px;text-align:center;font-size:17px;color:#fff5dc}
+.rf-action-row{display:grid;grid-template-columns:1.35fr 1fr;gap:10px}
+.rf-spin-button,.rf-buy-button{min-height:53px;display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid #ffe4a2;border-radius:10px;font-weight:1000;letter-spacing:1.2px;transition:filter .15s,transform .15s}
+.rf-spin-button{background:linear-gradient(110deg,#f8d98a,#c58a35);color:#261626;box-shadow:0 6px 24px #e3b45822}
+.rf-spin-button>span{font-size:19px}
+.rf-spin-button small{font-size:9px;letter-spacing:.5px}
+.rf-spin-button:disabled,.rf-buy-button:disabled{opacity:.45;cursor:not-allowed}
+.rf-buy-button{border-color:#9878d879;background:linear-gradient(110deg,#4a306c,#231d3c);color:#f5dca0}
+.rf-buy-button>span{display:flex;flex-direction:column;align-items:flex-start;gap:3px;font-size:10px}
+.rf-buy-button small{font-size:9px;color:#c8b9e4;letter-spacing:.6px}
+.rf-spinner{width:15px;height:15px;border:2px solid #34223c66;border-top-color:#34223c;border-radius:50%;animation:rf-spin .7s linear infinite}
+.rf-error{margin:0;color:#ffb5b5;font-size:11px}
+.rf-message{margin:0;text-align:center;color:#a59bbd;font-size:11px;min-height:15px}
+.rf-message.is-win{color:#ffe39a;font-weight:900}
+.rf-last-result{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border:1px solid #e5c36b55;border-radius:9px;background:linear-gradient(100deg,#a276291c,#7c5db31c)}
+.rf-last-result>span{display:flex;flex-direction:column;gap:4px;font-size:10px;font-weight:900;letter-spacing:1px;color:#f2d48c}
+.rf-last-result small{font-size:8px;font-weight:700;letter-spacing:.7px;color:#a99abe}
+.rf-last-result strong{font:800 20px Manrope;color:#ffe6a0;text-align:right}
+.rf-last-result strong small{display:block;margin-top:3px}
+.rf-info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rf-info-grid>div{display:flex;flex-direction:column;gap:5px;padding:10px;border:1px solid #ffffff10;border-radius:8px;background:#ffffff04}
+.rf-info-grid span{font-size:8px;color:#9b91b4;font-weight:900;letter-spacing:.9px}
+.rf-info-grid b{font-size:14px;color:#f5d98d}
+.rf-paytable{border:1px solid #ffffff12;border-radius:9px;background:#ffffff04}
+.rf-paytable summary{cursor:pointer;padding:11px 12px;color:#e7d6a3;font-size:10px;font-weight:900;letter-spacing:1px}
+.rf-paytable>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0 10px 10px}
+.rf-paytable>div>div{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:6px;background:#ffffff05}
+.rf-paytable>div>div span{font-size:8px;color:#c7b9d8;font-weight:900}
+.rf-paytable>div>div b{font-size:9px;color:#f4d68f;font-weight:700}
+.rf-paytable p{margin:0;padding:0 12px 12px;color:#948ba9;font-size:9px;line-height:1.6}
+.rf-demo-disclaimer{padding:9px 10px;border:1px solid #ffffff0c;border-radius:7px;color:#8c849e;font-size:8px;line-height:1.5;text-align:center;letter-spacing:.4px}
+@keyframes rf-reel-pulse{from{filter:brightness(.8);transform:translateY(-2px)}to{filter:brightness(1.4);transform:translateY(2px)}}
+@keyframes rf-win-glow{from{filter:brightness(1);box-shadow:inset 0 0 12px #ffcf5925,0 0 5px #f3c85d25}to{filter:brightness(1.25);box-shadow:inset 0 0 18px #ffcf5940,0 0 15px #f3c85d70}}
+@keyframes rf-spin{to{transform:rotate(360deg)}}
+@media(max-width:720px){
+ .modal-backdrop:has(.modal-slot){padding:5px}
+ .modal-slot{width:calc(100vw - 10px);height:calc(100dvh - 10px);max-height:calc(100dvh - 10px);padding:13px 10px 10px;border-radius:12px}
+ .modal-slot>.modal-close{top:8px;right:8px;width:28px;height:28px}
+ .modal-slot>.rf-game{gap:10px;padding:0 1px 5px}
+ .rf-game-top{padding-right:32px;gap:6px}
+ .rf-emblem{width:37px;height:37px;border-radius:10px}
+ .rf-emblem svg{width:22px;height:22px}
+ .rf-title-lockup{gap:8px}
+ .rf-eyebrow{font-size:7px;letter-spacing:1px}
+ .rf-title-lockup h3{font-size:18px;letter-spacing:.7px}
+ .rf-title-lockup p{font-size:9px}
+ .rf-status{font-size:7px;padding:6px}
+ .rf-icon-button{padding:6px}
+ .rf-mode-tabs button{font-size:8px;padding:8px 4px;gap:4px}
+ .rf-mode-tabs small{font-size:7px}
+ .rf-cabinet{padding:10px 7px 8px;border-radius:12px}
+ .rf-cabinet-header{font-size:7px;letter-spacing:.8px}
+ .rf-cabinet-header span:last-child{font-size:6px;letter-spacing:.5px}
+ .rf-reel-window{grid-template-rows:repeat(3,minmax(61px,1fr));gap:3px;padding:4px;margin:8px 0 7px}
+ .rf-reel{min-height:61px;gap:3px;border-radius:5px}
+ .rf-reel>svg{width:clamp(19px,6vw,28px);height:clamp(19px,6vw,28px)}
+ .rf-reel small{font-size:6px;letter-spacing:0}
+ .rf-machine-footer{gap:6px;font-size:6px;letter-spacing:.3px}
+ .rf-balance-row{padding:9px;gap:8px}
+ .rf-credit-panel>span,.rf-bet-control label{font-size:7px;letter-spacing:.5px}
+ .rf-credit-panel strong{font-size:21px}
+ .rf-credit-panel small,.rf-bet-control>small{font-size:7px}
+ .rf-bet-control>div{gap:7px}
+ .rf-bet-control button{width:24px;height:24px}
+ .rf-bet-control strong{font-size:14px}
+ .rf-action-row{grid-template-columns:1.15fr 1fr;gap:6px}
+ .rf-spin-button,.rf-buy-button{min-height:47px;gap:5px;border-radius:8px;font-size:10px;letter-spacing:.6px}
+ .rf-spin-button small{font-size:7px}
+ .rf-buy-button>span{font-size:8px}
+ .rf-buy-button small{font-size:7px}
+ .rf-last-result{padding:8px 9px}
+ .rf-last-result strong{font-size:16px}
+ .rf-info-grid{gap:5px}
+ .rf-info-grid>div{padding:7px}
+ .rf-info-grid span{font-size:6px;letter-spacing:.4px}
+ .rf-info-grid b{font-size:12px}
+ .rf-paytable>div{grid-template-columns:1fr;gap:4px}
+}
+@media(max-width:380px){
+ .rf-top-actions{gap:4px}
+ .rf-icon-button{display:none}
+ .rf-cabinet-header span:last-child{letter-spacing:0}
+ .rf-machine-footer span:last-child{display:none}
+ .rf-action-row{grid-template-columns:1fr}
+}
