@@ -517,3 +517,10 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
  .rf-machine-footer span:last-child{display:none}
  .rf-action-row{grid-template-columns:1fr}
 }
+
+
+/* Hard guarantee that the Royal Fortune cabinet always displays all 15 cells (5 reels × 3 rows). */
+.modal-slot .rf-cabinet{flex:0 0 auto;overflow:visible}
+.modal-slot .rf-reel-window{display:grid!important;grid-auto-flow:column!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;grid-auto-columns:minmax(0,1fr);height:clamp(255px,38vh,330px);min-height:255px;max-height:330px;align-content:stretch;align-items:stretch;justify-items:stretch;overflow:visible}
+.modal-slot .rf-reel{min-height:0;height:100%;width:100%}
+@media(max-width:720px){.modal-slot .rf-reel-window{height:clamp(210px,31vh,260px);min-height:210px;max-height:260px}.modal-slot .rf-reel{min-height:0}}
