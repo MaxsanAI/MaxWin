@@ -1,7 +1,7 @@
 import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, randomToken, readJson, SESSION_MAX_AGE } from "./_shared";
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  if (!env.DB) return json({ error: "Account service is not configured yet." }, 503);
+  if (!env.DB) return json({ error: "Account service is not configured yet.", diagnostic: "D1 binding env.DB is missing." }, 503);
   const body = await readJson(request);
   if (!body) return json({ error: "Please submit valid form details." }, 400);
 
@@ -12,7 +12,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) {
     return json({ error: "Username must be 3–24 characters using letters, numbers, or underscores." }, 400);
   }
-  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
     return json({ error: "Enter a valid email address." }, 400);
   }
   if (password.length < 10 || password.length > 128) {
@@ -36,10 +36,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       "Set-Cookie": cookie(token, SESSION_MAX_AGE)
     });
   } catch (error) {
-    console.error(
-      "[MAXWIN auth/register] Registration failed:",
-      error instanceof Error ? error.message : String(error)
-    );
-    return json({ error: "Could not create the account right now. Please try again." }, 500);
+    const diagnostic = error instanceof Error ? error.message : String(error);
+    console.error("[MAXWIN auth/register] Registration failed:", diagnostic);
+    return json({
+      error: "Registration failed.",
+      diagnostic,
+      stage: "register-or-create-session"
+    }, 500);
   }
 };
