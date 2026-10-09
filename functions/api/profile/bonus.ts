@@ -31,8 +31,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       if (!existing) return json({ error: "That bonus was not found in your account." }, 404);
       return json({ error: existing.status === "pending" ? "This bonus request is already pending review." : "This bonus is no longer available." }, 409);
     }
-    await env.DB.prepare("INSERT INTO wallet_transactions (id, user_id, asset, kind, status, amount_units, tx_hash, address, idempotency_key, created_at, updated_at) SELECT ?, ?, 'SOL', 'bonus_request', 'pending', '0', NULL, NULL, ?, ?, ? WHERE EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'wallet_transactions')")
-      .bind(crypto.randomUUID(), user.id, "bonus-request:" + bonusId, now, now).run().catch(() => undefined);
     return json({ requested: true, status: "pending", message: "Bonus request submitted for review. It has not been added to your wallet balance." });
   } catch (error) {
     console.error("[MAXWIN bonus] Request failed:", error instanceof Error ? error.message : String(error));
