@@ -34,7 +34,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return json({ authenticated: true, user: { id, username, email, createdAt } }, 201, {
       "Set-Cookie": cookie(token, SESSION_MAX_AGE)
     });
-  } catch {
+  } catch (error) {
+    console.error(
+      "[MAXWIN auth/register] Registration failed:",
+      error instanceof Error ? error.message : String(error)
+    );
     return json({ error: "Could not create the account right now. Please try again." }, 500);
   }
 };
