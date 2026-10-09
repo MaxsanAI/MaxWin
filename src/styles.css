@@ -198,3 +198,10 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
  .header-avatar{width:22px;height:22px;margin-right:4px}
  .profile-avatar{width:60px;height:60px;flex-basis:60px}
 }
+
+@media(max-width:720px){
+ .hero-copy>p{max-width:63%}
+ .hero-trust{max-width:62%}
+ .hero-art{width:43%;right:-1%;top:140px}
+}
+.modal:has(.profile-form){max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}
