@@ -1,7 +1,7 @@
 import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, readJson, SESSION_MAX_AGE } from "./_shared";
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  if (!env.DB) return json({ error: "Account service is not configured yet." }, 503);
+  if (!env.DB) return json({ error: "Account service is not configured yet.", diagnostic: "D1 binding env.DB is missing." }, 503);
   const body = await readJson(request);
   if (!body) return json({ error: "Please enter your email and password." }, 400);
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
@@ -20,7 +20,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       "Set-Cookie": cookie(token, SESSION_MAX_AGE)
     });
   } catch (error) {
-    console.error("[MAXWIN auth/login] Login failed:", error instanceof Error ? error.message : String(error));
-    return json({ error: "Could not log in right now. Please try again." }, 500);
+    const diagnostic = error instanceof Error ? error.message : String(error);
+    console.error("[MAXWIN auth/login] Login failed:", diagnostic);
+    return json({
+      error: "Login failed.",
+      diagnostic,
+      stage: "login-or-create-session"
+    }, 500);
   }
 };
