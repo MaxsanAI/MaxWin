@@ -29,7 +29,15 @@ function randomIndex(max: number): number {
   do { crypto.getRandomValues(value); } while (value[0] >= limit);
   return value[0] % max;
 }
-function spinReels(): SymbolName[] { return Array.from({ length: 20 }, () => SYMBOLS[randomIndex(SYMBOLS.length)]); }
+function spinReels(): SymbolName[] {
+  // Scatter is intentionally rare: 2.5% per cell, instead of the old 10% chance.
+  // The other symbols share the remaining probability evenly.
+  return Array.from({ length: 20 }, () => {
+    if (randomIndex(1000) < 25) return "scatter";
+    const regularSymbols = SYMBOLS.filter(symbol => symbol !== "scatter");
+    return regularSymbols[randomIndex(regularSymbols.length)];
+  });
+}
 function evaluate(symbols: SymbolName[], totalBet: number) {
   const lineBet = totalBet / PAYLINES.length;
   let payout = 0;
@@ -112,13 +120,20 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (action === "spin") {
       payout = last.payout;
       if (isFreeSpin) freeSpinsAfter = Math.max(0, freeSpinsBefore - 1);
-      awardedFreeSpins = last.awardedFreeSpins;
+      // No scatter retriggers while a free-spin feature is already active.
+      // Once the feature is fully used, a later paid spin can trigger it again.
+      awardedFreeSpins = freeSpinsBefore > 0 ? 0 : last.awardedFreeSpins;
       freeSpinsAfter += awardedFreeSpins;
     } else {
       for (let i = 0; i < bonusSpins; i++) {
         last = playOne(bet * 10);
         payout += last.payout;
-        freeSpinsAfter += last.awardedFreeSpins;
+        // A bonus purchase may award at most one free-spin feature, and only
+        // when no free spins were already waiting.
+        if (freeSpinsBefore === 0 && freeSpinsAfter === 0 && last.awardedFreeSpins > 0) {
+          freeSpinsAfter += last.awardedFreeSpins;
+          awardedFreeSpins = last.awardedFreeSpins;
+        }
       }
     }
     const result = { id: roundId, symbols: last.symbols, outcome: last.outcome, bet, stake, payout, mode: action, wins: last.wins, winningPositions: last.winningPositions, awardedFreeSpins, freeSpinsRemaining: freeSpinsAfter, ...(action === "buyBonus" ? { bonusSpins } : {}) };
