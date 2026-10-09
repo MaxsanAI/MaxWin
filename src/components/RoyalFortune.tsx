@@ -36,7 +36,6 @@ export default function RoyalFortune() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("Your royal adventure starts here.");
   const [mode, setMode] = useState<"demo" | "real">("demo");
-  const [bonus, setBonus] = useState(false);
   useEffect(() => {
     let live = true;
     fetch("/api/games/royal-fortune", { credentials: "same-origin", cache: "no-store" })
@@ -55,7 +54,6 @@ export default function RoyalFortune() {
       if (!response.ok) throw new Error(data.error || "Spin failed. Your demo balance has not been changed.");
       setResult(data.result);
       setBalance(Number(data.balance));
-      setBonus(action === "buyBonus");
       setMessage(action === "buyBonus" ? `ROYAL BONUS COMPLETE · ${Number(data.result.payout).toLocaleString()} demo credits returned` : data.result.payout > 0 ? `WIN · ${Number(data.result.payout).toLocaleString()} demo credits` : "No win this time. The next spin is yours.");
     } catch (e) { setError(e instanceof Error ? e.message : "Could not complete the spin."); }
     finally { setBusy(false); }
@@ -69,7 +67,7 @@ export default function RoyalFortune() {
       <div className="rf-reel-window">{(result?.symbols || ["crown","gem","coins"] as SymbolName[]).map((name, i) => { const item = symbolMeta[name] || symbolMeta.crown; const Icon = item.Icon; return <div className={`rf-reel ${item.className} ${busy ? "rf-reel-spinning" : ""}`} key={(result?.id || "initial") + i}><span className="rf-reel-glow"/><Icon size={47} strokeWidth={1.7}/><small>{item.label}</small></div>; })}</div>
       <div className="rf-machine-footer"><span>3 REELS</span><span>8 SYMBOLS</span><span>1 ROYAL CHANCE</span></div>
     </div>
-    <div className="rf-balance-row"><div><span>DEMO CREDIT BALANCE</span><strong>{balance === null ? "—" : balance.toLocaleString()}</strong></div><div className="rf-bet-control"><label htmlFor="rf-bet">BET / SPIN</label><div><button disabled={busy} onClick={() => setBet(v => Math.max(1, v / 2))} aria-label="Lower bet">−</button><strong>{bet.toLocaleString()}</strong><button disabled={busy} onClick={() => setBet(v => Math.min(100, v * 2))} aria-label="Raise bet">+</button></div></div></div>
+    <div className="rf-balance-row"><div><span>DEMO CREDIT BALANCE</span><strong>{balance === null ? "—" : balance.toLocaleString()}</strong></div><div className="rf-bet-control"><label htmlFor="rf-bet">BET / SPIN</label><div><button disabled={busy} onClick={() => setBet(v => Math.max(1, Math.floor(v / 2)))} aria-label="Lower bet">−</button><strong>{bet.toLocaleString()}</strong><button disabled={busy} onClick={() => setBet(v => Math.min(100, v * 2))} aria-label="Raise bet">+</button></div></div></div>
     <div className="rf-action-row"><button className="rf-spin-button" disabled={busy || balance === null || balance < bet || mode === "real"} onClick={() => void play("spin")}>{busy && !bonus ? "SPINNING…" : <><span>✦</span> SPIN <small>{bet} CREDITS</small></>}</button><button className="rf-buy-button" disabled={busy || balance === null || balance < bet * 100 || mode === "real"} onClick={() => void play("buyBonus")}><Crown size={17}/><span>BUY BONUS<small>100× BET · { (bet * 100).toLocaleString() }</small></span></button></div>
     {error && <p className="rf-error" role="alert">{error}</p>}
     <p className={`rf-message ${result?.payout ? "is-win" : ""}`} aria-live="polite">{message}</p>
