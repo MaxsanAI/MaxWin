@@ -622,3 +622,151 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
  .rf-speed-panel button{padding:5px 7px;font-size:9px}
  .rf-action-row{grid-template-columns:1fr 1fr}
 }
+
+
+/* Royal Fortune: proper vertical symbol motion and centered main spin control */
+.rf-reel-spinning{
+  animation:none!important;
+  position:relative;
+  overflow:hidden;
+  filter:saturate(1.1);
+}
+.rf-reel-spinning::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:repeating-linear-gradient(to bottom,transparent 0%,#f9e9ff0b 8%,#ffffff18 13%,transparent 20%,transparent 27%);
+  background-size:100% 170%;
+  animation:rf-reel-streak .22s linear infinite;
+  opacity:.75;
+}
+.rf-symbol-art{
+  display:grid;
+  place-items:center;
+  min-height:0;
+  position:relative;
+  z-index:1;
+  flex:1 1 auto;
+}
+.rf-reel-spinning .rf-symbol-art{
+  animation:rf-symbol-roll .16s cubic-bezier(.2,.7,.2,1) infinite;
+  filter:blur(1.5px);
+}
+.rf-reel-spinning small{
+  position:relative;
+  z-index:1;
+  opacity:.55;
+}
+.rf-speed-slow .rf-reel-spinning .rf-symbol-art{animation-duration:.3s}
+.rf-speed-turbo .rf-reel-spinning .rf-symbol-art{animation-duration:.085s}
+.rf-speed-slow .rf-reel-spinning::after{animation-duration:.34s}
+.rf-speed-turbo .rf-reel-spinning::after{animation-duration:.12s}
+@keyframes rf-symbol-roll{
+  0%{transform:translateY(-145%) scaleY(.78);opacity:.35}
+  45%{transform:translateY(0) scaleY(1.08);opacity:1}
+  100%{transform:translateY(145%) scaleY(.78);opacity:.35}
+}
+@keyframes rf-reel-streak{
+  from{background-position:0 -100%}
+  to{background-position:0 100%}
+}
+.rf-reel:not(.rf-reel-spinning) .rf-symbol-art{
+  animation:rf-symbol-land .22s cubic-bezier(.16,1.2,.35,1) both;
+}
+@keyframes rf-symbol-land{
+  0%{transform:translateY(-12%) scaleY(.92)}
+  65%{transform:translateY(3%) scaleY(1.04)}
+  100%{transform:translateY(0) scaleY(1)}
+}
+.rf-action-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,320px)!important;
+  justify-content:center!important;
+  justify-items:stretch!important;
+  gap:10px!important;
+  margin-top:14px!important;
+}
+.rf-spin-button{
+  position:relative;
+  isolation:isolate;
+  width:100%;
+  min-height:76px!important;
+  overflow:hidden;
+  border:1px solid #ffe8a2!important;
+  border-radius:15px!important;
+  background:linear-gradient(115deg,#ffe9a0 0%,#e8b64d 27%,#fff0b8 49%,#bd7d26 72%,#ffe6a0 100%)!important;
+  background-size:220% 100%!important;
+  color:#28142c!important;
+  box-shadow:0 8px 0 #75451d,0 12px 32px #e5b54b40,inset 0 2px 0 #fff8d8!important;
+  font-size:clamp(20px,2vw,27px)!important;
+  font-weight:1000!important;
+  letter-spacing:2px!important;
+  text-shadow:0 1px #fff4c4;
+  animation:rf-spin-button-shine 4s ease-in-out infinite;
+  transition:transform .15s,filter .15s,box-shadow .15s!important;
+}
+.rf-spin-button::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:5px;
+  border:1px solid #fff6cc9c;
+  border-radius:10px;
+  pointer-events:none;
+}
+.rf-spin-button::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  width:120px;
+  height:150%;
+  top:-25%;
+  left:-45%;
+  transform:rotate(22deg);
+  background:linear-gradient(90deg,transparent,#ffffff88,transparent);
+  animation:rf-spin-sweep 3.6s ease-in-out infinite;
+  pointer-events:none;
+}
+.rf-spin-button>span:first-child{font-size:22px;margin-right:8px}
+.rf-spin-button small{
+  display:block;
+  margin-top:3px;
+  color:#55341b!important;
+  font-size:11px!important;
+  letter-spacing:1.1px!important;
+}
+.rf-spin-button:hover:not(:disabled){
+  transform:translateY(-2px);
+  filter:brightness(1.08);
+  box-shadow:0 10px 0 #75451d,0 16px 36px #e5b54b55,inset 0 2px 0 #fff8d8!important;
+}
+.rf-spin-button:active:not(:disabled){
+  transform:translateY(4px);
+  box-shadow:0 3px 0 #75451d,0 6px 18px #e5b54b30!important;
+}
+.rf-spin-button:disabled{filter:saturate(.55);opacity:.78}
+.rf-buy-button{
+  width:100%;
+  min-height:54px!important;
+  justify-content:center!important;
+  border-radius:11px!important;
+}
+@keyframes rf-spin-button-shine{
+  0%,75%,100%{background-position:0% 50%;filter:brightness(1)}
+  38%{background-position:100% 50%;filter:brightness(1.08)}
+}
+@keyframes rf-spin-sweep{
+  0%,20%{left:-45%;opacity:0}
+  35%{opacity:.8}
+  58%,100%{left:130%;opacity:0}
+}
+@media(max-width:720px){
+  .rf-action-row{grid-template-columns:minmax(0,300px)!important;gap:9px!important;margin-top:10px!important}
+  .rf-spin-button{min-height:68px!important;font-size:21px!important}
+  .rf-buy-button{min-height:48px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .rf-spin-button,.rf-spin-button::after,.rf-reel-spinning::after{animation:none!important}
+  .rf-reel-spinning .rf-symbol-art{animation:none!important;filter:blur(.5px)}
+}
