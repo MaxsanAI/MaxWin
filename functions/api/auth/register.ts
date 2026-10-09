@@ -1,4 +1,4 @@
-import { createSession, cookie, Env, hashPassword, json, randomToken, readJson, SESSION_MAX_AGE } from "./_shared";
+import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, randomToken, readJson, SESSION_MAX_AGE } from "./_shared";
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Account service is not configured yet." }, 503);
@@ -20,6 +20,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   }
 
   try {
+    await ensureAuthSchema(env.DB);
     const duplicate = await env.DB.prepare("SELECT id FROM users WHERE username_key = ? OR email = ? LIMIT 1")
       .bind(username.toLowerCase(), email).first<{ id: string }>();
     if (duplicate) return json({ error: "That username or email is already registered." }, 409);
