@@ -1,4 +1,5 @@
 import { Env, getUser, json } from "../auth/_shared";
+import { ensureFreeSpinSchema } from "./_free-spins";
 
 async function ensureProfileSchema(db: D1Database): Promise<void> {
   await db.prepare(`CREATE TABLE IF NOT EXISTS user_profiles (
@@ -25,11 +26,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!user) return json({ error: "Please log in to view your profile." }, 401);
   try {
     await ensureProfileSchema(env.DB);
-    const [profile, bonuses] = await Promise.all([
+    await ensureFreeSpinSchema(env.DB);
+    const now = new Date();
+    const fallbackNext = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString();
+    await env.DB.prepare("INSERT OR IGNORE INTO free_spin_wallets (user_id, available_spins, total_awarded, next_recurring_at, updated_at) VALUES (?, 0, 0, ?, ?)").bind(user.id, fallbackNext, now.toISOString()).run();
+    const [profile, bonuses, spinWallet, spinGrants] = await Promise.all([
       env.DB.prepare("SELECT avatar_data_url AS avatarDataUrl FROM user_profiles WHERE user_id = ? LIMIT 1").bind(user.id).first<{ avatarDataUrl: string | null }>(),
-      env.DB.prepare("SELECT id, title, amount, status, created_at FROM user_bonuses WHERE user_id = ? ORDER BY created_at DESC LIMIT 30").bind(user.id).all()
+      env.DB.prepare("SELECT id, title, amount, status, created_at FROM user_bonuses WHERE user_id = ? ORDER BY created_at DESC LIMIT 30").bind(user.id).all(),
+      env.DB.prepare("SELECT available_spins AS availableSpins, total_awarded AS totalAwarded, next_recurring_at AS nextRecurringAt FROM free_spin_wallets WHERE user_id = ? LIMIT 1").bind(user.id).first<{ availableSpins: number; totalAwarded: number; nextRecurringAt: string }>(),
+      env.DB.prepare("SELECT id, grant_type AS grantType, spins, created_at AS createdAt FROM free_spin_grants WHERE user_id = ? ORDER BY created_at DESC LIMIT 10").bind(user.id).all()
     ]);
-    return json({ profile: { avatarDataUrl: profile?.avatarDataUrl || null, bonuses: bonuses.results || [] } });
+    return json({ profile: { avatarDataUrl: profile?.avatarDataUrl || null, bonuses: bonuses.results || [], freeSpins: { available: spinWallet?.availableSpins || 0, totalAwarded: spinWallet?.totalAwarded || 0, nextRecurringAt: spinWallet?.nextRecurringAt || null, grants: spinGrants.results || [] } } });
   } catch (error) {
     console.error("[MAXWIN profile] Load failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not load your profile." }, 500);
