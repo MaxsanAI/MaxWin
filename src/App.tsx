@@ -82,7 +82,7 @@ function App() {
         <a href="#featured" onClick={() => setMobileMenu(false)}><Trophy size={16}/> Featured</a>
         <a href="#responsible" onClick={() => setMobileMenu(false)}><ShieldCheck size={16}/> Play responsibly</a>
       </nav>
-      <div className="header-actions"><button className="btn btn-ghost" onClick={() => authUser ? setModal("game") : openAuth("signin")}>{authUser ? authUser.username : "Log in"}</button>{!authUser && <button className="btn btn-gold" onClick={() => openAuth("register")}>Create account <span>→</span></button>}{authUser && <button className="btn btn-gold" onClick={logout}>Log out</button>}</div>
+      <div className="header-actions"><button className="btn btn-ghost" onClick={() => { if (authUser) { setSelectedGame(null); setModal("game"); } else openAuth("signin"); }}>{authUser ? authUser.username : "Log in"}</button>{!authUser && <button className="btn btn-gold" onClick={() => openAuth("register")}>Create account <span>→</span></button>}{authUser && <button className="btn btn-gold" onClick={logout}>Log out</button>}</div>
     </header>
     <main>
       <section className="hero" id="featured">
