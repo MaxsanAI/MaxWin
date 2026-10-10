@@ -919,3 +919,27 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 .rf-speed-panel>span{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .rf-sound-inline small{font-size:8px;letter-spacing:.3px}
 @media(max-width:720px){.rf-sound-inline{padding:4px 6px}.rf-sound-inline small{font-size:8px}}
+
+
+/* Royal Fortune Buy Bonus confirmation and completion dialogs */
+.rf-bonus-overlay{z-index:60}
+.rf-bonus-modal{text-align:center;max-width:440px}
+.rf-bonus-modal .modal-mark{margin:0 auto 18px}
+.rf-bonus-modal .eyebrow{justify-content:center}
+.rf-bonus-modal h2{margin:12px 0}
+.rf-bonus-modal>p{font-size:15px;line-height:1.65}
+.rf-bonus-price{display:grid;gap:7px;margin:20px 0 8px;padding:17px;border:1px solid #e9c87955;border-radius:12px;background:linear-gradient(135deg,#f3c96914,#9a72ff12)}
+.rf-bonus-price span{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#c9bedf}
+.rf-bonus-price strong{font:800 clamp(24px,5vw,32px)/1.2 Manrope,sans-serif;color:#ffe19a;overflow-wrap:anywhere}
+.rf-bonus-price small{font-size:12px;color:#a9a0bf}
+.rf-bonus-total{margin-top:18px}
+.rf-bonus-modal .modal-done{width:100%;min-height:48px}
+.rf-bonus-modal .auth-switch{margin-top:12px}
+.rf-bonus-win-modal .modal-mark{background:linear-gradient(135deg,#f5d77d30,#9b72ff24);color:#f7d782}
+.rf-bonus-win-modal h2{font-size:clamp(25px,5vw,34px)}
+.auth-form .upload-photo{position:relative;align-items:center;justify-content:space-between;gap:12px;min-height:48px}
+.auth-form .upload-photo>span:first-child{font-size:13px;font-weight:600;color:#e9e7f4}
+.auth-form .upload-photo .upload-photo-button{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:8px 13px;border:1px solid #c9a35b66;border-radius:8px;background:linear-gradient(110deg,#f3d38b,#dca94b);color:#241a20;font-size:12px;font-weight:800;white-space:nowrap}
+.auth-form .upload-photo .profile-file-input{position:absolute;inset:0;width:100%;height:100%;min-height:0;opacity:0;cursor:pointer;z-index:2;padding:0;border:0;background:transparent}
+.auth-form .upload-photo .profile-file-input:disabled{cursor:wait}
+@media(max-width:480px){.rf-bonus-modal{padding:25px 20px}.rf-bonus-price{padding:14px}}
