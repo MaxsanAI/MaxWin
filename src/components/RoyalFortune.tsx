@@ -29,7 +29,7 @@ export default function RoyalFortune(){
  </div>
  {result&&<div className={"rf-win-toast "+(result.payout>0?"has-win":"no-win")} role="status" aria-live="polite"><span className="rf-win-label">{result.payout>0?"✦ YOU WON":"LAST SPIN"}</span><strong>{result.payout>0?"+"+result.payout.toLocaleString():"NO WIN"}</strong><small>{result.payout>0?"DEMO CREDITS":result.mode==="buyBonus"?"BONUS ROUND COMPLETE":"Try your luck again"}</small></div>}
  <div className="rf-secondary-controls">
-  <div className="rf-speed-panel"><span><Gauge size={16}/> SPEED</span><div>{(["slow","normal","turbo"] as const).map(s=><button key={s} disabled={busy} className={speed===s?"active":""} onClick={()=>setSpeed(s)}>{s==="slow"?"SLOW":s==="normal"?"NORMAL":"TURBO"}</button>)}</div></div>
+  <div className="rf-speed-panel"><span><Gauge size={16}/> SPEED <button className="rf-icon-button rf-sound-inline" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Turn sound off":"Turn sound on"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}<small>{soundOn?"SOUND ON":"SOUND OFF"}</small></button></span><div>{(["slow","normal","turbo"] as const).map(s=><button key={s} disabled={busy} className={speed===s?"active":""} onClick={()=>setSpeed(s)}>{s==="slow"?"SLOW":s==="normal"?"NORMAL":"TURBO"}</button>)}</div></div>
   <button className="rf-buy-button" disabled={busy||balance===null||balance<bet*100||mode==="real"} onClick={()=>void play("buyBonus")}><Crown size={19}/><span>BUY BONUS<small>100× BET · {(bet*100).toLocaleString()}</small></span></button>
  </div>
  {error&&<p className="rf-error" role="alert">{error}</p>}
