@@ -884,3 +884,21 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
   .rf-main-controls .rf-spin-button{font-size:14px!important}
   .rf-secondary-controls .rf-speed-panel>span{font-size:8px}
 }
+
+
+/* Lobby play-mode selectors: keep demo/real choice on each game card. */
+.game-card{display:flex;flex-direction:column;min-width:0;text-align:left;padding:0;border:1px solid #b3a1ff16;border-radius:12px;overflow:hidden;background:#11162a;color:#f7f4ff;transition:transform .2s,border-color .2s,box-shadow .2s}
+.game-card:hover{transform:translateY(-3px);border-color:#aa88ff66;box-shadow:0 12px 35px #0003}
+.game-card-preview{display:block;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.game-card-preview:focus-visible,.game-mode-picker button:focus-visible{outline:2px solid #f3d18b;outline-offset:-3px}
+.game-card-preview .game-art{width:100%}
+.game-card-preview .game-info{width:100%;box-sizing:border-box}
+.game-mode-picker{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 9px 10px}
+.game-mode-picker button{display:flex;min-width:0;min-height:34px;align-items:center;justify-content:center;gap:4px;padding:7px 5px;border:1px solid #ffffff1c;border-radius:7px;font-size:clamp(9px,.8vw,11px);font-weight:900;letter-spacing:.25px;cursor:pointer;white-space:nowrap}
+.game-mode-demo{background:linear-gradient(135deg,#f3d18b,#b98135);border-color:#f3d18b!important;color:#24172a}
+.game-mode-real{background:#171526;color:#b7a8ce}
+.game-mode-real small{font-size:7px;letter-spacing:.5px;color:#ffca87}
+.game-mode-picker button:active{transform:translateY(1px)}
+/* Slot play view starts at the reels; the lobby owns the play-mode choice. */
+.modal-slot .rf-game-top,.modal-slot .rf-mode-tabs{display:none!important}
+@media(max-width:720px){.game-grid{gap:10px}.game-mode-picker{gap:5px;padding:0 7px 8px}.game-mode-picker button{font-size:9px;padding:7px 3px;min-height:32px}.game-mode-real small{font-size:6px}}
