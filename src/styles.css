@@ -1181,3 +1181,106 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 .book-of-ra-slot .bra-reel.rf-reel-spinning::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(to bottom,transparent 0%,#ffffff10 9%,transparent 18%,#d9b7ff0b 27%,transparent 36%);background-size:100% 180%;animation:bra-vertical-streaks .16s linear infinite}
 @keyframes bra-true-vertical-roll{0%{transform:translateY(-175%);opacity:.1}12%{opacity:.8}50%{transform:translateY(0%);opacity:1}88%{opacity:.8}100%{transform:translateY(175%);opacity:.1}}
 @keyframes bra-vertical-streaks{from{background-position:0 0}to{background-position:0 180%}}
+
+
+/* Book of Ra — compact professional desktop sizing: fit the whole machine without oversized controls. */
+@media (min-width: 721px) {
+  .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
+    padding: 12px !important;
+    align-items: center !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) {
+    width: min(900px, calc(100vw - 24px)) !important;
+    height: auto !important;
+    max-height: calc(100dvh - 24px) !important;
+    overflow-y: auto !important;
+    padding: 14px 18px 12px !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) > .rf-game {
+    gap: 7px !important;
+  }
+  .book-of-ra-slot { gap: 7px !important; }
+  .book-of-ra-slot .rf-game-top { min-height: 42px; }
+  .book-of-ra-slot .rf-emblem { width: 38px !important; height: 38px !important; flex-basis: 38px !important; }
+  .book-of-ra-slot .rf-emblem svg { width: 21px !important; height: 21px !important; }
+  .book-of-ra-slot .rf-title-lockup h3 { font-size: 19px !important; margin: 2px 0 !important; }
+  .book-of-ra-slot .rf-title-lockup p { font-size: 10px !important; margin: 2px 0 0 !important; }
+  .book-of-ra-slot .rf-eyebrow { font-size: 8px !important; letter-spacing: 1px !important; }
+  .book-of-ra-slot .rf-status { font-size: 8px !important; padding: 5px 7px !important; }
+  .book-of-ra-slot .rf-icon-button { min-height: 28px !important; padding: 5px 7px !important; font-size: 10px !important; }
+  .book-of-ra-slot .bra-cabinet { padding: 8px 10px 7px !important; }
+  .book-of-ra-slot .bra-cabinet .rf-cabinet-header { min-height: 18px; font-size: 9px !important; }
+  .book-of-ra-slot .bra-reel-window {
+    height: clamp(270px, 36vh, 350px) !important;
+    min-height: 270px !important;
+    max-height: 350px !important;
+    gap: 5px !important;
+    padding: 6px !important;
+    margin: 6px 0 !important;
+  }
+  .book-of-ra-slot .bra-reel { gap: 3px !important; padding: 4px 2px !important; border-radius: 7px !important; }
+  .book-of-ra-slot .bra-reel .rf-symbol-art svg {
+    width: clamp(34px, 3.5vw, 50px) !important;
+    height: clamp(34px, 3.5vw, 50px) !important;
+  }
+  .book-of-ra-slot .bra-reel small { font-size: 8px !important; }
+  .book-of-ra-slot .rf-machine-footer { font-size: 7px !important; gap: 6px !important; }
+  .book-of-ra-slot .bra-main-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(105px, .9fr) minmax(0, 1fr) !important;
+    gap: 7px !important;
+    margin-top: 3px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .rf-bet-control,
+  .book-of-ra-slot .bra-main-controls .rf-credit-panel {
+    min-height: 43px !important;
+    height: 43px !important;
+    padding: 4px 7px !important;
+    gap: 2px !important;
+    border-radius: 7px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .rf-bet-control label,
+  .book-of-ra-slot .bra-main-controls .rf-credit-panel > span { font-size: 7px !important; letter-spacing: .3px !important; }
+  .book-of-ra-slot .bra-main-controls .rf-bet-control > div { gap: 4px !important; }
+  .book-of-ra-slot .bra-main-controls .rf-bet-control button {
+    width: 19px !important; height: 19px !important; min-height: 19px !important;
+    padding: 0 !important; font-size: 12px !important; border-radius: 4px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .rf-bet-control strong { font-size: 12px !important; }
+  .book-of-ra-slot .bra-main-controls .rf-bet-control small,
+  .book-of-ra-slot .bra-main-controls .rf-credit-panel small { font-size: 7px !important; }
+  .book-of-ra-slot .bra-main-controls .rf-credit-panel strong { font-size: 17px !important; line-height: 1 !important; }
+  .book-of-ra-slot .bra-main-controls .rf-spin-button {
+    min-height: 43px !important; height: 43px !important; padding: 4px 6px !important;
+    gap: 2px !important; border-radius: 7px !important; font-size: 12px !important;
+    letter-spacing: .4px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .rf-spin-button > span:first-child svg { width: 12px !important; height: 12px !important; }
+  .book-of-ra-slot .bra-main-controls .rf-spin-button small { font-size: 7px !important; }
+  .book-of-ra-slot .bra-secondary-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto !important;
+    gap: 6px !important; margin-top: 2px !important;
+  }
+  .book-of-ra-slot .bra-secondary-controls .rf-speed-panel {
+    padding: 4px 6px !important; gap: 4px !important; border-radius: 7px !important;
+  }
+  .book-of-ra-slot .bra-secondary-controls .rf-speed-panel > span { font-size: 7px !important; }
+  .book-of-ra-slot .bra-secondary-controls .rf-speed-panel button {
+    min-height: 23px !important; padding: 3px 5px !important; font-size: 7px !important;
+  }
+  .book-of-ra-slot .bra-secondary-controls .rf-buy-button {
+    min-height: 34px !important; padding: 4px 7px !important; gap: 5px !important; border-radius: 7px !important;
+  }
+  .book-of-ra-slot .bra-secondary-controls .rf-buy-button svg { width: 12px !important; height: 12px !important; }
+  .book-of-ra-slot .bra-secondary-controls .rf-buy-button > span { font-size: 8px !important; }
+  .book-of-ra-slot .bra-secondary-controls .rf-buy-button small { font-size: 6px !important; }
+  .book-of-ra-slot .bra-secondary-controls .bra-paytable-toggle {
+    min-height: 34px !important; padding: 4px 7px !important; font-size: 7px !important;
+  }
+  .book-of-ra-slot .bra-message { font-size: 10px !important; margin: 1px 0 !important; min-height: 12px !important; }
+  .book-of-ra-slot .rf-last-result { padding: 6px 9px !important; }
+  .book-of-ra-slot .rf-last-result strong { font-size: 15px !important; }
+  .book-of-ra-slot .rf-last-result small,
+  .book-of-ra-slot .rf-last-result span { font-size: 8px !important; }
+  .book-of-ra-slot .rf-paytable summary { padding: 7px 9px !important; font-size: 9px !important; }
+  .book-of-ra-slot .rf-demo-disclaimer { font-size: 7px !important; margin-top: 1px !important; }
+}
