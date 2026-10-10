@@ -3,16 +3,16 @@ import { Env, getUser, json, readJson, randomToken } from "../auth/_shared";
 type SymbolName = "crown" | "gem" | "shield" | "coins" | "star" | "flame" | "zap" | "coin" | "wild" | "scatter";
 const SYMBOLS: SymbolName[] = ["crown", "gem", "shield", "coins", "star", "flame", "zap", "coin", "wild", "scatter"];
 
-// Multipliers are paid per active line. Bets use 5-credit increments.
+// Darežljivije isplate za demo: 3 simbola uvek vraćaju solidan deo ili više od uloga
 const PAYOUTS: Record<Exclude<SymbolName, "wild" | "scatter">, { 3: number; 4: number; 5: number }> = {
-  crown: { 3: 6, 4: 30, 5: 315 },
-  gem: { 3: 4, 4: 22, 5: 240 },
-  shield: { 3: 4, 4: 18, 5: 190 },
-  coins: { 3: 2, 4: 12, 5: 140 },
-  star: { 3: 2, 4: 10, 5: 110 },
-  flame: { 3: 2, 4: 8, 5: 85 },
-  zap: { 3: 1, 4: 5, 5: 60 },
-  coin: { 3: 1, 4: 2, 5: 35 },
+  crown: { 3: 15, 4: 50, 5: 350 },
+  gem: { 3: 12, 4: 40, 5: 280 },
+  shield: { 3: 10, 4: 30, 5: 220 },
+  coins: { 3: 8, 4: 20, 5: 160 },
+  star: { 3: 6, 4: 15, 5: 130 },
+  flame: { 3: 5, 4: 12, 5: 100 },
+  zap: { 3: 3, 4: 8, 5: 70 },
+  coin: { 3: 2, 4: 5, 5: 40 },
 };
 
 const PAYLINES: number[][] = [
@@ -20,9 +20,9 @@ const PAYLINES: number[][] = [
   [3,2,1,2,3], [0,0,1,2,2], [3,3,2,1,1], [1,0,0,0,1], [2,3,3,3,2],
 ];
 
-// Casino Protection Parameters
-const BUY_BONUS_MULTIPLIER = 75; // Standard cost for Buy Bonus: 75x total bet
-const MAX_WIN_MULTIPLIER = 1000;   // Maximum capped win per round: 1000x total bet
+// Olabavljeni parametri za demo verziju
+const DEMO_BUY_BONUS_MULTIPLIER = 30; // Jeftiniji Buy Bonus za demo (30x umesto 75x)
+const MAX_WIN_MULTIPLIER = 500;       // Razuman limit za demo
 
 async function ensureSchema(db: D1Database) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_features (user_id TEXT PRIMARY KEY, free_spins INTEGER NOT NULL DEFAULT 0, free_spin_bet INTEGER NOT NULL DEFAULT 10, updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
@@ -32,8 +32,7 @@ async function ensureSchema(db: D1Database) {
   await db.prepare("UPDATE royal_fortune_demo_features SET free_spins = 15 WHERE free_spins > 15").run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_wallets (user_id TEXT PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 1000 CHECK (balance >= 0), updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_settings (setting_key TEXT PRIMARY KEY, setting_value TEXT NOT NULL)`).run();
-  const demoBalanceMigration = await db.prepare("INSERT OR IGNORE INTO royal_fortune_demo_settings (setting_key, setting_value) VALUES ('initial_balance_v2', '1000')").run();
-  if (demoBalanceMigration.meta.changes > 0) await db.prepare("UPDATE royal_fortune_demo_wallets SET balance = 1000, updated_at = ? WHERE balance = 10000").bind(new Date().toISOString()).run();
+  await db.prepare("INSERT OR IGNORE INTO royal_fortune_demo_settings (setting_key, setting_value) VALUES ('initial_balance_v2', '1000')").run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_rounds (id TEXT PRIMARY KEY, request_id TEXT NOT NULL UNIQUE, user_id TEXT NOT NULL, action TEXT NOT NULL CHECK (action IN ('spin','buyBonus')), bet INTEGER NOT NULL, stake INTEGER NOT NULL, payout INTEGER NOT NULL DEFAULT 0, result_json TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_royal_fortune_rounds_user_created ON royal_fortune_demo_rounds(user_id, created_at DESC)").run();
 }
@@ -52,9 +51,9 @@ function randomIndex(max: number): number {
 }
 
 function spinReels(): SymbolName[] {
-  // Scatter probability set to 1.2% (12 out of 1000) for balanced RTP
+  // Povećana šansa za Scatter u demo modu na 3% po polju da se češće ulazi u bonus
   return Array.from({ length: 20 }, () => {
-    if (randomIndex(1000) < 12) return "scatter";
+    if (randomIndex(1000) < 30) return "scatter";
     const regularSymbols = SYMBOLS.filter(symbol => symbol !== "scatter");
     return regularSymbols[randomIndex(regularSymbols.length)];
   });
@@ -79,7 +78,11 @@ function evaluate(symbols: SymbolName[], totalBet: number) {
 
     if (count < 3) return;
     const regular = firstRegular as Exclude<SymbolName, "wild" | "scatter">;
-    const linePayout = Math.floor(lineBet * PAYOUTS[regular][count as 3 | 4 | 5]);
+    
+    // Računanje isplate: osiguravamo da čak i 3 slaba simbola vrate bar ulog ili više
+    const rawPayout = lineBet * PAYOUTS[regular][count as 3 | 4 | 5];
+    const linePayout = Math.max(Math.round(totalBet * 0.2), Math.floor(rawPayout));
+    
     if (linePayout <= 0) return;
 
     const positions = Array.from({ length: count }, (_, reel) => reel * 4 + line[reel]);
@@ -154,7 +157,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
     const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
-    const stake = action === "buyBonus" ? bet * BUY_BONUS_MULTIPLIER : isFreeSpin ? 0 : bet;
+    const stake = action === "buyBonus" ? bet * DEMO_BUY_BONUS_MULTIPLIER : isFreeSpin ? 0 : bet;
 
     if (action === "buyBonus" && freeSpinsBefore > 0) return json({ error: "Finish your current free-spin feature before buying another bonus." }, 409);
 
@@ -190,7 +193,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       freeSpinsAfter += awardedFreeSpins;
       if (awardedFreeSpins > 0) freeSpinBetAfter = effectiveBet;
     } else {
-      // Buy Bonus mode triggers a feature using BUY_BONUS_MULTIPLIER
       awardedFreeSpins = randomIndex(2) === 0 ? 8 : 12;
       bonusSpins = awardedFreeSpins;
 
@@ -221,7 +223,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       }
     }
 
-    // Apply Max Win Cap protection for Casino Risk Control
     const maxPayoutCap = effectiveBet * MAX_WIN_MULTIPLIER;
     if (payout > maxPayoutCap) {
       payout = maxPayoutCap;
