@@ -12,7 +12,7 @@ const PAYLINES: number[][] = [
   [1,1,1,1,1], [0,0,0,0,0], [2,2,2,2,2], [3,3,3,3,3], [0,1,2,1,0],
   [3,2,1,2,3], [0,0,1,2,2], [3,3,2,1,1], [1,0,0,0,1], [2,3,3,3,2],
 ];
-async async function ensureSchema(db: D1Database) {
+async function ensureSchema(db: D1Database) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_features (user_id TEXT PRIMARY KEY, free_spins INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
   // Repair inflated balances created by the previous overly-frequent scatter bug.
   await db.prepare("UPDATE royal_fortune_demo_features SET free_spins = 8 WHERE free_spins > 8").run();
