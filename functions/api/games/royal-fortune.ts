@@ -16,13 +16,16 @@ async function ensureSchema(db: D1Database) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_features (user_id TEXT PRIMARY KEY, free_spins INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
   // Repair inflated balances created by the previous overly-frequent scatter bug.
   await db.prepare("UPDATE royal_fortune_demo_features SET free_spins = 8 WHERE free_spins > 8").run();
-  await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_wallets (user_id TEXT PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 10000 CHECK (balance >= 0), updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_wallets (user_id TEXT PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 1000 CHECK (balance >= 0), updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_settings (setting_key TEXT PRIMARY KEY, setting_value TEXT NOT NULL)`).run();
+  const demoBalanceMigration = await db.prepare("INSERT OR IGNORE INTO royal_fortune_demo_settings (setting_key, setting_value) VALUES ('initial_balance_v2', '1000')").run();
+  if (demoBalanceMigration.meta.changes > 0) await db.prepare("UPDATE royal_fortune_demo_wallets SET balance = 1000, updated_at = ? WHERE balance = 10000").bind(new Date().toISOString()).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_rounds (id TEXT PRIMARY KEY, request_id TEXT NOT NULL UNIQUE, user_id TEXT NOT NULL, action TEXT NOT NULL CHECK (action IN ('spin','buyBonus')), bet INTEGER NOT NULL, stake INTEGER NOT NULL, payout INTEGER NOT NULL DEFAULT 0, result_json TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_royal_fortune_rounds_user_created ON royal_fortune_demo_rounds(user_id, created_at DESC)").run();
 }
 async function getOrCreateWallet(db: D1Database, userId: string) {
   const now = new Date().toISOString();
-  await db.prepare("INSERT OR IGNORE INTO royal_fortune_demo_wallets (user_id, balance, updated_at) VALUES (?, 10000, ?)").bind(userId, now).run();
+  await db.prepare("INSERT OR IGNORE INTO royal_fortune_demo_wallets (user_id, balance, updated_at) VALUES (?, 1000, ?)").bind(userId, now).run();
   return db.prepare("SELECT balance FROM royal_fortune_demo_wallets WHERE user_id = ? LIMIT 1").bind(userId).first<{ balance: number }>();
 }
 function randomIndex(max: number): number {
@@ -81,7 +84,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     await ensureSchema(env.DB);
     const wallet = await getOrCreateWallet(env.DB, user.id);
     const features = await env.DB.prepare("SELECT free_spins AS freeSpins FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number }>();
-    return json({ balance: Number(wallet?.balance ?? 0), freeSpins: Number(features?.freeSpins ?? 0), mode: "demo", cashValue: false, initialCredits: 10000 });
+    return json({ balance: Number(wallet?.balance ?? 0), freeSpins: Number(features?.freeSpins ?? 0), mode: "demo", cashValue: false, initialCredits: 1000 });
   } catch (error) {
     console.error("[Royal Fortune] Load failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not load Royal Fortune demo balance." }, 500);
@@ -97,7 +100,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const bet = Number(body.bet);
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
   if (!action) return json({ error: "Unknown game action." }, 400);
-  if (!Number.isSafeInteger(bet) || bet < 10 || bet > 100 || bet % 10 !== 0) return json({ error: "Bet must be 10 to 100 demo credits in steps of 10." }, 400);
+  if (!Number.isSafeInteger(bet) || bet < 5 || bet > 100 || bet % 5 !== 0) return json({ error: "Bet must be 5 to 100 demo credits in steps of 5." }, 400);
   if (!/^[a-f0-9-]{16,64}$/i.test(requestId)) return json({ error: "Refresh the game and try again." }, 400);
   try {
     await ensureSchema(env.DB);
