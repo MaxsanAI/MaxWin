@@ -131,11 +131,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
     const now = new Date().toISOString();
     const roundId = randomToken(16);
-    let last = playOne(bet);
+    let last = playOne(effectiveBet);
     let payout = 0;
     const bonusSpins = action === "buyBonus" ? 10 : 0;
     let awardedFreeSpins = 0;
     let freeSpinsAfter = freeSpinsBefore;
+    let freeSpinBetAfter = freeSpinBetBefore;
     const bonusBreakdown: { spin: number; symbols: SymbolName[]; payout: number; wins: typeof last.wins; winningPositions: number[]; outcome: string }[] = [];
     if (action === "spin") {
       payout = last.payout;
@@ -144,6 +145,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       // paid spin can award a new feature.
       awardedFreeSpins = freeSpinsBefore > 0 ? 0 : last.awardedFreeSpins;
       freeSpinsAfter += awardedFreeSpins;
+      if (awardedFreeSpins > 0) freeSpinBetAfter = effectiveBet;
     } else {
       for (let i = 0; i < bonusSpins; i++) {
         last = playOne(bet * 10);
@@ -160,6 +162,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         // if no free spins were already active when the purchase began.
         if (freeSpinsBefore === 0 && freeSpinsAfter === 0 && last.awardedFreeSpins > 0) {
           freeSpinsAfter += last.awardedFreeSpins;
+          freeSpinBetAfter = bet * 10;
           awardedFreeSpins = last.awardedFreeSpins;
         }
       }
@@ -168,7 +171,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       id: roundId,
       symbols: last.symbols,
       outcome: last.outcome,
-      bet,
+      bet: effectiveBet,
       stake,
       payout,
       mode: action,
@@ -178,7 +181,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       freeSpinsRemaining: freeSpinsAfter,
       ...(action === "buyBonus" ? { bonusSpins, bonusBreakdown } : {}),
     };
-    const inserted = await env.DB.prepare("INSERT OR IGNORE INTO royal_fortune_demo_rounds (id, request_id, user_id, action, bet, stake, payout, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").bind(roundId, requestId, user.id, action, bet, stake, payout, JSON.stringify(result), now).run();
+    const inserted = await env.DB.prepare("INSERT OR IGNORE INTO royal_fortune_demo_rounds (id, request_id, user_id, action, bet, stake, payout, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").bind(roundId, requestId, user.id, action, effectiveBet, stake, payout, JSON.stringify(result), now).run();
     if (!inserted.meta.changes) {
       const duplicate = await env.DB.prepare("SELECT result_json AS resultJson FROM royal_fortune_demo_rounds WHERE request_id = ? AND user_id = ? LIMIT 1").bind(requestId, user.id).first<{ resultJson: string }>();
       const latest = await getOrCreateWallet(env.DB, user.id);
