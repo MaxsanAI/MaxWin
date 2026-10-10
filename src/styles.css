@@ -967,3 +967,15 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
   .game-mode-picker button{min-height:40px;padding:9px 8px;font-size:11px;letter-spacing:.2px;white-space:normal;line-height:1.2}
   .game-mode-real small{font-size:8px}
 }
+
+
+/* Fix: preserve the square mobile Royal Fortune cover and keep the slot title row visible. */
+@media(max-width:720px){
+  .game-card-preview .game-art.royal-cover-art{height:auto!important;aspect-ratio:1/1!important;min-height:0!important;}
+  .royal-cover-art .royal-cover-picture{inset:0;width:100%;height:100%;}
+  .royal-cover-art .royal-cover-picture img{width:100%;height:100%;object-fit:contain;object-position:center;}
+  .game-card-preview .game-info{position:relative;display:flex!important;min-height:58px;align-items:center;justify-content:space-between;gap:10px;background:#11162a;}
+  .game-card-preview .game-info>span:first-child{display:block!important;min-width:0;}
+  .game-card-preview .game-info b{display:block!important;visibility:visible!important;color:#f7f4ff;font-size:16px!important;line-height:1.3;overflow-wrap:anywhere;}
+  .game-card-preview .game-info small{display:block!important;visibility:visible!important;color:#a0a6c1;font-size:12px!important;line-height:1.35;}
+}
