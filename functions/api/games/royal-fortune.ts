@@ -2,11 +2,20 @@ import { Env, getUser, json, readJson, randomToken } from "../auth/_shared";
 
 type SymbolName = "crown" | "gem" | "shield" | "coins" | "star" | "flame" | "zap" | "coin" | "wild" | "scatter";
 const SYMBOLS: SymbolName[] = ["crown", "gem", "shield", "coins", "star", "flame", "zap", "coin", "wild", "scatter"];
+// Multipliers are paid per active line. Calibrated against the current
+// 2.5% scatter distribution and 10-line evaluation; keep bets in 10-credit
+// increments so each line receives a whole-credit stake and payouts do not
+// suffer bet-size-dependent rounding bias. Estimated RTP is a simulation
+// target, not an independent certification.
 const PAYOUTS: Record<Exclude<SymbolName, "wild" | "scatter">, { 3: number; 4: number; 5: number }> = {
-  crown: { 3: 60, 4: 300, 5: 3250 }, gem: { 3: 45, 4: 225, 5: 2450 },
-  shield: { 3: 35, 4: 175, 5: 1900 }, coins: { 3: 25, 4: 125, 5: 1400 },
-  star: { 3: 20, 4: 100, 5: 1100 }, flame: { 3: 15, 4: 75, 5: 850 },
-  zap: { 3: 10, 4: 50, 5: 600 }, coin: { 3: 5, 4: 25, 5: 350 },
+  crown: { 3: 6, 4: 30, 5: 320 },
+  gem: { 3: 4, 4: 22, 5: 243 },
+  shield: { 3: 4, 4: 18, 5: 190 },
+  coins: { 3: 2, 4: 12, 5: 140 },
+  star: { 3: 2, 4: 10, 5: 110 },
+  flame: { 3: 2, 4: 8, 5: 85 },
+  zap: { 3: 1, 4: 5, 5: 60 },
+  coin: { 3: 1, 4: 2, 5: 35 },
 };
 const PAYLINES: number[][] = [
   [1,1,1,1,1], [0,0,0,0,0], [2,2,2,2,2], [3,3,3,3,3], [0,1,2,1,0],
@@ -101,7 +110,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const bet = Number(body.bet);
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
   if (!action) return json({ error: "Unknown game action." }, 400);
-  if (!Number.isSafeInteger(bet) || bet < 5 || bet > 100 || bet % 5 !== 0) return json({ error: "Bet must be 5 to 100 demo credits in steps of 5." }, 400);
+  if (!Number.isSafeInteger(bet) || bet < 10 || bet > 100 || bet % 10 !== 0) return json({ error: "Bet must be 10 to 100 demo credits in steps of 10." }, 400);
   if (!/^[a-f0-9-]{16,64}$/i.test(requestId)) return json({ error: "Refresh the game and try again." }, 400);
   try {
     await ensureSchema(env.DB);
@@ -123,26 +132,48 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const bonusSpins = action === "buyBonus" ? 10 : 0;
     let awardedFreeSpins = 0;
     let freeSpinsAfter = freeSpinsBefore;
+    const bonusBreakdown: { spin: number; symbols: SymbolName[]; payout: number; wins: typeof last.wins; winningPositions: number[]; outcome: string }[] = [];
     if (action === "spin") {
       payout = last.payout;
       if (isFreeSpin) freeSpinsAfter = Math.max(0, freeSpinsBefore - 1);
-      // No scatter retriggers while a free-spin feature is already active.
-      // Once the feature is fully used, a later paid spin can trigger it again.
+      // Free spins do not retrigger; the feature must finish before another
+      // paid spin can award a new feature.
       awardedFreeSpins = freeSpinsBefore > 0 ? 0 : last.awardedFreeSpins;
       freeSpinsAfter += awardedFreeSpins;
     } else {
       for (let i = 0; i < bonusSpins; i++) {
         last = playOne(bet * 10);
         payout += last.payout;
-        // A bonus purchase may award at most one free-spin feature, and only
-        // when no free spins were already waiting.
+        bonusBreakdown.push({
+          spin: i + 1,
+          symbols: last.symbols,
+          payout: last.payout,
+          wins: last.wins,
+          winningPositions: last.winningPositions,
+          outcome: last.outcome,
+        });
+        // Bonus purchase awards at most one free-spin feature, and only
+        // if no free spins were already active when the purchase began.
         if (freeSpinsBefore === 0 && freeSpinsAfter === 0 && last.awardedFreeSpins > 0) {
           freeSpinsAfter += last.awardedFreeSpins;
           awardedFreeSpins = last.awardedFreeSpins;
         }
       }
     }
-    const result = { id: roundId, symbols: last.symbols, outcome: last.outcome, bet, stake, payout, mode: action, wins: last.wins, winningPositions: last.winningPositions, awardedFreeSpins, freeSpinsRemaining: freeSpinsAfter, ...(action === "buyBonus" ? { bonusSpins } : {}) };
+    const result = {
+      id: roundId,
+      symbols: last.symbols,
+      outcome: last.outcome,
+      bet,
+      stake,
+      payout,
+      mode: action,
+      wins: last.wins,
+      winningPositions: last.winningPositions,
+      awardedFreeSpins,
+      freeSpinsRemaining: freeSpinsAfter,
+      ...(action === "buyBonus" ? { bonusSpins, bonusBreakdown } : {}),
+    };
     const inserted = await env.DB.prepare("INSERT OR IGNORE INTO royal_fortune_demo_rounds (id, request_id, user_id, action, bet, stake, payout, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").bind(roundId, requestId, user.id, action, bet, stake, payout, JSON.stringify(result), now).run();
     if (!inserted.meta.changes) {
       const duplicate = await env.DB.prepare("SELECT result_json AS resultJson FROM royal_fortune_demo_rounds WHERE request_id = ? AND user_id = ? LIMIT 1").bind(requestId, user.id).first<{ resultJson: string }>();
