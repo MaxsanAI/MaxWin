@@ -8,8 +8,8 @@ const SYMBOLS: SymbolName[] = ["crown", "gem", "shield", "coins", "star", "flame
 // suffer bet-size-dependent rounding bias. Estimated RTP is a simulation
 // target, not an independent certification.
 const PAYOUTS: Record<Exclude<SymbolName, "wild" | "scatter">, { 3: number; 4: number; 5: number }> = {
-  crown: { 3: 6, 4: 30, 5: 320 },
-  gem: { 3: 4, 4: 22, 5: 243 },
+  crown: { 3: 6, 4: 30, 5: 315 },
+  gem: { 3: 4, 4: 22, 5: 240 },
   shield: { 3: 4, 4: 18, 5: 190 },
   coins: { 3: 2, 4: 12, 5: 140 },
   star: { 3: 2, 4: 10, 5: 110 },
