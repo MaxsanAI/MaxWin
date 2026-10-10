@@ -152,9 +152,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       // The trigger board visibly contains either 3 or 4 Scatter symbols.
       awardedFreeSpins = randomIndex(2) === 0 ? 8 : 12;
       bonusSpins = awardedFreeSpins;
-      const triggerSymbols = spinReels();
-      const triggerPositions = Array.from({ length: 20 }, (_, index) => index).sort(() => randomIndex(2) ? 1 : -1).slice(0, awardedFreeSpins === 8 ? 3 : 4);
-      triggerPositions.forEach(position => { triggerSymbols[position] = "scatter"; });
+      const triggerSymbols = spinReels().map(symbol => symbol === "scatter" ? "crown" : symbol);
+      const triggerPositions = Array.from({ length: 20 }, (_, index) => index);
+      for (let i = triggerPositions.length - 1; i > 0; i--) {
+        const j = randomIndex(i + 1);
+        [triggerPositions[i], triggerPositions[j]] = [triggerPositions[j], triggerPositions[i]];
+      }
+      triggerPositions.slice(0, awardedFreeSpins === 8 ? 3 : 4).forEach(position => { triggerSymbols[position] = "scatter"; });
       resultSymbols = triggerSymbols;
       resultOutcome = "bonus-trigger";
       resultWins = [];
