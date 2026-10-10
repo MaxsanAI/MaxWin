@@ -770,3 +770,117 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
   .rf-spin-button,.rf-spin-button::after,.rf-reel-spinning::after{animation:none!important}
   .rf-reel-spinning .rf-symbol-art{animation:none!important;filter:blur(.5px)}
 }
+
+
+/* Royal Fortune: requested slot-floor control layout */
+.rf-main-controls{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(140px,1.15fr) minmax(0,1fr);
+  align-items:center;
+  gap:clamp(8px,1.2vw,16px);
+  margin-top:12px;
+}
+.rf-main-controls .rf-bet-control,
+.rf-main-controls .rf-credit-panel{
+  min-width:0;
+  min-height:76px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:6px;
+  padding:10px 11px;
+  border:1px solid #ffffff17;
+  border-radius:13px;
+  background:linear-gradient(145deg,#1c172c,#11101d);
+}
+.rf-main-controls .rf-bet-control{text-align:left}
+.rf-main-controls .rf-bet-control>div{gap:clamp(4px,.7vw,10px)}
+.rf-main-controls .rf-bet-control button{flex:0 0 auto;width:29px;height:29px}
+.rf-main-controls .rf-bet-control strong{flex:1;min-width:0;font-variant-numeric:tabular-nums}
+.rf-main-controls .rf-credit-panel strong{font-size:clamp(20px,2vw,29px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rf-main-controls .rf-spin-button{
+  min-width:0;
+  width:100%;
+  min-height:76px!important;
+  margin:0;
+}
+.rf-win-toast{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  margin-top:9px;
+  padding:9px 13px;
+  border:1px solid #ffffff1b;
+  border-radius:12px;
+  background:linear-gradient(100deg,#1a1729,#11121f);
+  box-shadow:0 5px 18px #0002;
+}
+.rf-win-toast.has-win{
+  border-color:#f4ce7b8c;
+  background:linear-gradient(100deg,#5c421f70,#211a31 68%,#171321);
+  box-shadow:0 0 22px #e9b84a19,inset 0 0 15px #f6d67b0b;
+  animation:rf-toast-pop .28s cubic-bezier(.16,1.25,.3,1) both;
+}
+.rf-win-toast.no-win{border-color:#ffffff12}
+.rf-win-label{font-size:10px;font-weight:1000;letter-spacing:1px;color:#e7d5a7;white-space:nowrap}
+.rf-win-toast.has-win .rf-win-label{color:#ffe7a1}
+.rf-win-toast strong{font:800 clamp(16px,1.8vw,22px)/1.1 Manrope,sans-serif;color:#f4f0ff;text-align:center;overflow-wrap:anywhere}
+.rf-win-toast.has-win strong{color:#ffe6a0;text-shadow:0 0 14px #e8bd5b36}
+.rf-win-toast small{font-size:9px;font-weight:800;letter-spacing:.5px;color:#a69bb8;text-align:right}
+.rf-secondary-controls{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(190px,.82fr);
+  align-items:stretch;
+  gap:10px;
+  margin-top:10px;
+}
+.rf-secondary-controls .rf-speed-panel{min-width:0;padding:9px 10px}
+.rf-secondary-controls .rf-speed-panel>span{font-size:11px}
+.rf-secondary-controls .rf-speed-panel button{padding:6px 10px;min-height:32px}
+.rf-secondary-controls .rf-buy-button{
+  min-width:0;
+  min-height:58px!important;
+  border-radius:13px!important;
+  border-color:#c49bff8a!important;
+  background:linear-gradient(115deg,#57377b,#302044 55%,#70449a)!important;
+  box-shadow:inset 0 1px #ffffff21,0 5px 18px #6d42a42b;
+}
+.rf-secondary-controls .rf-buy-button>span{font-size:12px}
+.rf-secondary-controls .rf-buy-button small{font-size:10px}
+@keyframes rf-toast-pop{from{transform:translateY(4px) scale(.98);opacity:.5}to{transform:translateY(0) scale(1);opacity:1}}
+@media(max-width:720px){
+  .rf-main-controls{grid-template-columns:minmax(0,1fr) minmax(94px,1.05fr) minmax(0,1fr);gap:5px;margin-top:8px}
+  .rf-main-controls .rf-bet-control,.rf-main-controls .rf-credit-panel{min-height:65px;padding:7px 6px;gap:5px;border-radius:9px}
+  .rf-main-controls .rf-bet-control label,.rf-main-controls .rf-credit-panel>span{font-size:8px;letter-spacing:.2px;white-space:nowrap}
+  .rf-main-controls .rf-bet-control>div{gap:3px}
+  .rf-main-controls .rf-bet-control button{width:22px;height:25px;font-size:16px;border-radius:5px}
+  .rf-main-controls .rf-bet-control strong{font-size:13px}
+  .rf-main-controls .rf-bet-control>small,.rf-main-controls .rf-credit-panel small{font-size:8px}
+  .rf-main-controls .rf-credit-panel strong{font-size:clamp(15px,4.3vw,21px)}
+  .rf-main-controls .rf-spin-button{min-height:65px!important;border-radius:10px!important;font-size:16px!important;letter-spacing:.7px!important}
+  .rf-main-controls .rf-spin-button>span:first-child{font-size:15px;margin-right:2px}
+  .rf-main-controls .rf-spin-button small{font-size:8px!important;letter-spacing:.3px!important}
+  .rf-win-toast{grid-template-columns:auto 1fr;gap:4px 8px;margin-top:7px;padding:8px 10px;border-radius:10px}
+  .rf-win-toast strong{grid-column:2;grid-row:1;font-size:18px;text-align:right}
+  .rf-win-toast small{grid-column:1 / -1;text-align:center;font-size:8px}
+  .rf-win-label{font-size:9px}
+  .rf-secondary-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin-top:8px}
+  .rf-secondary-controls .rf-speed-panel{flex-direction:column;align-items:stretch;justify-content:center;gap:5px;padding:7px}
+  .rf-secondary-controls .rf-speed-panel>span{font-size:9px}
+  .rf-secondary-controls .rf-speed-panel>div{justify-content:space-between;gap:2px}
+  .rf-secondary-controls .rf-speed-panel button{flex:1;padding:5px 3px;min-height:29px;font-size:8px}
+  .rf-secondary-controls .rf-buy-button{min-height:57px!important;padding:6px 4px;gap:5px;border-radius:10px!important}
+  .rf-secondary-controls .rf-buy-button svg{width:17px;height:17px}
+  .rf-secondary-controls .rf-buy-button>span{font-size:10px;gap:4px}
+  .rf-secondary-controls .rf-buy-button small{font-size:8px;letter-spacing:0}
+}
+@media(max-width:360px){
+  .rf-main-controls{grid-template-columns:minmax(0,1fr) minmax(85px,1fr) minmax(0,1fr);gap:4px}
+  .rf-main-controls .rf-bet-control,.rf-main-controls .rf-credit-panel{padding:6px 4px}
+  .rf-main-controls .rf-bet-control label,.rf-main-controls .rf-credit-panel>span{font-size:7px}
+  .rf-main-controls .rf-bet-control button{width:20px}
+  .rf-main-controls .rf-spin-button{font-size:14px!important}
+  .rf-secondary-controls .rf-speed-panel>span{font-size:8px}
+}
