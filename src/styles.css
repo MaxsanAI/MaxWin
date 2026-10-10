@@ -943,3 +943,12 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 .auth-form .upload-photo .profile-file-input{position:absolute;inset:0;width:100%;height:100%;min-height:0;opacity:0;cursor:pointer;z-index:2;padding:0;border:0;background:transparent}
 .auth-form .upload-photo .profile-file-input:disabled{cursor:wait}
 @media(max-width:480px){.rf-bonus-modal{padding:25px 20px}.rf-bonus-price{padding:14px}}
+
+
+/* Royal Fortune responsive promotional cover */
+.royal-cover-art:before{background:#171225!important}
+.royal-cover-art .art-glow,.royal-cover-art .art-symbol,.royal-cover-art .art-title{display:none!important}
+.royal-cover-picture{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:0;overflow:hidden}
+.royal-cover-picture img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.royal-cover-art .game-tag{z-index:2}
+.royal-cover-art .play-overlay{z-index:3}
