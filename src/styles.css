@@ -902,3 +902,9 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 /* Slot play view starts at the reels; the lobby owns the play-mode choice. */
 .modal-slot .rf-game-top,.modal-slot .rf-mode-tabs{display:none!important}
 @media(max-width:720px){.game-grid{gap:10px}.game-mode-picker{gap:5px;padding:0 7px 8px}.game-mode-picker button{font-size:9px;padding:7px 3px;min-height:32px}.game-mode-real small{font-size:6px}}
+
+/* Keep the Royal Fortune sound control visible inside the compact slot view. */
+.rf-sound-inline{display:inline-flex!important;align-items:center;gap:5px;padding:5px 7px;border:1px solid #f4c66a55;border-radius:7px;background:#f4c66a12;color:#f4d48d;flex-shrink:0}
+.rf-speed-panel>span{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rf-sound-inline small{font-size:8px;letter-spacing:.3px}
+@media(max-width:720px){.rf-sound-inline{padding:4px 6px}.rf-sound-inline small{font-size:8px}}
