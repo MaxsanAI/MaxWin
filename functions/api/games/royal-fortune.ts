@@ -126,8 +126,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const previous = await env.DB.prepare("SELECT result_json AS resultJson FROM royal_fortune_demo_rounds WHERE request_id = ? AND user_id = ? LIMIT 1").bind(requestId, user.id).first<{ resultJson: string }>();
     if (previous) {
       const balance = await getOrCreateWallet(env.DB, user.id);
-      const currentFeatures = await env.DB.prepare("SELECT free_spins AS freeSpins FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number }>();
-      return json({ result: JSON.parse(previous.resultJson), balance: Number(balance?.balance ?? 0), freeSpins: Number(currentFeatures?.freeSpins ?? 0), replayed: true, cashValue: false });
+      const currentFeatures = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number }>();
+      return json({ result: JSON.parse(previous.resultJson), balance: Number(balance?.balance ?? 0), freeSpins: Number(currentFeatures?.freeSpins ?? 0), freeSpinBet: Number(currentFeatures?.freeSpinBet ?? 10), replayed: true, cashValue: false });
     }
     const now = new Date().toISOString();
     const roundId = randomToken(16);
@@ -192,9 +192,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       await env.DB.prepare("DELETE FROM royal_fortune_demo_rounds WHERE id = ? AND user_id = ?").bind(roundId, user.id).run();
       return json({ error: "Not enough demo credits. Lower your bet or play more demo rounds." }, 409);
     }
-    await env.DB.prepare("INSERT INTO royal_fortune_demo_features (user_id, free_spins, updated_at) VALUES (?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET free_spins = excluded.free_spins, updated_at = excluded.updated_at").bind(user.id, freeSpinsAfter, now).run();
+    await env.DB.prepare("INSERT INTO royal_fortune_demo_features (user_id, free_spins, free_spin_bet, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET free_spins = excluded.free_spins, free_spin_bet = excluded.free_spin_bet, updated_at = excluded.updated_at").bind(user.id, freeSpinsAfter, freeSpinBetAfter, now).run();
     const latest = await getOrCreateWallet(env.DB, user.id);
-    return json({ result, balance: Number(latest?.balance ?? 0), freeSpins: freeSpinsAfter, replayed: false, cashValue: false, message: "Demo result recorded." });
+    return json({ result, balance: Number(latest?.balance ?? 0), freeSpins: freeSpinsAfter, freeSpinBet: freeSpinBetAfter, replayed: false, cashValue: false, message: "Demo result recorded." });
   } catch (error) {
     console.error("[Royal Fortune] Action failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not complete the demo action. Refresh and check your demo balance before retrying." }, 500);
