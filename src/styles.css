@@ -1129,3 +1129,45 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
  .book-of-ra-slot .bra-reel-window{height:clamp(265px,39vh,340px)!important;min-height:265px!important;max-height:340px!important}
  .book-of-ra-slot .bra-reel .rf-symbol-art svg{width:clamp(31px,7.8vw,43px)!important;height:clamp(31px,7.8vw,43px)!important}
 }
+
+
+/* Book of Ra desktop proportions: compact cabinet, taller reel cells */
+@media (min-width: 721px) {
+  .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) { padding: 16px !important; }
+  .modal-slot:has(.book-of-ra-slot) {
+    width: min(1040px, calc(100vw - 32px)) !important;
+    height: min(940px, calc(100dvh - 32px)) !important;
+    max-height: calc(100dvh - 32px) !important;
+    padding: 20px 22px 16px !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) > .rf-game {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: auto !important;
+  }
+  .book-of-ra-slot .bra-cabinet {
+    padding: 12px 13px 10px !important;
+  }
+  .book-of-ra-slot .bra-reel-window {
+    grid-auto-flow: column !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+    height: clamp(390px, 55vh, 520px) !important;
+    min-height: 390px !important;
+    max-height: 520px !important;
+    gap: clamp(7px, .8vw, 11px) !important;
+    padding: 9px !important;
+    margin: 10px 0 !important;
+  }
+  .book-of-ra-slot .bra-reel {
+    min-width: 0 !important;
+    padding: 8px 4px !important;
+  }
+  .book-of-ra-slot .bra-reel .rf-symbol-art svg {
+    width: clamp(52px, 5.6vw, 78px) !important;
+    height: clamp(52px, 5.6vw, 78px) !important;
+  }
+  .book-of-ra-slot .bra-reel small {
+    font-size: clamp(9px, .8vw, 12px) !important;
+  }
+}
