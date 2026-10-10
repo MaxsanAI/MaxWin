@@ -49,17 +49,18 @@ function evaluate(symbols: SymbolName[], totalBet: number) {
   const wins: { line: number; symbol: SymbolName; count: number; payout: number; positions: number[] }[] = [];
   const winningPositions = new Set<number>();
   PAYLINES.forEach((line, lineIndex) => {
-    let first = symbols[line[0]];
-    if (first === "wild") first = symbols[line[1]];
-    if (first === "wild" || first === "scatter") return;
-    let count = 1;
-    for (let reel = 1; reel < 5; reel++) {
-      const symbol = symbols[reel * 4 + line[reel]];
-      if (symbol !== first && symbol !== "wild") break;
+    // Read the five symbols on this payline from left to right.
+    const lineSymbols = line.map((row, reel) => symbols[reel * 4 + row]);
+    // WILD may lead a line; find the first regular symbol it can substitute for.
+    const firstRegular = lineSymbols.find(symbol => symbol !== "wild" && symbol !== "scatter");
+    if (!firstRegular) return;
+    let count = 0;
+    for (const symbol of lineSymbols) {
+      if (symbol !== firstRegular && symbol !== "wild") break;
       count++;
     }
     if (count < 3) return;
-    const regular = first as Exclude<SymbolName, "wild" | "scatter">;
+    const regular = firstRegular as Exclude<SymbolName, "wild" | "scatter">;
     const linePayout = Math.floor(lineBet * PAYOUTS[regular][count as 3 | 4 | 5]);
     if (linePayout <= 0) return;
     const positions = Array.from({ length: count }, (_, reel) => reel * 4 + line[reel]);
