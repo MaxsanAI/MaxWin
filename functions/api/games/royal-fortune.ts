@@ -95,8 +95,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureSchema(env.DB);
     const wallet = await getOrCreateWallet(env.DB, user.id);
-    const features = await env.DB.prepare("SELECT free_spins AS freeSpins FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number }>();
-    return json({ balance: Number(wallet?.balance ?? 0), freeSpins: Number(features?.freeSpins ?? 0), mode: "demo", cashValue: false, initialCredits: 1000 });
+    const features = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number }>();
+    return json({ balance: Number(wallet?.balance ?? 0), freeSpins: Number(features?.freeSpins ?? 0), freeSpinBet: Number(features?.freeSpinBet ?? 10), mode: "demo", cashValue: false, initialCredits: 1000 });
   } catch (error) {
     console.error("[Royal Fortune] Load failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not load Royal Fortune demo balance." }, 500);
@@ -117,9 +117,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureSchema(env.DB);
     await getOrCreateWallet(env.DB, user.id);
-    const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number }>();
+    const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number }>();
     const freeSpinsBefore = Number(featureRow?.freeSpins ?? 0);
+    const freeSpinBetBefore = Number(featureRow?.freeSpinBet ?? 10);
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
+    const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
     const stake = action === "buyBonus" ? bet * 100 : isFreeSpin ? 0 : bet;
     const previous = await env.DB.prepare("SELECT result_json AS resultJson FROM royal_fortune_demo_rounds WHERE request_id = ? AND user_id = ? LIMIT 1").bind(requestId, user.id).first<{ resultJson: string }>();
     if (previous) {
