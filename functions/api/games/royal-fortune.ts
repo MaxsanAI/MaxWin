@@ -2,11 +2,8 @@ import { Env, getUser, json, readJson, randomToken } from "../auth/_shared";
 
 type SymbolName = "crown" | "gem" | "shield" | "coins" | "star" | "flame" | "zap" | "coin" | "wild" | "scatter";
 const SYMBOLS: SymbolName[] = ["crown", "gem", "shield", "coins", "star", "flame", "zap", "coin", "wild", "scatter"];
-// Multipliers are paid per active line. Calibrated against the current
-// 2.5% scatter distribution and 10-line evaluation; keep bets in 10-credit
-// increments so each line receives a whole-credit stake and payouts do not
-// suffer bet-size-dependent rounding bias. Estimated RTP is a simulation
-// target, not an independent certification.
+// Multipliers are paid per active line. Bets use 5-credit increments.
+// RTP is not certified; do not display a guaranteed RTP claim until tested.
 const PAYOUTS: Record<Exclude<SymbolName, "wild" | "scatter">, { 3: number; 4: number; 5: number }> = {
   crown: { 3: 6, 4: 30, 5: 315 },
   gem: { 3: 4, 4: 22, 5: 240 },
@@ -112,7 +109,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const bet = Number(body.bet);
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
   if (!action) return json({ error: "Unknown game action." }, 400);
-  if (!Number.isSafeInteger(bet) || bet < 10 || bet > 100 || bet % 10 !== 0) return json({ error: "Bet must be 10 to 100 demo credits in steps of 10." }, 400);
+  if (!Number.isSafeInteger(bet) || bet < 5 || bet > 100 || bet % 5 !== 0) return json({ error: "Bet must be 5 to 100 demo credits in steps of 5." }, 400);
   if (!/^[a-f0-9-]{16,64}$/i.test(requestId)) return json({ error: "Refresh the game and try again." }, 400);
   try {
     await ensureSchema(env.DB);
@@ -122,7 +119,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const freeSpinBetBefore = Number(featureRow?.freeSpinBet ?? 10);
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
     const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
-    const stake = action === "buyBonus" ? bet * 100 : isFreeSpin ? 0 : bet;
+    const stake = action === "buyBonus" ? bet * 10 : isFreeSpin ? 0 : bet;
+    if (action === "buyBonus" && freeSpinsBefore > 0) return json({ error: "Finish your current free-spin feature before buying another bonus." }, 409);
     const previous = await env.DB.prepare("SELECT result_json AS resultJson FROM royal_fortune_demo_rounds WHERE request_id = ? AND user_id = ? LIMIT 1").bind(requestId, user.id).first<{ resultJson: string }>();
     if (previous) {
       const balance = await getOrCreateWallet(env.DB, user.id);
@@ -133,22 +131,36 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const roundId = randomToken(16);
     let last = playOne(effectiveBet);
     let payout = 0;
-    const bonusSpins = action === "buyBonus" ? 10 : 0;
+    let bonusSpins = 0;
     let awardedFreeSpins = 0;
     let freeSpinsAfter = freeSpinsBefore;
     let freeSpinBetAfter = freeSpinBetBefore;
+    let resultSymbols = last.symbols;
+    let resultOutcome = last.outcome;
+    let resultWins = last.wins;
+    let resultWinningPositions = last.winningPositions;
     const bonusBreakdown: { spin: number; symbols: SymbolName[]; payout: number; wins: typeof last.wins; winningPositions: number[]; outcome: string }[] = [];
     if (action === "spin") {
       payout = last.payout;
       if (isFreeSpin) freeSpinsAfter = Math.max(0, freeSpinsBefore - 1);
-      // Free spins do not retrigger; the feature must finish before another
-      // paid spin can award a new feature.
+      // A scatter feature cannot retrigger while free spins are active.
       awardedFreeSpins = freeSpinsBefore > 0 ? 0 : last.awardedFreeSpins;
       freeSpinsAfter += awardedFreeSpins;
       if (awardedFreeSpins > 0) freeSpinBetAfter = effectiveBet;
     } else {
+      // Buy Bonus costs 10x the selected bet and starts a feature directly.
+      // The trigger board visibly contains either 3 or 4 Scatter symbols.
+      awardedFreeSpins = randomIndex(2) === 0 ? 8 : 12;
+      bonusSpins = awardedFreeSpins;
+      const triggerSymbols = spinReels();
+      const triggerPositions = Array.from({ length: 20 }, (_, index) => index).sort(() => randomIndex(2) ? 1 : -1).slice(0, awardedFreeSpins === 8 ? 3 : 4);
+      triggerPositions.forEach(position => { triggerSymbols[position] = "scatter"; });
+      resultSymbols = triggerSymbols;
+      resultOutcome = "bonus-trigger";
+      resultWins = [];
+      resultWinningPositions = [];
       for (let i = 0; i < bonusSpins; i++) {
-        last = playOne(bet * 10);
+        last = playOne(bet);
         payout += last.payout;
         bonusBreakdown.push({
           spin: i + 1,
@@ -158,25 +170,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
           winningPositions: last.winningPositions,
           outcome: last.outcome,
         });
-        // Bonus purchase awards at most one free-spin feature, and only
-        // if no free spins were already active when the purchase began.
-        if (freeSpinsBefore === 0 && freeSpinsAfter === 0 && last.awardedFreeSpins > 0) {
-          freeSpinsAfter += last.awardedFreeSpins;
-          freeSpinBetAfter = bet * 10;
-          awardedFreeSpins = last.awardedFreeSpins;
-        }
       }
     }
     const result = {
       id: roundId,
-      symbols: last.symbols,
-      outcome: last.outcome,
-      bet: effectiveBet,
+      symbols: resultSymbols,
+      outcome: resultOutcome,
+      bet,
       stake,
       payout,
       mode: action,
-      wins: last.wins,
-      winningPositions: last.winningPositions,
+      wins: resultWins,
+      winningPositions: resultWinningPositions,
       awardedFreeSpins,
       freeSpinsRemaining: freeSpinsAfter,
       ...(action === "buyBonus" ? { bonusSpins, bonusBreakdown } : {}),
