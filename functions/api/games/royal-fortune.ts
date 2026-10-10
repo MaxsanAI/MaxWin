@@ -105,6 +105,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!user) return json({ error: "Log in to play Royal Fortune." }, 401);
   const body = await readJson(request);
   if (!body) return json({ error: "Submit a valid game action." }, 400);
+  if (body.action === "resetDemo") {
+    try {
+      await ensureSchema(env.DB);
+      await getOrCreateWallet(env.DB, user.id);
+      const now = new Date().toISOString();
+      await env.DB.prepare("UPDATE royal_fortune_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?").bind(now, user.id).run();
+      return json({ reset: true, balance: 1000, mode: "demo", cashValue: false });
+    } catch (error) {
+      console.error("[Royal Fortune] Demo reset failed:", error instanceof Error ? error.message : String(error));
+      return json({ error: "Could not reset demo credits. Please try again." }, 500);
+    }
+  }
   const action = body.action === "buyBonus" ? "buyBonus" : body.action === "spin" ? "spin" : null;
   const bet = Number(body.bet);
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
