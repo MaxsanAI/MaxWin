@@ -22,6 +22,7 @@ export default function BookOfRaSlot(){
  const [bet,setBet]=useState(5);
  const [result,setResult]=useState<SpinResult|null>(null);
  const [busy,setBusy]=useState(false);
+ const [reelStops,setReelStops]=useState(5);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("Choose your bet and spin the ancient reels.");
  const [soundOn,setSoundOn]=useState(false);
@@ -47,7 +48,7 @@ export default function BookOfRaSlot(){
   if(busy||balance===null)return;
   if(action==="buyBonus"&&balance<bet*75){setError("Not enough demo credits for Buy Bonus.");return;}
   if(action==="spin"&&freeSpins<=0&&balance<bet){setError("Not enough demo credits.");return;}
-  setBusy(true);setError("");setBuyConfirm(false);
+  setBusy(true);setError("");setBuyConfirm(false);setReelStops(0);
   setMessage(action==="buyBonus"?"Opening the Sacred Book…":freeSpins>0?"Free spin in progress…":"Reels spinning…");
   const pool:SymbolName[]=["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"];
   const interval=speed==="slow"?120:speed==="normal"?75:35;
@@ -57,11 +58,17 @@ export default function BookOfRaSlot(){
    const data=await res.json();
    if(!res.ok)throw new Error(data.error||"Spin failed.");
    if(rollTimer.current)clearInterval(rollTimer.current);
-   setDisplaySymbols(data.result.symbols);setResult(data.result);setBalance(Number(data.balance));setFreeSpins(Number(data.freeSpins||0));
+   const finalSymbols=data.result.symbols as SymbolName[];
+   for(let reel=0;reel<5;reel++){
+    await new Promise(resolve=>window.setTimeout(resolve,speed==="slow"?210:speed==="normal"?155:105));
+    setDisplaySymbols(current=>current.map((symbol,index)=>Math.floor(index/3)===reel?finalSymbols[index]:symbol));
+    setReelStops(reel+1);
+   }
+   setResult(data.result);setBalance(Number(data.balance));setFreeSpins(Number(data.freeSpins||0));
    if(data.expandingSymbol)setExpandingSymbol(data.expandingSymbol);
    setMessage(data.result.payout>0?"WIN · "+data.result.payout.toLocaleString()+" CREDITS":data.result.awardedFreeSpins?"SACRED BOOK TRIGGERED · "+data.result.awardedFreeSpins+" FREE SPINS":"No match this time. Try another spin.");
   }catch(e:unknown){setError(e instanceof Error?e.message:"Error during spin.");}
-  finally{if(rollTimer.current)clearInterval(rollTimer.current);setBusy(false);}
+  finally{if(rollTimer.current)clearInterval(rollTimer.current);setReelStops(5);setBusy(false);}
  };
  const winning=new Set(result?.winningPositions||[]);
 
