@@ -1171,3 +1171,13 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
     font-size: clamp(9px, .8vw, 12px) !important;
   }
 }
+
+
+/* Strong vertical reel travel for Book of Ra (not a symbol wobble) */
+.book-of-ra-slot .bra-reel-window{grid-auto-flow:column!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important}
+.book-of-ra-slot .bra-reel{position:relative;overflow:hidden!important}
+.book-of-ra-slot .bra-reel.rf-reel-spinning .rf-symbol-art{animation:bra-true-vertical-roll .22s linear infinite!important;will-change:transform,opacity}
+.book-of-ra-slot .bra-reel.rf-reel-spinning .rf-symbol-art svg{filter:blur(1.4px) brightness(1.18)!important}
+.book-of-ra-slot .bra-reel.rf-reel-spinning::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(to bottom,transparent 0%,#ffffff10 9%,transparent 18%,#d9b7ff0b 27%,transparent 36%);background-size:100% 180%;animation:bra-vertical-streaks .16s linear infinite}
+@keyframes bra-true-vertical-roll{0%{transform:translateY(-175%);opacity:.1}12%{opacity:.8}50%{transform:translateY(0%);opacity:1}88%{opacity:.8}100%{transform:translateY(175%);opacity:.1}}
+@keyframes bra-vertical-streaks{from{background-position:0 0}to{background-position:0 180%}}
