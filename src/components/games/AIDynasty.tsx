@@ -61,6 +61,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   const [holdBusy, setHoldBusy] = useState(false);
   const [boxingWinner, setBoxingWinner] = useState<"elon" | "altman" | null>(null);
   const [spinNumber, setSpinNumber] = useState(0);
+  const [stoppedReels, setStoppedReels] = useState<boolean[]>([true, true, true, true, true]);
 
   useEffect(() => {
     try { setSoundOn(localStorage.getItem("maxwin-ai-dynasty-sound") !== "off"); } catch { /* optional preference */ }
@@ -167,7 +168,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
 
   const spin = async () => {
     if (busy || (freeSpins <= 0 && balance < bet)) return;
-    setBusy(true); setWinningCells([]); setLastWin(0); setBonus(null); setBoxingWinner(null);
+    setBusy(true); setWinningCells([]); setLastWin(0); setBonus(null); setBoxingWinner(null); setStoppedReels([false, false, false, false, false]);
     const usingFreeSpin = freeSpins > 0;
     const stake = usingFreeSpin ? freeSpinBet : bet;
     if (!usingFreeSpin) setBalance((value) => value - bet);
@@ -179,6 +180,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     for (let reel = 0; reel < 5; reel++) {
       await new Promise((resolve) => window.setTimeout(resolve, (spinDuration / 5) + (speed === "normal" ? reel * 45 : 0)));
       setBoard((current) => current.map((column, index) => index === reel ? next[reel] : column));
+      setStoppedReels((current) => current.map((stopped, index) => index === reel ? true : stopped));
       playTone("stop");
     }
     const winning = new Set<string>();
@@ -303,7 +305,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     <section className="aid-machine">
       <div className="aid-machine-head"><span><i/> DYNASTY REELS</span><span>25 WAYS TO WIN <b>✦</b></span></div>
       <div className={"aid-reels" + (busy ? " aid-is-spinning" : "")} aria-label="Five reels with four symbols each">
-        {board.map((column, col) => <div className={"aid-reel-column" + (busy ? " aid-column-spin" : "")} key={col}>{column.map((symbolId, row) => { const symbol = SYMBOL_BY_ID[symbolId]; const isWinning = winningCells.includes(col+"-"+row); return <div key={col+"-"+row} className={"aid-symbol "+symbol.className+(isWinning?" aid-symbol-win":"")}><span className="aid-symbol-light"/><img className="aid-symbol-image" src={"/images/slots/ai-neon-dynasty/"+symbol.id+".jpg"} alt="" draggable={false} onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentElement?.classList.add("aid-symbol-no-image"); }} /><span className="aid-symbol-mark">{symbol.mark}</span></div>; })}</div>)}
+        {board.map((column, col) => <div className={"aid-reel-column" + (busy && !stoppedReels[col] ? " aid-column-spin" : "")} key={col}>{column.map((symbolId, row) => { const symbol = SYMBOL_BY_ID[symbolId]; const isWinning = winningCells.includes(col+"-"+row); return <div key={col+"-"+row} className={"aid-symbol "+symbol.className+(isWinning?" aid-symbol-win":"")}><span className="aid-symbol-light"/><img className="aid-symbol-image" src={"/images/slots/ai-neon-dynasty/"+symbol.id+".jpg"} alt="" draggable={false} onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentElement?.classList.add("aid-symbol-no-image"); }} /><span className="aid-symbol-mark">{symbol.mark}</span></div>; })}</div>)}
       </div>
       <div className="aid-machine-foot"><span>SCATTER BONUSES</span><span>WILD SUBSTITUTES</span><span>NEON ENERGY</span></div>
     </section>
