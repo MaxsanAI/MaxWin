@@ -1380,3 +1380,49 @@
   .aid-topbar { height: 0 !important; }
   .aid-back { position: relative !important; top: auto !important; left: auto !important; margin-bottom: 5px !important; }
 }
+
+
+/* Render supplied AI NEON DYNASTY artwork inside reel tiles; no text labels on symbols. */
+.aid-symbol {
+  position: relative;
+  isolation: isolate;
+}
+.aid-symbol-image {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: inherit;
+  user-select: none;
+  pointer-events: none;
+}
+.aid-symbol-mark,
+.aid-symbol > b {
+  display: none !important;
+}
+.aid-symbol-no-image .aid-symbol-mark {
+  position: relative;
+  z-index: 2;
+  display: grid !important;
+  place-items: center;
+  width: 70%;
+  height: 70%;
+  border: 1px solid var(--symbol-color, #a36bff);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, #ffffff2a, transparent 60%), linear-gradient(145deg, var(--symbol-glow, #5a367f), #11101e 80%);
+  color: var(--symbol-color, #e4d8ff);
+  font: 900 clamp(15px, 2.7vw, 29px)/1 Manrope, sans-serif;
+  text-shadow: 0 0 14px var(--symbol-glow, #a36bff);
+  box-shadow: 0 0 19px var(--symbol-glow, #a36bff22), inset 0 0 12px #ffffff10;
+}
+@media (max-width: 720px) {
+  .aid-symbol-no-image .aid-symbol-mark {
+    width: 70%;
+    height: 70%;
+    font-size: clamp(10px, 3.2vw, 16px);
+  }
+}
