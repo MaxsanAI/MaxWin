@@ -1340,3 +1340,43 @@
 .aid-game h2 { font-size: clamp(11px, .95vw, 15px) !important; }
 .aid-game h3,
 .aid-game .aid-subtitle { font-size: clamp(9px, .75vw, 12px) !important; }
+
+
+/* Remove the oversized header area; keep LOBBY and move DEMO/SOUND below controls. */
+.aid-brand,
+.aid-hero,
+.aid-game-meta,
+.aid-machine-head,
+.aid-machine-foot {
+  display: none !important;
+}
+.aid-topbar {
+  min-height: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.aid-back {
+  z-index: 4 !important;
+}
+.aid-bottom-tools {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 5px auto 0 !important;
+}
+.aid-bottom-tools .aid-demo-pill,
+.aid-bottom-tools .aid-sound {
+  min-height: 26px !important;
+  padding: 4px 9px !important;
+  font-size: 8px !important;
+}
+@media (min-width: 1000px) {
+  .aid-back { top: 68px !important; }
+}
+@media (max-width: 999px) {
+  .aid-topbar { height: 0 !important; }
+  .aid-back { position: relative !important; top: auto !important; left: auto !important; margin-bottom: 5px !important; }
+}
