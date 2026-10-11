@@ -1778,3 +1778,128 @@ html, body {
 @keyframes bra-gold-dust{0%{opacity:0;transform:scale(.45) rotate(0)}30%{opacity:1}100%{opacity:0;transform:scale(1.35) rotate(32deg)}}
 @media(max-width:720px){.book-cover-picture img{object-position:center}.book-of-ra-slot .bra-book-trigger:before{inset:-6px;background-size:18px 19px,25px 23px,29px 27px,22px 24px,25px 22px}}
 @media(prefers-reduced-motion:reduce){.book-of-ra-slot .bra-book-trigger,.book-of-ra-slot .bra-book-trigger:before{animation-duration:.01ms;animation-iteration-count:1}}
+
+
+/* Royal Fortune: edge-to-edge game stage, remove the outer cabinet/modal frames. */
+.modal-backdrop:has(.modal-slot .rf-cabinet) {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.modal-slot:has(.rf-cabinet) {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 14px clamp(12px, 2vw, 30px) 12px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: radial-gradient(ellipse at 50% 0, #38224f 0, transparent 54%), linear-gradient(145deg, #111022, #090b16 70%) !important;
+  overflow: hidden !important;
+}
+.modal-slot:has(.rf-cabinet) > .rf-game {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  padding: 0 0 10px !important;
+  gap: clamp(9px, 1.25vh, 14px) !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-cabinet {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-cabinet::before {
+  display: none !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-cabinet-header {
+  padding: 0 2px;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel-window {
+  width: 100% !important;
+  max-width: none !important;
+  height: clamp(420px, 59vh, 700px) !important;
+  min-height: 420px !important;
+  max-height: 700px !important;
+  margin: 8px 0 !important;
+  padding: clamp(4px, .65vw, 9px) !important;
+  gap: clamp(4px, .65vw, 9px) !important;
+  border: 1px solid #e9c56a4a !important;
+  border-radius: 10px !important;
+  box-shadow: inset 0 0 30px #000b !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel {
+  border-radius: 6px !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-symbol-art img {
+  max-width: 112px !important;
+  max-height: 112px !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+@media (max-width: 720px) {
+  .modal-backdrop:has(.modal-slot .rf-cabinet) {
+    position: fixed !important;
+    inset: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+  .modal-slot:has(.rf-cabinet) {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: max(7px, env(safe-area-inset-top)) 7px max(7px, env(safe-area-inset-bottom)) !important;
+  }
+  .modal-slot:has(.rf-cabinet) > .rf-game {
+    gap: 8px !important;
+    padding: 0 0 8px !important;
+  }
+  .modal-slot:has(.rf-cabinet) .rf-game-top {
+    padding-right: 34px !important;
+  }
+  .modal-slot:has(.rf-cabinet) .rf-cabinet {
+    padding: 0 !important;
+  }
+  .modal-slot:has(.rf-cabinet) .rf-reel-window {
+    height: clamp(300px, 43dvh, 430px) !important;
+    min-height: 300px !important;
+    max-height: 430px !important;
+    gap: 3px !important;
+    padding: 3px !important;
+    margin: 5px 0 !important;
+    border-radius: 5px !important;
+  }
+  .modal-slot:has(.rf-cabinet) .rf-reel {
+    padding: 3px 1px !important;
+    gap: 2px !important;
+    border-radius: 3px !important;
+  }
+  .modal-slot:has(.rf-cabinet) .rf-symbol-art img {
+    max-width: 94px !important;
+    max-height: 94px !important;
+  }
+  .modal-slot:has(.rf-cabinet) .rf-reel small {
+    font-size: clamp(6px, 1.7vw, 9px) !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+  }
+  .modal-slot:has(.rf-cabinet) .rf-machine-footer {
+    gap: 5px !important;
+    font-size: 6px !important;
+  }
+}
+@media (max-width: 380px) {
+  .modal-slot:has(.rf-cabinet) .rf-reel-window {
+    height: clamp(280px, 40dvh, 360px) !important;
+    min-height: 280px !important;
+  }
+}
