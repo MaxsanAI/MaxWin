@@ -109,7 +109,47 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
         window.setTimeout(() => void context.close(), 1500);
         return;
       }
-      const notes = kind === "bonus" ? [392,523,659,784,988] : kind === "win" ? [523,659,784,1047] : kind === "bell" ? [880,1174] : kind === "punch" ? [115,82,58] : kind === "stop" ? [220] : [160,210,260];
+      if (kind === "bell") {
+        // A low, layered metallic gong with a long resonant tail.
+        const now = context.currentTime;
+        [110, 164.8, 220, 277.2, 330, 392].forEach((frequency, index) => {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          const partialGain = [0.12, 0.075, 0.055, 0.035, 0.022, 0.014][index];
+          oscillator.type = index % 2 === 0 ? "sine" : "triangle";
+          oscillator.frequency.setValueAtTime(frequency, now);
+          oscillator.detune.setValueAtTime(index % 2 === 0 ? -5 : 7, now);
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.exponentialRampToValueAtTime(partialGain, now + 0.025);
+          gain.gain.exponentialRampToValueAtTime(partialGain * 0.48, now + 0.32);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8 + index * 0.12);
+          oscillator.connect(gain);
+          gain.connect(context.destination);
+          oscillator.start(now);
+          oscillator.stop(now + 3.05 + index * 0.12);
+        });
+        const clangLength = Math.floor(context.sampleRate * 0.65);
+        const clangBuffer = context.createBuffer(1, clangLength, context.sampleRate);
+        const clangData = clangBuffer.getChannelData(0);
+        for (let i = 0; i < clangLength; i++) clangData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (context.sampleRate * 0.12));
+        const clang = context.createBufferSource();
+        clang.buffer = clangBuffer;
+        const clangFilter = context.createBiquadFilter();
+        clangFilter.type = "lowpass";
+        clangFilter.frequency.value = 2400;
+        const clangGain = context.createGain();
+        clangGain.gain.setValueAtTime(0.0001, now);
+        clangGain.gain.exponentialRampToValueAtTime(0.055, now + 0.012);
+        clangGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+        clang.connect(clangFilter);
+        clangFilter.connect(clangGain);
+        clangGain.connect(context.destination);
+        clang.start(now);
+        clang.stop(now + 0.7);
+        window.setTimeout(() => void context.close(), 3600);
+        return;
+      }
+      const notes = kind === "bonus" ? [392,523,659,784,988] : kind === "win" ? [523,659,784,1047] : kind === "punch" ? [115,82,58] : kind === "stop" ? [220] : [160,210,260];
       notes.forEach((frequency, index) => {
         const oscillator = context.createOscillator();
         const gain = context.createGain();
