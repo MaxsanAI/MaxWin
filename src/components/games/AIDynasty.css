@@ -206,3 +206,26 @@
   .aid-holdwin-rocket { font-size:26px; }
   .aid-holdwin-panel { gap:5px; }
 }
+
+
+/* AI Dynasty: compact gold lobby control; reels and controls lead the screen. */
+.aid-topbar { margin-bottom:8px; min-height:34px; }
+.aid-back { flex:0 0 auto; min-height:30px; padding:6px 11px; border:1px solid #e8c46a99; border-radius:6px; background:linear-gradient(180deg,#ffe4a0 0%,#d7a64b 52%,#9b672b 100%); color:#33200d; box-shadow:0 3px 0 #754512,0 5px 12px #0005,inset 0 1px 0 #fff9d9; font-size:9px; font-weight:900; letter-spacing:.7px; }
+.aid-back svg { color:#4a2c0b; }
+.aid-back:hover { filter:brightness(1.08); transform:translateY(-1px); }
+.aid-hero { min-height:88px; padding:12px clamp(14px,2vw,24px); }
+.aid-hero h1 { margin:5px 0 2px; font-size:clamp(24px,3.4vw,38px); }
+.aid-hero p { margin-top:4px; font-size:10px; }
+.aid-hero-characters .aid-hero-portrait { width:38px; height:38px; }
+.aid-game-meta { padding-top:5px; padding-bottom:5px; }
+@media (max-width:600px) {
+ .aid-topbar { margin-bottom:5px; }
+ .aid-back { padding:6px 8px; font-size:8px; }
+ .aid-brand b { font-size:14px; }
+ .aid-hero { min-height:68px; padding:9px 10px; }
+ .aid-hero h1 { font-size:24px; letter-spacing:-1px; }
+ .aid-kicker { font-size:7px; letter-spacing:.7px; }
+ .aid-hero p { font-size:9px; }
+ .aid-hero-characters .aid-hero-portrait { width:29px; height:29px; }
+ .aid-hero-stamp { display:none; }
+}
