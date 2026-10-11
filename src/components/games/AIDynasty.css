@@ -900,3 +900,22 @@
 @media (max-width: 380px) {
   .aid-reels { height: clamp(225px, 34dvh, 285px) !important; }
 }
+
+
+/* Desktop only: park LOBBY beside the cabinet, aligned to its top edge. */
+@media (min-width: 1000px) {
+  .aid-game { position: relative; }
+  .aid-back {
+    position: absolute;
+    z-index: 3;
+    top: 51px;
+    left: max(0px, calc(50% - 500px));
+  }
+}
+@media (max-width: 999px) {
+  .aid-back {
+    position: static;
+    top: auto;
+    left: auto;
+  }
+}
