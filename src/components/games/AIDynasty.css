@@ -1994,3 +1994,85 @@
     animation-duration: 1.8s !important;
   }
 }
+
+
+/* Final requested controls: gold desktop lobby button without any arrow; hide it entirely on mobile. */
+@media (min-width: 721px) {
+  .aid-game .aid-topbar {
+    position: relative !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    margin: 0 auto 4px !important;
+    width: min(600px, 100%) !important;
+    overflow: visible !important;
+  }
+  .aid-game .aid-back {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 30px !important;
+    padding: 7px 15px !important;
+    border: 1px solid #ffe3a0 !important;
+    border-radius: 999px !important;
+    background: linear-gradient(135deg, #fff0b5 0%, #f6c453 35%, #b87912 72%, #ffe7a0 100%) !important;
+    color: #281604 !important;
+    font-weight: 900 !important;
+    font-size: 11px !important;
+    letter-spacing: 1.2px !important;
+    text-shadow: none !important;
+    box-shadow: 0 0 12px #f7c65b55, inset 0 1px 0 #fff8d9 !important;
+  }
+}
+@media (max-width: 720px) {
+  .aid-game .aid-topbar,
+  .aid-game .aid-back {
+    display: none !important;
+  }
+  .aid-game .aid-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 54px minmax(0, 1fr) minmax(0, 1fr) !important;
+    justify-items: center !important;
+    align-items: center !important;
+  }
+  .aid-game .aid-controls > .aid-spin {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: center !important;
+    align-self: center !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    padding: 4px 2px !important;
+    border: 2px solid #fff0b4 !important;
+    border-radius: 50% !important;
+    background: radial-gradient(circle at 32% 22%, #fff7d3 0%, #ffd66e 24%, #e9a928 57%, #9c5a08 100%) !important;
+    color: #281604 !important;
+    box-shadow: 0 0 10px #ffc64d99, 0 0 22px #e8a62d66, inset 0 2px 4px #fff8d8 !important;
+    font-size: 8px !important;
+    font-weight: 1000 !important;
+    text-shadow: 0 1px 0 #fff2c5 !important;
+    overflow: visible !important;
+  }
+  .aid-game .aid-controls > .aid-spin > span {
+    color: #5a3506 !important;
+    font-size: 10px !important;
+  }
+  .aid-game .aid-controls > .aid-spin small {
+    color: #4c2a04 !important;
+    font-size: 5px !important;
+    font-weight: 900 !important;
+  }
+  .aid-game .aid-controls > .aid-balance {
+    justify-self: stretch !important;
+    align-self: center !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
