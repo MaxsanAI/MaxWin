@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, AudioLines, Crown, Gauge, Info, RotateCcw, Sparkles, Volume2, VolumeX, Zap } from "lucide-react";
+import { ArrowLeft, AudioLines, Crown, Info, RotateCcw, Sparkles, Volume2, VolumeX, Zap } from "lucide-react";
 import "./AIDynasty.css";
 
 type SymbolId = "elon" | "trump" | "altman" | "snoop" | "bitcoin" | "rocket" | "wild" | "boxing";
@@ -267,7 +267,6 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       </div>
       <div className="aid-machine-foot"><span>SCATTER BONUSES</span><span>WILD SUBSTITUTES</span><span>NEON ENERGY</span></div>
     </section>
-    {freeSpins > 0 && <div className="aid-free-banner"><Sparkles size={18}/><span><b>{freeSpins} FREE SPINS REMAINING</b><small>Bonus stake locked at {freeSpinBet} demo credits. No stake deducted for a free spin.</small></span></div>}
     <div className="aid-controls">
       <div className="aid-bet-control"><label>BET / SPIN</label><div><button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.max(5, value - 5))}>−</button><strong>{bet}</strong><button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.min(100, value + 5))}>+</button></div><small>Demo credits</small></div>
       <div className="aid-speed"><span><AudioLines size={15}/> SPEED</span><div><button className={speed === "normal" ? "active" : ""} disabled={busy} onClick={() => setSpeed("normal")}>NORMAL</button><button className={speed === "turbo" ? "active" : ""} disabled={busy} onClick={() => setSpeed("turbo")}>TURBO</button></div></div>
@@ -275,8 +274,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       <div className="aid-balance"><span>BALANCE</span><strong>{balance.toLocaleString()}</strong><small>Demo credits</small></div>
       <button className="aid-reset" type="button" disabled={busy} onClick={resetDemo}><RotateCcw size={14}/> RESET DEMO</button>
     </div>
-    <section className="aid-hero"><div className="aid-hero-copy"><span className="aid-kicker"><Sparkles size={13}/> RULE THE FUTURE. OWN THE DYNASTY.</span><h1>AI <span>NEON DYNASTY</span></h1><p>Fame. Fortune. Full-throttle chaos.</p></div><div className="aid-orb aid-orb-one"/><div className="aid-orb aid-orb-two"/><div className="aid-hero-characters"><span className="aid-hero-portrait aid-portrait-elon">E</span><span className="aid-hero-portrait aid-portrait-trump">T</span><span className="aid-hero-portrait aid-portrait-altman">AI</span></div><div className="aid-hero-stamp">MAXWIN<br/><small>ORIGINALS</small></div></section>
-    <div className="aid-game-meta"><span><Zap size={14}/> 5 REELS · 4 ROWS</span><span><Crown size={14}/> 25 PAYLINES</span><span><Gauge size={14}/> DEMO CREDITS ONLY</span></div>
+    {freeSpins > 0 && <div className="aid-free-banner"><Sparkles size={18}/><span><b>{freeSpins} FREE SPINS REMAINING</b><small>Bonus stake locked at {freeSpinBet} demo credits. No stake deducted for a free spin.</small></span></div>}
     <div className={"aid-status" + (lastWin > 0 ? " aid-status-win" : "")} role="status" aria-live="polite"><span>{lastWin > 0 ? "LAST WIN" : "GAME STATUS"}</span><b>{message}</b><small>Demo-only outcomes · no monetary value · no real-money wagering</small></div>
     <details className="aid-paytable"><summary><Info size={15}/> PAYTABLE & BONUS RULES</summary><div className="aid-paytable-grid">{SYMBOLS.filter((symbol) => symbol.multiplier > 0).map((symbol) => <div key={symbol.id}><span className={"aid-pay-icon "+symbol.className}>{symbol.mark}</span><span><b>{symbol.label}</b><small>3 match: {symbol.multiplier}× · 4 match: {symbol.multiplier*2}× · 5 match: {symbol.multiplier*5}× base rate</small></span></div>)}</div><p>Wins are demo-only and generated locally. Three or more Trump symbols unlock the separate Trump Hold & Win rocket bonus. It starts with 3 respins; every newly locked credit card resets the counter to 3, and each card shows its credit value. Fill all 20 positions for MOON WIN, or collect the sum of locked cards when respins run out. Three or more Boxing Scatter symbols start the AI Boxing Arena: if Elon lands the final punch, 12 Free Spins are awarded; if Altman lands the final punch, 8 Free Spins are awarded. This demo RTP has not been independently certified.</p></details>
     <div className="aid-disclaimer">DEMO ONLY · NO DEPOSITS · NO CASH PAYOUTS · 18+</div>
