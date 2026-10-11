@@ -255,9 +255,10 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     }
     setBonusStep("fight");
     playTone("bell");
-    window.setTimeout(() => playTone("punch"), 500);
-    window.setTimeout(() => playTone("punch"), 1250);
-    await new Promise((resolve) => window.setTimeout(resolve, 2300));
+    window.setTimeout(() => playTone("punch"), 700);
+    window.setTimeout(() => playTone("punch"), 1750);
+    window.setTimeout(() => playTone("punch"), 2850);
+    await new Promise((resolve) => window.setTimeout(resolve, 4600));
 
     const winner = Math.random() < 0.5 ? "elon" : "altman";
     const awarded = winner === "elon" ? 10 : 7; // Umereni besplatni spinovi
