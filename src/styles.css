@@ -1903,3 +1903,62 @@ html, body {
     min-height: 280px !important;
   }
 }
+
+
+/* Book of Ra scroll fix: keep the full slot content reachable on short screens. */
+.modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+  align-items: flex-start !important;
+}
+.modal-slot:has(.book-of-ra-slot) {
+  min-height: 0 !important;
+  max-height: calc(100dvh - 24px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin !important;
+}
+.modal-slot:has(.book-of-ra-slot) > .rf-game {
+  flex: 0 0 auto !important;
+  min-height: max-content !important;
+  overflow: visible !important;
+}
+.modal-slot:has(.book-of-ra-slot) .bra-paytable {
+  scroll-margin-block: 14px;
+}
+@media (max-width: 720px) {
+  .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    padding: 0 !important;
+    touch-action: pan-y;
+  }
+  .modal-slot:has(.book-of-ra-slot) {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    touch-action: pan-y !important;
+    scrollbar-width: auto !important;
+    padding-bottom: max(18px, env(safe-area-inset-bottom)) !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) > .rf-game {
+    flex: 0 0 auto !important;
+    min-height: max-content !important;
+    overflow: visible !important;
+    padding-bottom: 18px !important;
+  }
+}
