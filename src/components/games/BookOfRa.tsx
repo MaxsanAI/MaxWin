@@ -152,7 +152,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
      return <div key={reel} className={"bra-reel-column"+(spinning?" is-spinning":"")+(busy&&!spinning?" is-stopping":"")}>
       <div className="bra-reel-viewport">
        <div className="bra-reel-strip" aria-hidden="true">{strip.map((name,index)=>{const item=symbolMeta[name]||symbolMeta.book;return <div key={index} className={"bra-strip-symbol "+item.className}><img src={"/images/book-of-ra/"+name+".jpg"} alt="" draggable={false} decoding="async"/></div>;})}</div>
-       <div className={"bra-final-column"+(spinning?" is-hidden":"")}>{finalColumn.map((name,row)=>{const i=reel*3+row;const item=symbolMeta[name]||symbolMeta.book;return <div key={i} className={"rf-reel bra-reel "+item.className+(winning.has(i)?" rf-reel-win":"")+(expandingPosition===i?" bra-cell-expanding":"")+(bonusReveal&&name==="book"?" bra-book-trigger":"")}><span className="rf-reel-glow"/><span className="rf-symbol-art"><img src={"/images/book-of-ra/"+name+".jpg"} alt={item.label} draggable={false} decoding="async"/></span><small>{item.label}</small></div>;})}</div>
+       <div className={"bra-final-column"+(spinning?" is-hidden":"")}>{finalColumn.map((name,row)=>{const i=reel*3+row;const item=symbolMeta[name]||symbolMeta.book;return <div key={i} className={"rf-reel bra-reel "+item.className+(winning.has(i)?" rf-reel-win":"")+(expandingPosition===i?" bra-cell-expanding":"")+(bonusReveal&&name==="book"?" bra-book-trigger":"")}><span className="rf-reel-glow"/><span className="rf-symbol-art"><img src={"/images/book-of-ra/"+name+".jpg"} alt={item.label} draggable={false} decoding="async"/></span></div>;})}</div>
       </div>
      </div>;
     })}
