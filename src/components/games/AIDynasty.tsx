@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, AudioLines, Info, RotateCcw, Sparkles, Volume2, VolumeX } from "lucide-react";
 import "./AIDynasty.css";
 
@@ -28,17 +28,17 @@ const PAYLINES: number[][] = [
   [0,2,1,2,0],[3,1,2,1,3],[1,0,1,0,1],[2,3,2,3,2],[0,3,1,3,0],
 ];
 
-// Matemački kontrolisan Random (RTP Control)
+// Matematički korigovane verovatnoće za ~95% RTP (House Edge ~5%)
 const randomSymbol = (): SymbolId => {
   const roll = Math.random();
-  if (roll < 0.08) return "elon";       // 8%  (Najjači)
-  if (roll < 0.18) return "trump";      // 10%
-  if (roll < 0.31) return "altman";     // 13%
-  if (roll < 0.47) return "snoop";      // 16%
-  if (roll < 0.65) return "bitcoin";    // 18%
-  if (roll < 0.88) return "rocket";     // 23% (Slabiji simbol)
-  if (roll < 0.94) return "wild";       // 6%  (Smanjen sa 11%)
-  return "boxing";                      // 6%  (Bonus scatter)
+  if (roll < 0.035) return "elon";      // 3.5% (Najjači simbol)
+  if (roll < 0.080) return "trump";     // 4.5%
+  if (roll < 0.140) return "altman";    // 6.0%
+  if (roll < 0.220) return "snoop";     // 8.0%
+  if (roll < 0.320) return "bitcoin";   // 10.0%
+  if (roll < 0.600) return "rocket";    // 28.0% (Mali simbol)
+  if (roll < 0.820) return "wild";      // 22.0% (Wild za linije)
+  return "boxing";                      // 18.0% (Scatter za bonus)
 };
 
 const makeBoard = (): SymbolId[][] => Array.from({ length: 5 }, () => Array.from({ length: 4 }, randomSymbol));
@@ -189,7 +189,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     let payout = 0;
     const betPerLine = stake / PAYLINES.length;
 
-    // Proračun isplata po linijama (Sleva na desno, bez deljenja ukupne sume)
+    // Korigovan obračun po linijama za balansiranu matematiku kazina
     PAYLINES.forEach((line) => {
       const lineSymbols = line.map((row, col) => next[col][row]);
       const firstRealSymbol = lineSymbols.find((symbol) => symbol !== "wild" && symbol !== "boxing");
@@ -204,18 +204,20 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
           count++;
           positions.push(col + "-" + line[col]);
         } else {
-          break; // Prekid čim nema slaganja
+          break;
         }
       }
 
       if (count >= 3) {
         const baseMultiplier = SYMBOL_BY_ID[firstRealSymbol].multiplier;
-        // Množioci po linijama: 3x da daju mali dobitak, 4x umeren, 5x jak
-        const scale = count === 3 ? 0.7 : count === 4 ? 2.2 : 6.0;
+        // Skala prilagođena realnim slot mašinama (RTP ~95%)
+        const scale = count === 3 ? 0.35 : count === 4 ? 1.2 : 3.5;
         const linePayout = Math.round(betPerLine * baseMultiplier * scale);
         
-        payout += linePayout;
-        positions.forEach((position) => winning.add(position));
+        if (linePayout > 0) {
+          payout += linePayout;
+          positions.forEach((position) => winning.add(position));
+        }
       }
     });
 
@@ -261,7 +263,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     await new Promise((resolve) => window.setTimeout(resolve, 4600));
 
     const winner = Math.random() < 0.5 ? "elon" : "altman";
-    const awarded = winner === "elon" ? 10 : 7; // Umereni besplatni spinovi
+    const awarded = winner === "elon" ? 10 : 7;
     setBoxingWinner(winner);
     playTone("crowd");
     setFreeSpinBet(bet);
@@ -282,7 +284,6 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       let locked = 0;
 
       for (let i = 0; i < nextCards.length; i++) {
-        // Kontrolisana šansa zaključavanja kartice (6.5%)
         if (nextCards[i] === null && Math.random() < 0.065) {
           nextCards[i] = bet * cardMultipliers[Math.floor(Math.random() * cardMultipliers.length)];
           locked++;
@@ -326,40 +327,229 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   const closeBonus = () => { setBonus(null); setBonusStep("intro"); setBoxingWinner(null); setHoldCards(Array(20).fill(null)); setHoldSpins(3); setHoldBusy(false); };
   const resetDemo = () => { if (busy) return; setBalance(1000); setBet(10); setFreeSpins(0); setFreeSpinBet(10); setLastWin(0); setWinningCells([]); setMessage("DEMO RESET · 1,000 CREDITS READY 🔄"); setBonus(null); setBoxingWinner(null); };
 
-  return <div className="aid-game">
-    <div className="aid-topbar"><button className="aid-back" type="button" onClick={onBackToLobby}><ArrowLeft size={16}/> LOBBY</button></div>
-    <section className="aid-machine">
-      <div className="aid-machine-head"><span><i/> DYNASTY REELS</span><span>25 WAYS TO WIN <b>✦</b></span></div>
-      <div className={"aid-reels" + (busy ? " aid-is-spinning" : "")} aria-label="Five reels with four symbols each">
-        {board.map((column, col) => <div className={"aid-reel-column" + (busy && !stoppedReels[col] ? " aid-column-spin" : "")} key={col}>{column.map((symbolId, row) => { const symbol = SYMBOL_BY_ID[symbolId]; const isWinning = winningCells.includes(col+"-"+row); return <div key={col+"-"+row} className={"aid-symbol "+symbol.className+(isWinning?" aid-symbol-win":"")}><span className="aid-symbol-light"/><img className="aid-symbol-image" src={"/images/slots/ai-neon-dynasty/"+symbol.id+".jpg"} alt="" draggable={false} onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentElement?.classList.add("aid-symbol-no-image"); }} /><span className="aid-symbol-mark">{symbol.mark}</span></div>; })}</div>)}
+  return (
+    <div className="aid-game">
+      <div className="aid-topbar">
+        <button className="aid-back" type="button" onClick={onBackToLobby}>
+          <ArrowLeft size={16}/> LOBBY
+        </button>
       </div>
-      <div className="aid-machine-foot"><span>SCATTER BONUSES</span><span>WILD SUBSTITUTES</span><span>NEON ENERGY</span></div>
-    </section>
-    <div className="aid-controls">
-      <div className="aid-bet-control"><label>BET / SPIN</label><div><button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.max(5, value - 5))}>−</button><strong>{bet}</strong><button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.min(100, value + 5))}>+</button></div><small>Demo credits</small></div>
-      <div className="aid-speed"><span><AudioLines size={15}/> SPEED</span><div><button className={speed === "normal" ? "active" : ""} disabled={busy} onClick={() => setSpeed("normal")}>NORMAL</button><button className={speed === "turbo" ? "active" : ""} disabled={busy} onClick={() => setSpeed("turbo")}>TURBO</button></div></div>
-      <button className="aid-spin" type="button" disabled={busy || (freeSpins <= 0 && balance < bet)} onClick={() => void spin()}>{busy ? <><span className="aid-spinner"/> SPINNING</> : <><span>✦</span> {freeSpins > 0 ? "FREE SPIN" : "SPIN"}<small>{freeSpins > 0 ? freeSpins+" LEFT" : bet+" CREDITS"}</small></>}</button>
-      <div className="aid-balance"><span>BALANCE</span><strong>{balance.toLocaleString()}</strong><small>Demo credits</small></div>
-      <button className="aid-reset" type="button" disabled={busy} onClick={resetDemo}><RotateCcw size={14}/> RESET DEMO</button>
+
+      <section className="aid-machine">
+        <div className="aid-machine-head">
+          <span><i/> DYNASTY REELS</span>
+          <span>25 WAYS TO WIN <b>✦</b></span>
+        </div>
+
+        <div className={"aid-reels" + (busy ? " aid-is-spinning" : "")} aria-label="Five reels with four symbols each">
+          {board.map((column, col) => (
+            <div className={"aid-reel-column" + (busy && !stoppedReels[col] ? " aid-column-spin" : "")} key={col}>
+              {column.map((symbolId, row) => { 
+                const symbol = SYMBOL_BY_ID[symbolId]; 
+                const isWinning = winningCells.includes(col+"-"+row); 
+                return (
+                  <div key={col+"-"+row} className={"aid-symbol "+symbol.className+(isWinning?" aid-symbol-win":"")}>
+                    <span className="aid-symbol-light"/>
+                    <img 
+                      className="aid-symbol-image" 
+                      src={"/images/slots/ai-neon-dynasty/"+symbol.id+".jpg"} 
+                      alt="" 
+                      draggable={false} 
+                      onError={(event) => { 
+                        event.currentTarget.style.display = "none"; 
+                        event.currentTarget.parentElement?.classList.add("aid-symbol-no-image"); 
+                      }} 
+                    />
+                    <span className="aid-symbol-mark">{symbol.mark}</span>
+                  </div>
+                ); 
+              })}
+            </div>
+          ))}
+        </div>
+
+        <div className="aid-machine-foot">
+          <span>SCATTER BONUSES</span>
+          <span>WILD SUBSTITUTES</span>
+          <span>NEON ENERGY</span>
+        </div>
+      </section>
+
+      <div className="aid-controls">
+        <div className="aid-bet-control">
+          <label>BET / SPIN</label>
+          <div>
+            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.max(5, value - 5))}>−</button>
+            <strong>{bet}</strong>
+            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.min(100, value + 5))}>+</button>
+          </div>
+          <small>Demo credits</small>
+        </div>
+
+        <div className="aid-speed">
+          <span><AudioLines size={15}/> SPEED</span>
+          <div>
+            <button className={speed === "normal" ? "active" : ""} disabled={busy} onClick={() => setSpeed("normal")}>NORMAL</button>
+            <button className={speed === "turbo" ? "active" : ""} disabled={busy} onClick={() => setSpeed("turbo")}>TURBO</button>
+          </div>
+        </div>
+
+        <button className="aid-spin" type="button" disabled={busy || (freeSpins <= 0 && balance < bet)} onClick={() => void spin()}>
+          {busy ? <><span className="aid-spinner"/> SPINNING</> : <><span>✦</span> {freeSpins > 0 ? "FREE SPIN" : "SPIN"}<small>{freeSpins > 0 ? freeSpins+" LEFT" : bet+" CREDITS"}</small></>}
+        </button>
+
+        <div className="aid-balance">
+          <span>BALANCE</span>
+          <strong>{balance.toLocaleString()}</strong>
+          <small>Demo credits</small>
+        </div>
+
+        <button className="aid-reset" type="button" disabled={busy} onClick={resetDemo}>
+          <RotateCcw size={14}/> RESET DEMO
+        </button>
+      </div>
+
+      <div className="aid-bottom-tools">
+        <span className="aid-demo-pill"><i/> DEMO</span>
+        <button className="aid-sound" type="button" onClick={() => setSoundOn((value) => !value)} aria-label={soundOn ? "Turn sound off" : "Turn sound on"}>
+          {soundOn ? <Volume2 size={16}/> : <VolumeX size={16}/>} SOUND
+        </button>
+      </div>
+
+      {freeSpins > 0 && (
+        <div className="aid-free-banner">
+          <Sparkles size={18}/>
+          <span>
+            <b>{freeSpins} FREE SPINS REMAINING ✨</b>
+            <small>Bonus stake locked at {freeSpinBet} demo credits. No stake deducted for a free spin.</small>
+          </span>
+        </div>
+      )}
+
+      <div className={"aid-status" + (lastWin > 0 ? " aid-status-win" : "")} role="status" aria-live="polite">
+        <span>{lastWin > 0 ? "LAST WIN" : "GAME STATUS"}</span>
+        <b>{message}</b>
+        <small>Demo-only outcomes · no monetary value · no real-money wagering</small>
+      </div>
+
+      <details className="aid-paytable">
+        <summary><Info size={15}/> PAYTABLE & BONUS RULES</summary>
+        <div className="aid-paytable-grid">
+          {SYMBOLS.filter((symbol) => symbol.multiplier > 0).map((symbol) => (
+            <div key={symbol.id}>
+              <span className={"aid-pay-icon "+symbol.className}>{symbol.mark}</span>
+              <span>
+                <b>{symbol.label}</b>
+                <small>3 match: {symbol.multiplier}× · 4 match: {symbol.multiplier*2}× · 5 match: {symbol.multiplier*5}× base rate</small>
+              </span>
+            </div>
+          ))}
+        </div>
+        <p>Wins are demo-only and generated locally. Four or more Trump symbols unlock the separate Trump Hold & Win rocket bonus. It starts with 3 respins; every newly locked credit card resets the counter to 3, and each card shows its credit value. Fill all 20 positions for MOON WIN, or collect the sum of locked cards when respins run out. Three or more Boxing Scatter symbols start the AI Boxing Arena: if Elon lands the final punch, 10 Free Spins are awarded; if Altman lands the final punch, 7 Free Spins are awarded. RTP is mathematically balanced to ~95%.</p>
+      </details>
+
+      <div className="aid-disclaimer">DEMO ONLY · NO DEPOSITS · NO CASH PAYOUTS · 18+</div>
+
+      {bonus && (
+        <div className="aid-bonus-backdrop">
+          <section className={"aid-bonus-modal "+(bonus==="boxing"?"aid-bonus-boxing":"aid-bonus-rocket")} role="dialog" aria-modal="true" aria-labelledby="aid-bonus-title">
+            <div className="aid-bonus-stars"/>
+            <div className="aid-bonus-kicker">{bonus === "boxing" ? "AI NEON DYNASTY · MAIN EVENT 🥊" : "TRUMP ROCKET · HOLD & WIN 🚀"}</div>
+            <h2 id="aid-bonus-title">{bonus === "boxing" ? "AI BOXING ARENA" : "TRUMP HOLD & WIN"}</h2>
+
+            {bonusStep === "intro" && (
+              <>
+                <p>{bonus === "boxing" ? "Two AI titans. One neon ring. Who lands the final punch?" : "Lock credit cards, reset the three respins, and fill the frame to reach the Moon."}</p>
+                <div className="aid-bonus-visual">
+                  {bonus === "boxing" ? (
+                    <>
+                      <div className="aid-boxer aid-boxer-elon"><img src="/images/slots/ai-neon-dynasty/boxing-elon.png" alt="Elon boxer" /><b>ELON</b></div>
+                      <div className="aid-vs">VS</div>
+                      <div className="aid-boxer aid-boxer-altman"><img src="/images/slots/ai-neon-dynasty/boxing-altman.png" alt="Altman boxer" /><b>ALTMAN</b></div>
+                      <div className="aid-ring"><i/><i/><i/></div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="aid-rocket-emoji">🚀</div>
+                      <div className="aid-trump-rider">T</div>
+                      <div className="aid-rocket-trail"/>
+                    </>
+                  )}
+                </div>
+                <button className="aid-bonus-action" type="button" onClick={() => void startBonus()}>
+                  {bonus === "boxing" ? "RING THE BELL" : "START HOLD & WIN"} <span>↗</span>
+                </button>
+              </>
+            )}
+
+            {bonusStep === "hold" && bonus === "holdwin" && (
+              <div className="aid-holdwin-panel">
+                <div className="aid-holdwin-space">
+                  <span className="aid-holdwin-moon">🌕</span>
+                  <span className="aid-holdwin-rocket">🚀</span>
+                  <span className="aid-holdwin-trump">TRUMP</span>
+                  <span className="aid-holdwin-trail"/>
+                </div>
+                <div className="aid-holdwin-counter">
+                  <span>RESPINS LEFT</span>
+                  <strong>{holdSpins}</strong>
+                  <small>New card = reset to 3</small>
+                </div>
+                <div className="aid-holdwin-grid" aria-label="Hold and Win credit card frame">
+                  {holdCards.map((value, index) => (
+                    <div key={index} className={"aid-holdwin-cell" + (value !== null ? " is-locked" : "")}>
+                      {value !== null ? <><span>✦</span><strong>{value.toLocaleString()}</strong><small>CREDITS</small></> : <span className="aid-holdwin-empty">+</span>}
+                    </div>
+                  ))}
+                </div>
+                <div className="aid-holdwin-total">
+                  <span>LOCKED CREDIT TOTAL</span>
+                  <strong>{holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0).toLocaleString()}</strong>
+                </div>
+                {holdSpins > 0 && (
+                  <button className="aid-bonus-action" type="button" disabled={holdBusy} onClick={() => void spinHoldWin()}>
+                    {holdBusy ? "ROCKET IN FLIGHT…" : "SPIN TO THE MOON"} <span>↗</span>
+                  </button>
+                )}
+                <small className="aid-holdwin-rule">{holdSpins === 0 ? "ROUND COMPLETE · COLLECT YOUR CREDITS" : "A new card resets the respins to 3."}</small>
+              </div>
+            )}
+
+            {bonusStep === "fight" && (
+              <div className="aid-fight-scene">
+                <div className="aid-boxer aid-boxer-elon aid-fight-left"><img src="/images/slots/ai-neon-dynasty/boxing-elon.png" alt="Elon boxer" /><b>ELON</b></div>
+                <div className="aid-vs aid-fight-flash"><img src="/images/slots/ai-neon-dynasty/boxing-impact.png" alt="" /><span>POW! 💥</span></div>
+                <div className="aid-boxer aid-boxer-altman aid-fight-right"><img src="/images/slots/ai-neon-dynasty/boxing-altman.png" alt="Altman boxer" /><b>ALTMAN</b></div>
+                <div className="aid-fight-ko" aria-hidden="true"><img src="/images/slots/ai-neon-dynasty/boxing-ko.png" alt="" /></div>
+                <div className="aid-fight-caption">FINAL ROUND · NEON ARENA</div>
+              </div>
+            )}
+
+            {bonusStep === "result" && (
+              <>
+                <div className="aid-bonus-result">
+                  {bonus === "boxing" ? (
+                    <>
+                      <div className={"aid-winner-badge "+(boxingWinner==="elon"?"aid-winner-elon":"aid-winner-altman")}>{boxingWinner==="elon"?"E":"AI"}</div>
+                      <p>{boxingWinner === "elon" ? "ELON LANDS THE FINAL PUNCH!" : "ALTMAN LANDS THE FINAL PUNCH!"}</p>
+                      <strong>{boxingWinner === "elon" ? "10" : "7"} FREE SPINS</strong>
+                    </>
+                  ) : (
+                    <>
+                      <div className="aid-rocket-emoji">🚀</div>
+                      <p>{holdCards.every((value) => value !== null) ? "MOON WIN · FRAME COMPLETE!" : "TRUMP HOLD & WIN COMPLETE!"}</p>
+                      <strong>{holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0).toLocaleString()} DEMO CREDITS</strong>
+                    </>
+                  )}
+                </div>
+                <button className="aid-bonus-action" type="button" onClick={closeBonus}>
+                  {bonus === "boxing" ? "COLLECT FREE SPINS" : "COLLECT CREDITS"} <span>✓</span>
+                </button>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </div>
-    <div className="aid-bottom-tools"><span className="aid-demo-pill"><i/> DEMO</span><button className="aid-sound" type="button" onClick={() => setSoundOn((value) => !value)} aria-label={soundOn ? "Turn sound off" : "Turn sound on"}>{soundOn ? <Volume2 size={16}/> : <VolumeX size={16}/>} SOUND</button></div>
-    {freeSpins > 0 && <div className="aid-free-banner"><Sparkles size={18}/><span><b>{freeSpins} FREE SPINS REMAINING ✨</b><small>Bonus stake locked at {freeSpinBet} demo credits. No stake deducted for a free spin.</small></span></div>}
-    <div className={"aid-status" + (lastWin > 0 ? " aid-status-win" : "")} role="status" aria-live="polite"><span>{lastWin > 0 ? "LAST WIN" : "GAME STATUS"}</span><b>{message}</b><small>Demo-only outcomes · no monetary value · no real-money wagering</small></div>
-    <details className="aid-paytable"><summary><Info size={15}/> PAYTABLE & BONUS RULES</summary><div className="aid-paytable-grid">{SYMBOLS.filter((symbol) => symbol.multiplier > 0).map((symbol) => <div key={symbol.id}><span className={"aid-pay-icon "+symbol.className}>{symbol.mark}</span><span><b>{symbol.label}</b><small>3 match: {symbol.multiplier}× · 4 match: {symbol.multiplier*2}× · 5 match: {symbol.multiplier*5}× base rate</small></span></div>)}</div><p>Wins are demo-only and generated locally. Four or more Trump symbols unlock the separate Trump Hold & Win rocket bonus. It starts with 3 respins; every newly locked credit card resets the counter to 3, and each card shows its credit value. Fill all 20 positions for MOON WIN, or collect the sum of locked cards when respins run out. Three or more Boxing Scatter symbols start the AI Boxing Arena: if Elon lands the final punch, 10 Free Spins are awarded; if Altman lands the final punch, 7 Free Spins are awarded. This demo RTP has not been independently certified.</p></details>
-    <div className="aid-disclaimer">DEMO ONLY · NO DEPOSITS · NO CASH PAYOUTS · 18+</div>
-    {bonus && <div className="aid-bonus-backdrop"><section className={"aid-bonus-modal "+(bonus==="boxing"?"aid-bonus-boxing":"aid-bonus-rocket")} role="dialog" aria-modal="true" aria-labelledby="aid-bonus-title">
-      <div className="aid-bonus-stars"/><div className="aid-bonus-kicker">{bonus === "boxing" ? "AI NEON DYNASTY · MAIN EVENT 🥊" : "TRUMP ROCKET · HOLD & WIN 🚀"}</div><h2 id="aid-bonus-title">{bonus === "boxing" ? "AI BOXING ARENA" : "TRUMP HOLD & WIN"}</h2>
-      {bonusStep === "intro" && <><p>{bonus === "boxing" ? "Two AI titans. One neon ring. Who lands the final punch?" : "Lock credit cards, reset the three respins, and fill the frame to reach the Moon."}</p><div className="aid-bonus-visual">{bonus === "boxing" ? <><div className="aid-boxer aid-boxer-elon"><img src="/images/slots/ai-neon-dynasty/boxing-elon.png" alt="Elon boxer" /><b>ELON</b></div><div className="aid-vs">VS</div><div className="aid-boxer aid-boxer-altman"><img src="/images/slots/ai-neon-dynasty/boxing-altman.png" alt="Altman boxer" /><b>ALTMAN</b></div><div className="aid-ring"><i/><i/><i/></div></> : <><div className="aid-rocket-emoji">🚀</div><div className="aid-trump-rider">T</div><div className="aid-rocket-trail"/></>}</div><button className="aid-bonus-action" type="button" onClick={() => void startBonus()}>{bonus === "boxing" ? "RING THE BELL" : "START HOLD & WIN"} <span>↗</span></button></>}
-      {bonusStep === "hold" && bonus === "holdwin" && <div className="aid-holdwin-panel">
-        <div className="aid-holdwin-space"><span className="aid-holdwin-moon">🌕</span><span className="aid-holdwin-rocket">🚀</span><span className="aid-holdwin-trump">TRUMP</span><span className="aid-holdwin-trail"/></div>
-        <div className="aid-holdwin-counter"><span>RESPINS LEFT</span><strong>{holdSpins}</strong><small>New card = reset to 3</small></div>
-        <div className="aid-holdwin-grid" aria-label="Hold and Win credit card frame">{holdCards.map((value, index) => <div key={index} className={"aid-holdwin-cell" + (value !== null ? " is-locked" : "")}>{value !== null ? <><span>✦</span><strong>{value.toLocaleString()}</strong><small>CREDITS</small></> : <span className="aid-holdwin-empty">+</span>}</div>)}</div>
-        <div className="aid-holdwin-total"><span>LOCKED CREDIT TOTAL</span><strong>{holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0).toLocaleString()}</strong></div>
-        {holdSpins > 0 && <button className="aid-bonus-action" type="button" disabled={holdBusy} onClick={() => void spinHoldWin()}>{holdBusy ? "ROCKET IN FLIGHT…" : "SPIN TO THE MOON"} <span>↗</span></button>}
-        <small className="aid-holdwin-rule">{holdSpins === 0 ? "ROUND COMPLETE · COLLECT YOUR CREDITS" : "A new card resets the respins to 3."}</small>
-      </div>}
-      {bonusStep === "fight" && <div className="aid-fight-scene"><div className="aid-boxer aid-boxer-elon aid-fight-left"><img src="/images/slots/ai-neon-dynasty/boxing-elon.png" alt="Elon boxer" /><b>ELON</b></div><div className="aid-vs aid-fight-flash"><img src="/images/slots/ai-neon-dynasty/boxing-impact.png" alt="" /><span>POW! 💥</span></div><div className="aid-boxer aid-boxer-altman aid-fight-right"><img src="/images/slots/ai-neon-dynasty/boxing-altman.png" alt="Altman boxer" /><b>ALTMAN</b></div><div className="aid-fight-ko" aria-hidden="true"><img src="/images/slots/ai-neon-dynasty/boxing-ko.png" alt="" /></div><div className="aid-fight-caption">FINAL ROUND · NEON ARENA</div></div>}
-      {bonusStep === "result" && <><div className="aid-bonus-result">{bonus === "boxing" ? <><div className={"aid-winner-badge "+(boxingWinner==="elon"?"aid-winner-elon":"aid-winner-altman")}>{boxingWinner==="elon"?"E":"AI"}</div><p>{boxingWinner === "elon" ? "ELON LANDS THE FINAL PUNCH!" : "ALTMAN LANDS THE FINAL PUNCH!"}</p><strong>{boxingWinner === "elon" ? "10" : "7"} FREE SPINS</strong></> : <><div className="aid-rocket-emoji">🚀</div><p>{holdCards.every((value) => value !== null) ? "MOON WIN · FRAME COMPLETE!" : "TRUMP HOLD & WIN COMPLETE!"}</p><strong>{holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0).toLocaleString()} DEMO CREDITS</strong></>}</div><button className="aid-bonus-action" type="button" onClick={closeBonus}>{bonus === "boxing" ? "COLLECT FREE SPINS" : "COLLECT CREDITS"} <span>✓</span></button></>}
-    </section></div>}
-  </div>;
+  );
 }
