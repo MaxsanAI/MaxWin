@@ -2962,3 +2962,133 @@ html, body {
     animation-duration: 500ms !important;
   }
 }
+
+
+/* Book of Ra: real vertical reel strips clipped to a solid 3-row viewport. */
+.book-of-ra-slot .bra-strip-reels {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  grid-auto-flow: column !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  background: #100d19 !important;
+}
+.book-of-ra-slot .bra-reel-column {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #21192b;
+  border: 1px solid #ffffff18;
+  border-radius: 6px;
+  contain: paint;
+}
+.book-of-ra-slot .bra-reel-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #21192b;
+}
+.book-of-ra-slot .bra-reel-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 533.333333%;
+  display: flex;
+  flex-direction: column;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  opacity: 0;
+}
+.book-of-ra-slot .bra-strip-symbol {
+  position: relative;
+  flex: 0 0 6.25%;
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #21192b !important;
+  border-bottom: 1px solid #ffffff0c;
+}
+.book-of-ra-slot .bra-strip-symbol img {
+  display: block;
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 5px #0009);
+}
+.book-of-ra-slot .bra-reel-column.is-spinning .bra-reel-strip {
+  opacity: 1;
+  animation: bra-real-strip-spin 460ms linear infinite;
+}
+.book-of-ra-slot.rf-speed-slow .bra-reel-column.is-spinning .bra-reel-strip {
+  animation-duration: 760ms;
+}
+.book-of-ra-slot.rf-speed-normal .bra-reel-column.is-spinning .bra-reel-strip {
+  animation-duration: 460ms;
+}
+.book-of-ra-slot.rf-speed-turbo .bra-reel-column.is-spinning .bra-reel-strip {
+  animation-duration: 260ms;
+}
+.book-of-ra-slot .bra-final-column {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  background: #21192b;
+  opacity: 1;
+}
+.book-of-ra-slot .bra-final-column.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+.book-of-ra-slot .bra-final-column .bra-reel {
+  min-height: 0 !important;
+  height: 100%;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #ffffff13;
+  border-radius: 0 !important;
+  background-color: #21192b !important;
+}
+.book-of-ra-slot .bra-final-column .bra-reel:last-child {
+  border-bottom: 0;
+}
+.book-of-ra-slot .bra-final-column .bra-reel-spinning {
+  animation: none !important;
+}
+.book-of-ra-slot .bra-final-column .rf-symbol-art img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+.book-of-ra-slot .bra-reel-column.is-stopping .bra-final-column .bra-reel {
+  animation: bra-column-land 300ms cubic-bezier(.16, 1.2, .3, 1) both;
+}
+@keyframes bra-real-strip-spin {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, -50%, 0); }
+}
+@keyframes bra-column-land {
+  0% { transform: translate3d(0, -8px, 0); }
+  62% { transform: translate3d(0, 2px, 0); }
+  82% { transform: translate3d(0, -1px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+.book-of-ra-slot .bra-reel-column.is-spinning .bra-reel-viewport::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0%, #fff1 14%, #fff2 19%, transparent 31%, transparent 42%);
+  opacity: .8;
+}
+@media (prefers-reduced-motion: reduce) {
+  .book-of-ra-slot .bra-reel-column.is-spinning .bra-reel-strip {
+    animation-duration: 1200ms !important;
+  }
+}
