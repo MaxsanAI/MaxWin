@@ -1645,3 +1645,70 @@
   .aid-fight-scene { min-height: 205px !important; }
   .aid-fight-scene .aid-boxer { height: 175px !important; }
 }
+
+
+/* Final viewport fit and proper top-to-bottom reel roll, stopping one column at a time. */
+.aid-machine {
+  width: min(620px, 100%) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.aid-reels {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 5 / 4 !important;
+}
+.aid-reel-column {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+.aid-column-spin .aid-symbol {
+  animation: aid-symbol-roll-down .105s linear infinite !important;
+  will-change: transform, filter;
+}
+.aid-column-spin .aid-symbol:nth-child(2) { animation-delay: -.025s !important; }
+.aid-column-spin .aid-symbol:nth-child(3) { animation-delay: -.05s !important; }
+.aid-column-spin .aid-symbol:nth-child(4) { animation-delay: -.075s !important; }
+@keyframes aid-symbol-roll-down {
+  0% { transform: translateY(-24%); filter: blur(2px) brightness(1.22); }
+  50% { transform: translateY(16%); filter: blur(1.5px) brightness(1.08); }
+  100% { transform: translateY(55%); filter: blur(2px) brightness(1.2); }
+}
+.aid-column-spin {
+  animation: aid-reel-column-glow .22s linear infinite alternate;
+}
+@keyframes aid-reel-column-glow {
+  from { box-shadow: inset 0 0 0 rgba(78,245,255,0); }
+  to { box-shadow: inset 0 0 14px rgba(78,245,255,.24); }
+}
+.aid-column-spin .aid-symbol-image {
+  transform: scale(1.03);
+}
+@media (min-width: 721px) {
+  .aid-game {
+    padding-top: 0 !important;
+    padding-bottom: 2px !important;
+    gap: 5px !important;
+  }
+  .aid-machine { width: min(600px, 100%) !important; }
+  .aid-reels { padding: 4px !important; gap: 4px !important; }
+  .aid-reel-column { gap: 4px !important; }
+  .aid-controls { margin-top: 2px !important; }
+  .aid-bottom-tools { margin-top: 3px !important; }
+}
+@media (max-height: 780px) and (min-width: 721px) {
+  .aid-machine { width: min(570px, 100%) !important; }
+  .aid-reels { padding: 3px !important; gap: 3px !important; }
+  .aid-reel-column { gap: 3px !important; }
+  .aid-controls { height: 64px !important; min-height: 64px !important; }
+}
+@media (max-width: 720px) {
+  .aid-machine { width: 100% !important; }
+  .aid-reels { aspect-ratio: 5 / 4 !important; }
+  .aid-column-spin .aid-symbol { animation-duration: .09s !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aid-column-spin,
+  .aid-column-spin .aid-symbol { animation-duration: .35s !important; }
+}
