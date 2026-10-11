@@ -3353,3 +3353,91 @@ html, body {
     animation: none !important;
   }
 }
+
+
+/* Royal Fortune polish: keep the true 5x4 layout, improve symbol contrast, and highlight wins. */
+.modal-slot:has(.rf-cabinet) .rf-reel-window {
+  grid-auto-flow: column !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(4, minmax(0, 1fr)) !important;
+  align-content: stretch !important;
+  overflow: hidden !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  position: relative !important;
+  isolation: isolate !important;
+  background: linear-gradient(145deg, #34254a 0%, #20182f 48%, #11101f 100%) !important;
+  border: 1px solid #d9c0ff30 !important;
+  box-shadow: inset 0 1px 0 #fff2, inset 0 -10px 18px #08061180, 0 2px 8px #0005 !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel::marker { display: none !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-crown { background: linear-gradient(145deg,#594a2b 0%,#32243a 52%,#151222 100%) !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-gem { background: linear-gradient(145deg,#17475a 0%,#25203f 56%,#11101f 100%) !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-shield { background: linear-gradient(145deg,#4b3268 0%,#29203f 55%,#12101f 100%) !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-coins,
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-coin { background: linear-gradient(145deg,#654726 0%,#33233a 55%,#13101f 100%) !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-star { background: linear-gradient(145deg,#5a4c2a 0%,#30243b 55%,#12101f 100%) !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-flame { background: linear-gradient(145deg,#71353c 0%,#352039 55%,#12101f 100%) !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-zap { background: linear-gradient(145deg,#25544d 0%,#25213e 55%,#11101f 100%) !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-wild { background: radial-gradient(ellipse at 50% 28%,#b27a2e 0%,#49304e 48%,#171124 100%) !important; border-color:#f7d87b70 !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-symbol-scatter { background: radial-gradient(ellipse at 50% 28%,#8244a4 0%,#3c2858 48%,#171124 100%) !important; border-color:#d9a0ff70 !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel .rf-symbol-art {
+  z-index: 2 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 5% !important;
+  filter: drop-shadow(0 3px 5px #0009) drop-shadow(0 0 7px #e6c9ff20) !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel .rf-symbol-art img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 112px !important;
+  max-height: 112px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel small { display: none !important; }
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-reel-win {
+  border: 2px solid #ffe8a0 !important;
+  background: radial-gradient(ellipse at 50% 42%,#75501e 0%,#3a2850 57%,#171124 100%) !important;
+  box-shadow: inset 0 0 20px #ffd76b55, 0 0 13px #ffc84d88, 0 0 26px #f0b83b45 !important;
+  animation: rf-premium-win-pulse .76s ease-in-out infinite alternate !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-reel-win::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 3 !important;
+  inset: -45% -80% !important;
+  pointer-events: none !important;
+  background: linear-gradient(112deg,transparent 38%,#fff8c71c 44%,#fff9dcae 50%,#fff1a82a 56%,transparent 63%) !important;
+  transform: translateX(-75%) !important;
+  animation: rf-premium-win-shine 1.35s ease-in-out infinite !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-reel-win::after {
+  content: "✦" !important;
+  position: absolute !important;
+  z-index: 4 !important;
+  top: 3px !important;
+  right: 4px !important;
+  color: #fff4b8 !important;
+  font-size: clamp(10px,1vw,16px) !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 8px #ffc94c !important;
+  pointer-events: none !important;
+}
+.modal-slot:has(.rf-cabinet) .rf-reel.rf-reel-win .rf-symbol-art {
+  animation: rf-premium-win-symbol .76s ease-in-out infinite alternate !important;
+  filter: drop-shadow(0 0 6px #ffe18a) drop-shadow(0 0 13px #ffbd4a) !important;
+}
+@keyframes rf-premium-win-pulse { from { filter: brightness(1.03); } to { filter: brightness(1.27); } }
+@keyframes rf-premium-win-shine { 0% { transform: translateX(-75%); } 100% { transform: translateX(75%); } }
+@keyframes rf-premium-win-symbol { from { transform: scale(1); } to { transform: scale(1.055); } }
+@media (prefers-reduced-motion: reduce) {
+  .modal-slot:has(.rf-cabinet) .rf-reel.rf-reel-win,
+  .modal-slot:has(.rf-cabinet) .rf-reel.rf-reel-win::before,
+  .modal-slot:has(.rf-cabinet) .rf-reel.rf-reel-win::after,
+  .modal-slot:has(.rf-cabinet) .rf-reel.rf-reel-win .rf-symbol-art { animation: none !important; }
+}
