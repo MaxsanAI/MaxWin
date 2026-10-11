@@ -94,14 +94,14 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   if(soundOn&&typeof window.AudioContext!=="undefined"){try{const ctx=audioContext.current||(audioContext.current=new window.AudioContext());if(ctx.state==="suspended")void ctx.resume();}catch{}}
   setBusy(true);setError("");setBuyConfirm(false);setReelStops(0);
   setMessage(action==="buyBonus"?"Opening the Sacred Book…":freeSpins>0?"Free spin in progress…":"Reels spinning…");
-  const pool:SymbolName[]=["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"];
-  const interval=speed==="slow"?120:speed==="normal"?75:35;
-  rollTimer.current=window.setInterval(()=>{setDisplaySymbols(Array.from({length:15},()=>pool[Math.floor(Math.random()*pool.length)]));playSpinTick();},interval);
+  const spinStartedAt=performance.now();
   try{
    const res=await fetch("/api/games/book-of-ra",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,bet,requestId:requestId()})});
    const data=await res.json();
    if(!res.ok)throw new Error(data.error||"Spin failed.");
-   if(rollTimer.current)clearInterval(rollTimer.current);
+   const minimumSpin=speed==="slow"?1250:speed==="normal"?950:700;
+   const remainingSpin=minimumSpin-(performance.now()-spinStartedAt);
+   if(remainingSpin>0)await new Promise(resolve=>window.setTimeout(resolve,remainingSpin));
    const finalSymbols=data.result.symbols as SymbolName[];
    for(let reel=0;reel<5;reel++){
     await new Promise(resolve=>window.setTimeout(resolve,speed==="slow"?210:speed==="normal"?155:105));
@@ -133,11 +133,11 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     setMessage(data.result.payout>0?"WIN · "+data.result.payout.toLocaleString()+" CREDITS":data.result.awardedFreeSpins?"SACRED BOOK TRIGGERED · "+data.result.awardedFreeSpins+" FREE SPINS":"No match this time. Try another spin.");
    }
   }catch(e:unknown){setError(e instanceof Error?e.message:"Error during spin.");}
-  finally{if(rollTimer.current)clearInterval(rollTimer.current);setReelStops(5);setBusy(false);}
+  finally{setReelStops(5);setBusy(false);}
  };
  const winning=new Set(result?.winningPositions||[]);
 
- return <div className="rf-game book-of-ra-slot">
+ return <div className={"rf-game book-of-ra-slot rf-speed-"+speed}>
   <button className="bra-lobby-button" type="button" onClick={onBackToLobby}><Crown size={15} strokeWidth={2.2}/> <span>TO LOBBY</span></button>
   <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>BOOK OF <em>RA</em></h3><p>5 reels · 3 rows · Demo credits</p></div></div><div className="rf-top-actions"><span className="rf-status"><span/> DEMO MODE</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute sound":"Enable sound"} title={soundOn?"Mute sound":"Sound off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button></div></div>
   <div className="rf-cabinet bra-cabinet"><div className="rf-cabinet-header"><span><Crown size={13}/> TEMPLE OF RA</span><span><i/> 5 REELS <i/> 3 ROWS <i/> SACRED BOOK</span></div>
