@@ -1132,3 +1132,77 @@
     width: min(128px, 60%) !important;
   }
 }
+
+
+/* Control frame: 650 × 200 below the slot; all controls share one desktop row. */
+.aid-controls {
+  box-sizing: border-box !important;
+  width: min(650px, 100%) !important;
+  max-width: 650px !important;
+  height: 200px !important;
+  min-height: 200px !important;
+  margin: 8px auto 0 !important;
+  padding: 12px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) minmax(88px, 1fr) minmax(0, 1fr) auto !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  align-items: center !important;
+  justify-items: center !important;
+  column-gap: 8px !important;
+  row-gap: 0 !important;
+}
+.aid-bet-control,
+.aid-speed,
+.aid-spin,
+.aid-balance,
+.aid-reset {
+  grid-row: 1 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  justify-self: stretch !important;
+}
+.aid-bet-control { grid-column: 1 !important; }
+.aid-speed { grid-column: 2 !important; }
+.aid-spin {
+  grid-column: 3 !important;
+  width: 100% !important;
+  max-width: 104px !important;
+  min-height: 38px !important;
+  padding: 4px !important;
+}
+.aid-balance { grid-column: 4 !important; text-align: center !important; }
+.aid-reset {
+  grid-column: 5 !important;
+  justify-self: center !important;
+  white-space: normal !important;
+  max-width: 68px;
+  padding: 5px 3px !important;
+  font-size: 6px !important;
+}
+.aid-bet-control button { width: 19px !important; height: 19px !important; }
+.aid-bet-control strong { font-size: 11px !important; }
+.aid-speed button { padding: 4px 3px !important; font-size: 6px !important; }
+.aid-balance strong { font-size: 12px !important; overflow-wrap: anywhere; }
+
+@media (max-width: 720px) {
+  .aid-controls {
+    width: min(650px, 100%) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 7px !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 8px !important;
+    row-gap: 6px !important;
+  }
+  .aid-bet-control { grid-column: 1 !important; grid-row: 1 !important; }
+  .aid-balance { grid-column: 2 !important; grid-row: 1 !important; }
+  .aid-speed { grid-column: 1 !important; grid-row: 2 !important; }
+  .aid-reset { grid-column: 2 !important; grid-row: 2 !important; max-width: none; }
+  .aid-spin {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    width: min(128px, 60%) !important;
+    max-width: 128px !important;
+  }
+}
