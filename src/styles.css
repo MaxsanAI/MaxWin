@@ -2875,3 +2875,90 @@ html, body {
     font-size: 9px !important;
   }
 }
+
+
+/* Book of Ra reel animation: continuous CSS motion, opaque symbol cells, no random-frame flashing. */
+.book-of-ra-slot .bra-reel {
+  isolation: isolate;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: transform, filter;
+  background-color: #21192b !important;
+}
+.book-of-ra-slot .bra-reel-spinning {
+  animation: bra-reel-body 180ms linear infinite !important;
+  overflow: hidden !important;
+  background: linear-gradient(180deg, #21182c 0%, #352747 48%, #21182c 100%) !important;
+  contain: paint;
+}
+.book-of-ra-slot .bra-reel-spinning .rf-symbol-art {
+  animation: bra-symbol-roll 180ms linear infinite !important;
+  filter: blur(2px);
+  opacity: .92;
+  will-change: transform, filter;
+}
+.book-of-ra-slot .bra-reel-spinning .rf-symbol-art img {
+  filter: blur(1px) drop-shadow(0 4px 7px #0008) !important;
+}
+.book-of-ra-slot .bra-reel-spinning small {
+  opacity: .35 !important;
+  filter: blur(.5px);
+}
+.book-of-ra-slot .bra-reel-spinning::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  opacity: .65;
+  background: repeating-linear-gradient(to bottom, transparent 0, #fff1 12%, #fff3 18%, transparent 30%, transparent 42%);
+  background-size: 100% 220%;
+  animation: bra-reel-streak 180ms linear infinite;
+}
+.book-of-ra-slot.rf-speed-slow .bra-reel-spinning,
+.book-of-ra-slot.rf-speed-slow .bra-reel-spinning .rf-symbol-art,
+.book-of-ra-slot.rf-speed-slow .bra-reel-spinning::after {
+  animation-duration: 310ms !important;
+}
+.book-of-ra-slot.rf-speed-normal .bra-reel-spinning,
+.book-of-ra-slot.rf-speed-normal .bra-reel-spinning .rf-symbol-art,
+.book-of-ra-slot.rf-speed-normal .bra-reel-spinning::after {
+  animation-duration: 180ms !important;
+}
+.book-of-ra-slot.rf-speed-turbo .bra-reel-spinning,
+.book-of-ra-slot.rf-speed-turbo .bra-reel-spinning .rf-symbol-art,
+.book-of-ra-slot.rf-speed-turbo .bra-reel-spinning::after {
+  animation-duration: 95ms !important;
+}
+.book-of-ra-slot .bra-reel:not(.rf-reel-spinning) .rf-symbol-art {
+  animation: bra-symbol-land 280ms cubic-bezier(.18, 1.25, .32, 1) both !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+@keyframes bra-reel-body {
+  0% { transform: translate3d(0, -1px, 0); filter: brightness(.92); }
+  50% { transform: translate3d(0, 1px, 0); filter: brightness(1.08); }
+  100% { transform: translate3d(0, -1px, 0); filter: brightness(.92); }
+}
+@keyframes bra-symbol-roll {
+  0% { transform: translate3d(0, -125%, 0) scaleY(.72); opacity: .45; }
+  50% { transform: translate3d(0, 0, 0) scaleY(1.08); opacity: .95; }
+  100% { transform: translate3d(0, 125%, 0) scaleY(.72); opacity: .45; }
+}
+@keyframes bra-reel-streak {
+  from { background-position: 0 -110%; }
+  to { background-position: 0 110%; }
+}
+@keyframes bra-symbol-land {
+  0% { transform: translate3d(0, -9%, 0) scaleY(.94); }
+  62% { transform: translate3d(0, 2%, 0) scaleY(1.035); }
+  82% { transform: translate3d(0, -1%, 0) scaleY(.99); }
+  100% { transform: translate3d(0, 0, 0) scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book-of-ra-slot .bra-reel-spinning,
+  .book-of-ra-slot .bra-reel-spinning .rf-symbol-art,
+  .book-of-ra-slot .bra-reel-spinning::after {
+    animation-duration: 500ms !important;
+  }
+}
