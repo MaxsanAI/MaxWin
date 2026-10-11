@@ -1962,3 +1962,51 @@ html, body {
     padding-bottom: 18px !important;
   }
 }
+
+
+/* Book of Ra final mobile scroll repair: make the full-screen modal itself the scroll container. */
+@media (max-width: 720px) {
+  .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    touch-action: pan-y pinch-zoom !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: max(10px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: auto !important;
+    touch-action: pan-y pinch-zoom !important;
+    scrollbar-width: thin !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) > .rf-game {
+    display: flex !important;
+    width: 100% !important;
+    min-height: max-content !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 0 max(24px, env(safe-area-inset-bottom)) !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) > .modal-close {
+    position: fixed !important;
+    top: max(8px, env(safe-area-inset-top)) !important;
+    right: 8px !important;
+    z-index: 10001 !important;
+  }
+}
