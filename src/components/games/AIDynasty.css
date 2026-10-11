@@ -1922,3 +1922,75 @@
   }
   .aid-status { margin-top: 4px !important; }
 }
+
+
+/* AI NEON DYNASTY only: make winning symbols pop with animated neon gradients. */
+.aid-game .aid-symbol.aid-symbol-win {
+  z-index: 4 !important;
+  border: 2px solid transparent !important;
+  border-radius: 7px !important;
+  background:
+    linear-gradient(145deg, #171126, #11101f) padding-box,
+    linear-gradient(125deg, #4ef5ff, #a36bff, #ff43c8, #ffe7a2, #4ef5ff) border-box !important;
+  background-size: auto, 260% 260% !important;
+  animation: aid-neon-win-frame 1.15s linear infinite, aid-neon-win-pulse .62s ease-in-out infinite alternate !important;
+  box-shadow:
+    0 0 8px #4ef5ffb0,
+    0 0 18px #a36bff99,
+    0 0 28px #ff43c866,
+    inset 0 0 18px #a36bff55 !important;
+  filter: brightness(1.12) saturate(1.18);
+}
+.aid-game .aid-symbol.aid-symbol-win::after {
+  z-index: 3 !important;
+  content: "" !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(
+    115deg,
+    transparent 5%,
+    #4ef5ff24 25%,
+    #ffffff65 43%,
+    #ff43c844 58%,
+    #a36bff20 76%,
+    transparent 96%
+  ) !important;
+  background-size: 240% 100% !important;
+  animation: aid-neon-win-sweep .9s ease-in-out infinite !important;
+  pointer-events: none !important;
+}
+.aid-game .aid-symbol.aid-symbol-win .aid-symbol-image {
+  animation: aid-neon-win-art .62s ease-in-out infinite alternate !important;
+  filter: brightness(1.16) saturate(1.22) drop-shadow(0 0 5px #4ef5ffb0)
+    drop-shadow(0 0 9px #ff43c877);
+}
+@keyframes aid-neon-win-frame {
+  0% { background-position: 0 0, 0% 50%; }
+  100% { background-position: 0 0, 100% 50%; }
+}
+@keyframes aid-neon-win-pulse {
+  from {
+    box-shadow: 0 0 7px #4ef5ff99, 0 0 15px #a36bff77, 0 0 22px #ff43c855, inset 0 0 12px #a36bff33;
+    transform: scale(1);
+  }
+  to {
+    box-shadow: 0 0 12px #4ef5ffdd, 0 0 25px #a36bffbb, 0 0 36px #ff43c899, inset 0 0 23px #ff43c855;
+    transform: scale(1.025);
+  }
+}
+@keyframes aid-neon-win-sweep {
+  0% { background-position: 150% 0; opacity: .35; }
+  50% { opacity: .95; }
+  100% { background-position: -150% 0; opacity: .4; }
+}
+@keyframes aid-neon-win-art {
+  from { filter: brightness(1.08) saturate(1.15) drop-shadow(0 0 4px #4ef5ff99); }
+  to { filter: brightness(1.28) saturate(1.35) drop-shadow(0 0 8px #4ef5ffcc) drop-shadow(0 0 10px #ff43c899); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aid-game .aid-symbol.aid-symbol-win,
+  .aid-game .aid-symbol.aid-symbol-win::after,
+  .aid-game .aid-symbol.aid-symbol-win .aid-symbol-image {
+    animation-duration: 1.8s !important;
+  }
+}
