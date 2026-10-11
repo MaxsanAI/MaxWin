@@ -3069,8 +3069,9 @@ html, body {
   animation: bra-column-land 300ms cubic-bezier(.16, 1.2, .3, 1) both;
 }
 @keyframes bra-real-strip-spin {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(0, -50%, 0); }
+  /* The strip is duplicated end-to-end, so moving from -50% to 0 loops downward seamlessly. */
+  from { transform: translate3d(0, -50%, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 @keyframes bra-column-land {
   0% { transform: translate3d(0, -8px, 0); }
@@ -3160,19 +3161,15 @@ html, body {
 }
 
 
-/* Keep the lobby action out of document flow and align it with the reel-stage start. */
+/* Center the lobby action on desktop; keep it centered below the paytable on phones. */
 .book-of-ra-slot .bra-lobby-button {
   position: absolute !important;
   z-index: 12 !important;
   top: 25px !important;
-  left: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
   margin: 0 !important;
-}
-@media (max-width: 720px) {
-  .book-of-ra-slot .bra-lobby-button {
-    top: 22px !important;
-    left: 0 !important;
-  }
+  white-space: nowrap !important;
 }
 
 
@@ -3264,9 +3261,13 @@ html, body {
 @media (max-width: 720px) {
   .book-of-ra-slot .bra-lobby-button {
     position: static !important;
-    display: inline-flex !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: fit-content !important;
     top: auto !important;
     left: auto !important;
-    margin: 12px 0 8px !important;
+    transform: none !important;
+    margin: 12px auto 8px !important;
   }
 }
