@@ -2010,3 +2010,28 @@ html, body {
     z-index: 10001 !important;
   }
 }
+
+
+/* Book of Ra: square 1:1 cover on mobile lobby cards only. */
+@media (max-width: 720px) {
+  .game-card-preview .game-art.book-cover-art {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  .game-card-preview .book-cover-art .book-cover-picture {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .game-card-preview .book-cover-art .book-cover-picture img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+}
