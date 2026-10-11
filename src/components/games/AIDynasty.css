@@ -1526,3 +1526,122 @@
   .aid-fight-flash { width: 48px; height: 48px; flex-basis: 48px; font-size: 10px; }
   .aid-fight-flash img { inset: -16px; width: calc(100% + 32px); height: calc(100% + 32px); }
 }
+
+
+/* AI Boxing Arena: enlarge the fight into a full bonus set piece. */
+.aid-bonus-modal:has(.aid-fight-scene) {
+  width: min(94vw, 760px) !important;
+  max-height: min(94dvh, 760px) !important;
+  padding: clamp(18px, 3vw, 30px) !important;
+}
+.aid-bonus-modal:has(.aid-fight-scene) .aid-bonus-kicker {
+  font-size: clamp(10px, 1.4vw, 13px);
+}
+.aid-bonus-modal:has(.aid-fight-scene) h2 {
+  font-size: clamp(27px, 4vw, 42px) !important;
+  margin: 10px 0 14px;
+}
+.aid-fight-scene {
+  min-height: clamp(280px, 43vh, 390px) !important;
+  margin: 18px 0 !important;
+  gap: clamp(12px, 3vw, 30px) !important;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(ellipse at 50% 65%, #ff2bc455, transparent 52%),
+    radial-gradient(ellipse at 50% 10%, #287eff45, transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 35px, #4ef5ff10 36px 37px),
+    linear-gradient(180deg, #15102b, #070914 80%) !important;
+  box-shadow: inset 0 0 55px #000b, 0 0 32px #ff43c81c;
+}
+.aid-fight-scene:before {
+  inset: 10% 4% 12% !important;
+  border-width: 3px !important;
+  border-color: #ff43c899 !important;
+  box-shadow: inset 0 0 34px #4ef5ff22, 0 0 28px #ff43c844 !important;
+}
+.aid-fight-scene .aid-boxer {
+  width: clamp(145px, 25vw, 220px) !important;
+  height: clamp(210px, 32vh, 290px) !important;
+  padding: 0 !important;
+  gap: 5px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.aid-fight-scene .aid-boxer > img {
+  width: 100% !important;
+  height: calc(100% - 28px) !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  filter: drop-shadow(0 8px 20px #000d) drop-shadow(0 0 15px #4ef5ff35);
+}
+.aid-fight-scene .aid-boxer-altman > img {
+  filter: drop-shadow(0 8px 20px #000d) drop-shadow(0 0 15px #ff43c835);
+}
+.aid-fight-scene .aid-boxer > b {
+  font-size: clamp(12px, 1.7vw, 16px) !important;
+  letter-spacing: 2px !important;
+  text-shadow: 0 0 12px #4ef5ff88;
+}
+.aid-fight-scene .aid-vs.aid-fight-flash {
+  width: clamp(76px, 11vw, 118px) !important;
+  height: clamp(76px, 11vw, 118px) !important;
+  flex: 0 0 clamp(76px, 11vw, 118px) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: clamp(16px, 2.3vw, 24px) !important;
+}
+.aid-fight-flash img {
+  inset: -42% !important;
+  width: 184% !important;
+  height: 184% !important;
+  filter: drop-shadow(0 0 18px #ffcf78aa);
+}
+.aid-fight-ko {
+  inset: 2% 8% 9% !important;
+}
+.aid-fight-ko img {
+  width: min(75%, 420px) !important;
+  filter: drop-shadow(0 0 24px #ff43c8cc) drop-shadow(0 0 45px #f5cf7866) !important;
+}
+.aid-fight-caption {
+  bottom: 13px !important;
+  font-size: clamp(9px, 1.25vw, 12px) !important;
+  letter-spacing: clamp(1.5px, .35vw, 3px) !important;
+  text-shadow: 0 2px 7px #000;
+}
+.aid-fight-left { animation: aid-punch-left .62s ease-in-out infinite alternate !important; }
+.aid-fight-right { animation: aid-punch-right .62s ease-in-out infinite alternate !important; }
+@media (max-width: 600px) {
+  .aid-bonus-modal:has(.aid-fight-scene) {
+    width: min(96vw, 500px) !important;
+    padding: 14px 10px !important;
+  }
+  .aid-fight-scene {
+    min-height: clamp(235px, 39vh, 300px) !important;
+    gap: 2px !important;
+    margin: 12px 0 !important;
+  }
+  .aid-fight-scene .aid-boxer {
+    width: clamp(95px, 30vw, 145px) !important;
+    height: clamp(175px, 28vh, 225px) !important;
+    padding: 0 !important;
+  }
+  .aid-fight-scene .aid-boxer > img { height: calc(100% - 24px) !important; }
+  .aid-fight-scene .aid-boxer > b { font-size: 10px !important; letter-spacing: 1px !important; }
+  .aid-fight-scene .aid-vs.aid-fight-flash {
+    width: 48px !important; height: 48px !important; flex-basis: 48px !important;
+  }
+  .aid-fight-flash img { inset: -28px !important; width: calc(100% + 56px) !important; height: calc(100% + 56px) !important; }
+  .aid-fight-ko img { width: 88% !important; }
+}
+@media (max-height: 620px) {
+  .aid-bonus-modal:has(.aid-fight-scene) { max-height: calc(100dvh - 12px) !important; }
+  .aid-fight-scene { min-height: 205px !important; }
+  .aid-fight-scene .aid-boxer { height: 175px !important; }
+}
