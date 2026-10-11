@@ -3673,3 +3673,35 @@ html, body {
 @media (max-width: 360px) {
   .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-main-controls { grid-template-columns: minmax(0, 1fr) minmax(85px, 1fr) minmax(0, 1fr) !important; gap: 4px !important; }
 }
+
+
+/* Royal Fortune desktop: keep artwork square and tighten symbol spacing.
+   Scoped to Royal Fortune desktop only; mobile and Book of Ra are unchanged. */
+@media (min-width: 721px) {
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window {
+    gap: 1px !important;
+    padding: 2px !important;
+  }
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel {
+    padding: 1px !important;
+    gap: 0 !important;
+  }
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel .rf-symbol-art {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel .rf-symbol-art img {
+    width: auto !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    max-width: min(100%, 86px) !important;
+    max-height: 86px !important;
+    object-fit: contain !important;
+    object-position: center !important;
+  }
+}
