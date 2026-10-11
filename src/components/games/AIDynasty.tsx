@@ -263,7 +263,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     <section className="aid-machine">
       <div className="aid-machine-head"><span><i/> DYNASTY REELS</span><span>25 WAYS TO WIN <b>✦</b></span></div>
       <div className={"aid-reels" + (busy ? " aid-is-spinning" : "")} aria-label="Five reels with four symbols each">
-        {board.map((column, col) => <div className={"aid-reel-column" + (busy ? " aid-column-spin" : "")} key={col}>{column.map((symbolId, row) => { const symbol = SYMBOL_BY_ID[symbolId]; const isWinning = winningCells.includes(col+"-"+row); return <div key={col+"-"+row} className={"aid-symbol "+symbol.className+(isWinning?" aid-symbol-win":"")}><span className="aid-symbol-light"/><span className="aid-symbol-mark">{symbol.mark}</span><b>{symbol.label}</b></div>; })}</div>)}
+        {board.map((column, col) => <div className={"aid-reel-column" + (busy ? " aid-column-spin" : "")} key={col}>{column.map((symbolId, row) => { const symbol = SYMBOL_BY_ID[symbolId]; const isWinning = winningCells.includes(col+"-"+row); return <div key={col+"-"+row} className={"aid-symbol "+symbol.className+(isWinning?" aid-symbol-win":"")}><span className="aid-symbol-light"/><img className="aid-symbol-image" src={"/images/slots/ai-neon-dynasty/"+symbol.id+".jpg"} alt="" draggable={false} onError={(event) => { event.currentTarget.style.display = "none"; event.currentTarget.parentElement?.classList.add("aid-symbol-no-image"); }} /><span className="aid-symbol-mark">{symbol.mark}</span></div>; })}</div>)}
       </div>
       <div className="aid-machine-foot"><span>SCATTER BONUSES</span><span>WILD SUBSTITUTES</span><span>NEON ENERGY</span></div>
     </section>
