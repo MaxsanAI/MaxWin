@@ -1712,3 +1712,213 @@
   .aid-column-spin,
   .aid-column-spin .aid-symbol { animation-duration: .35s !important; }
 }
+
+
+/* Mobile layout correction: no decorative outer cabinet/frame, compact LOBBY, one aligned control row. */
+.aid-game {
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.aid-machine {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+.aid-reels {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+}
+.aid-topbar {
+  position: absolute !important;
+  z-index: 12 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: auto !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+.aid-back {
+  position: absolute !important;
+  top: 2px !important;
+  left: 2px !important;
+  z-index: 12 !important;
+  min-height: 23px !important;
+  margin: 0 !important;
+  padding: 3px 5px !important;
+  gap: 3px !important;
+  border: 0 !important;
+  border-radius: 5px !important;
+  background: #080914d9 !important;
+  font-size: 7px !important;
+  letter-spacing: .4px !important;
+}
+.aid-back svg { width: 11px !important; height: 11px !important; }
+.aid-controls {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+@media (max-width: 720px) {
+  .aid-game { gap: 3px !important; }
+  .aid-machine { width: 100% !important; margin: 0 !important; }
+  .aid-reels {
+    width: 100% !important;
+    aspect-ratio: 5 / 4 !important;
+    padding: 2px !important;
+    gap: 2px !important;
+    background: transparent !important;
+  }
+  .aid-reel-column {
+    grid-template-rows: repeat(4, minmax(0, 1fr)) !important;
+    min-height: 0 !important;
+    gap: 2px !important;
+  }
+  .aid-symbol {
+    min-height: 0 !important;
+    border-radius: 3px !important;
+    border-width: 0 !important;
+  }
+  .aid-controls {
+    display: grid !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 3px 0 0 !important;
+    padding: 2px 3px !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(48px, auto) !important;
+    column-gap: 3px !important;
+    row-gap: 0 !important;
+    align-items: center !important;
+    justify-items: stretch !important;
+  }
+  .aid-bet-control,
+  .aid-speed,
+  .aid-spin,
+  .aid-balance,
+  .aid-reset {
+    grid-row: 1 !important;
+    grid-column: auto !important;
+    justify-self: stretch !important;
+    align-self: center !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 43px !important;
+    margin: 0 !important;
+    padding: 3px 1px !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    background: linear-gradient(145deg, #12172a, #19102a) !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+  .aid-bet-control label,
+  .aid-speed > span,
+  .aid-balance > span {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 2px !important;
+    margin: 0 !important;
+    font-size: 6px !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+  }
+  .aid-bet-control > div,
+  .aid-speed > div {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 2px !important;
+    margin-top: 3px !important;
+    min-width: 0 !important;
+  }
+  .aid-bet-control button {
+    flex: 0 0 15px !important;
+    width: 15px !important;
+    height: 17px !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+  }
+  .aid-bet-control strong { font-size: 9px !important; }
+  .aid-bet-control small,
+  .aid-balance small { display: none !important; }
+  .aid-speed button {
+    min-width: 0 !important;
+    flex: 1 1 0 !important;
+    padding: 4px 1px !important;
+    font-size: 5px !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+  }
+  .aid-spin {
+    grid-column: auto !important;
+    grid-row: 1 !important;
+    justify-self: center !important;
+    align-self: center !important;
+    min-height: 43px !important;
+    padding: 3px 1px !important;
+    font-size: 9px !important;
+    line-height: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 2px !important;
+    white-space: nowrap !important;
+  }
+  .aid-spin small { font-size: 5px !important; line-height: 1 !important; }
+  .aid-spin > span { line-height: 1 !important; }
+  .aid-balance { text-align: center !important; }
+  .aid-balance strong {
+    display: block !important;
+    margin-top: 5px !important;
+    font-size: 9px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+  }
+  .aid-reset {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 3px !important;
+    font-size: 5px !important;
+    line-height: 1 !important;
+    white-space: normal !important;
+    text-align: center !important;
+  }
+  .aid-reset svg { width: 12px !important; height: 12px !important; flex: 0 0 auto !important; }
+  .aid-bottom-tools {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    margin: 3px auto 0 !important;
+  }
+  .aid-bottom-tools .aid-demo-pill,
+  .aid-bottom-tools .aid-sound {
+    min-height: 22px !important;
+    padding: 3px 7px !important;
+    font-size: 7px !important;
+  }
+  .aid-status { margin-top: 4px !important; }
+}
