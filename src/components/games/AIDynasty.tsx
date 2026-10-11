@@ -67,20 +67,53 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   }, [soundOn]);
 
   const flatBoard = useMemo(() => board.flat(), [board]);
-  const playTone = (kind: "spin" | "stop" | "win" | "bonus") => {
+  const playTone = (kind: "spin" | "stop" | "win" | "bonus" | "punch" | "crowd" | "bell") => {
     if (!soundOn) return;
     try {
       const AudioContextType = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextType) return;
       const context = new AudioContextType();
-      const notes = kind === "bonus" ? [392,523,659,784,988] : kind === "win" ? [523,659,784,1047] : kind === "stop" ? [220] : [160,210,260];
+      if (kind === "crowd") {
+        const length = Math.floor(context.sampleRate * 1.25);
+        const buffer = context.createBuffer(1, length, context.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (0.35 + Math.random() * 0.65);
+        const noise = context.createBufferSource();
+        noise.buffer = buffer;
+        const filter = context.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.frequency.value = 1050;
+        filter.Q.value = 0.65;
+        const crowdGain = context.createGain();
+        crowdGain.gain.setValueAtTime(0.0001, context.currentTime);
+        crowdGain.gain.exponentialRampToValueAtTime(0.11, context.currentTime + 0.18);
+        crowdGain.gain.setValueAtTime(0.085, context.currentTime + 0.72);
+        crowdGain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 1.2);
+        noise.connect(filter); filter.connect(crowdGain); crowdGain.connect(context.destination);
+        noise.start(); noise.stop(context.currentTime + 1.25);
+        [392, 494, 587, 740].forEach((frequency, index) => {
+          const cheer = context.createOscillator();
+          const cheerGain = context.createGain();
+          cheer.type = "sawtooth";
+          cheer.frequency.setValueAtTime(frequency, context.currentTime + index * 0.07);
+          cheer.frequency.exponentialRampToValueAtTime(frequency * 1.25, context.currentTime + 0.45 + index * 0.07);
+          cheerGain.gain.setValueAtTime(0.0001, context.currentTime);
+          cheerGain.gain.exponentialRampToValueAtTime(0.018, context.currentTime + 0.15);
+          cheerGain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 1.05);
+          cheer.connect(cheerGain); cheerGain.connect(context.destination);
+          cheer.start(); cheer.stop(context.currentTime + 1.1);
+        });
+        window.setTimeout(() => void context.close(), 1500);
+        return;
+      }
+      const notes = kind === "bonus" ? [392,523,659,784,988] : kind === "win" ? [523,659,784,1047] : kind === "bell" ? [880,1174] : kind === "punch" ? [115,82,58] : kind === "stop" ? [220] : [160,210,260];
       notes.forEach((frequency, index) => {
         const oscillator = context.createOscillator();
         const gain = context.createGain();
-        oscillator.type = kind === "spin" ? "sawtooth" : "sine";
+        oscillator.type = kind === "spin" || kind === "punch" ? "sawtooth" : "sine";
         oscillator.frequency.value = frequency;
         gain.gain.setValueAtTime(0.0001, context.currentTime + index * 0.065);
-        gain.gain.exponentialRampToValueAtTime(kind === "spin" ? 0.012 : 0.045, context.currentTime + index * 0.065 + 0.015);
+        gain.gain.exponentialRampToValueAtTime(kind === "spin" ? 0.012 : kind === "punch" ? 0.09 : 0.045, context.currentTime + index * 0.065 + 0.015);
         gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + index * 0.065 + 0.13);
         oscillator.connect(gain); gain.connect(context.destination);
         oscillator.start(context.currentTime + index * 0.065); oscillator.stop(context.currentTime + index * 0.065 + 0.15);
@@ -145,11 +178,17 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   const startBonus = async () => {
     if (!bonus || bonusStep !== "intro") return;
     setBonusStep("fight");
+    if (bonus === "boxing") {
+      playTone("bell");
+      window.setTimeout(() => playTone("punch"), 500);
+      window.setTimeout(() => playTone("punch"), 1250);
+    }
     await new Promise((resolve) => window.setTimeout(resolve, 2300));
     if (bonus === "boxing") {
       const winner = Math.random() < 0.5 ? "elon" : "altman";
       const awarded = winner === "elon" ? 12 : 8;
       setBoxingWinner(winner);
+      playTone("crowd");
       setFreeSpinBet(bet);
       setFreeSpins((value) => value + awarded);
       setMessage((winner === "elon" ? "ELON LANDS THE FINAL PUNCH · 12 FREE SPINS!" : "ALTMAN LANDS THE FINAL PUNCH · 8 FREE SPINS!"));
