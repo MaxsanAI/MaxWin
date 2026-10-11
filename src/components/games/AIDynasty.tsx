@@ -206,43 +206,53 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   const spinHoldWin = async () => {
     if (bonus !== "holdwin" || bonusStep !== "hold" || holdBusy || holdSpins <= 0) return;
     setHoldBusy(true);
-    playTone("spin");
-    await new Promise((resolve) => window.setTimeout(resolve, speed === "turbo" ? 380 : 650));
-    const nextCards = [...holdCards];
-    const cardMultipliers = [1, 1, 2, 2, 3, 3, 5, 8, 10];
-    let locked = 0;
-    for (let i = 0; i < nextCards.length; i++) {
-      if (nextCards[i] === null && Math.random() < 0.145) {
-        nextCards[i] = bet * cardMultipliers[Math.floor(Math.random() * cardMultipliers.length)];
-        locked++;
+    try {
+      playTone("spin");
+      await new Promise((resolve) => window.setTimeout(resolve, speed === "turbo" ? 380 : 650));
+
+      const nextCards = [...holdCards];
+      const cardMultipliers = [1, 1, 2, 2, 3, 3, 5, 8, 10];
+      let locked = 0;
+
+      for (let i = 0; i < nextCards.length; i++) {
+        if (nextCards[i] === null && Math.random() < 0.145) {
+          nextCards[i] = bet * cardMultipliers[Math.floor(Math.random() * cardMultipliers.length)];
+          locked++;
+        }
       }
-    }
-    const total = nextCards.reduce<number>((sum, value) => sum + (value ?? 0), 0);
-    setHoldCards(nextCards);
-    playTone(locked > 0 ? "win" : "stop");
-    if (nextCards.every((value) => value !== null)) {
-      setHoldSpins(0);
-      setBalance((value) => value + total);
-      setLastWin(total);
-      setMessage("MOON WIN · " + total.toLocaleString() + " DEMO CREDITS");
-      playTone("bonus");
-      setBonusStep("result");
-    } else if (locked > 0) {
-      setHoldSpins(3);
-      setMessage(locked + " NEW CARD" + (locked === 1 ? "" : "S") + " LOCKED · RESPINS RESET TO 3");
-    } else {
-      const remaining = holdSpins - 1;
-      setHoldSpins(remaining);
-      if (remaining === 0) {
+
+      const total = nextCards.reduce<number>((sum, value) => sum + (value ?? 0), 0);
+      const frameComplete = nextCards.every((value) => value !== null);
+      setHoldCards(nextCards);
+      playTone(locked > 0 ? "win" : "stop");
+
+      if (frameComplete) {
+        setHoldSpins(0);
         setBalance((value) => value + total);
         setLastWin(total);
-        setMessage("HOLD & WIN COMPLETE · " + total.toLocaleString() + " DEMO CREDITS");
+        setMessage("MOON WIN · " + total.toLocaleString() + " DEMO CREDITS");
+        playTone("bonus");
         setBonusStep("result");
+      } else if (locked > 0) {
+        setHoldSpins(3);
+        setMessage(locked + " NEW CARD" + (locked === 1 ? "" : "S") + " LOCKED · RESPINS RESET TO 3");
       } else {
-        setMessage("NO NEW CARDS · " + remaining + " RESPIN" + (remaining === 1 ? "" : "S") + " LEFT");
+        const remaining = holdSpins - 1;
+        setHoldSpins(remaining);
+        if (remaining === 0) {
+          setBalance((value) => value + total);
+          setLastWin(total);
+          setMessage("HOLD & WIN COMPLETE · " + total.toLocaleString() + " DEMO CREDITS");
+          setBonusStep("result");
+        } else {
+          setMessage("NO NEW CARDS · " + remaining + " RESPIN" + (remaining === 1 ? "" : "S") + " LEFT");
+        }
       }
+    } catch {
+      setMessage("HOLD & WIN PAUSED · TAP SPIN TO CONTINUE");
+    } finally {
+      setHoldBusy(false);
     }
-    setHoldBusy(false);
   };
 
   const closeBonus = () => { setBonus(null); setBonusStep("intro"); setBoxingWinner(null); setHoldCards(Array(20).fill(null)); setHoldSpins(3); setHoldBusy(false); };
