@@ -1999,15 +1999,19 @@
 /* Final requested controls: gold desktop lobby button without any arrow; hide it entirely on mobile. */
 @media (min-width: 721px) {
   .aid-game .aid-topbar {
-    position: relative !important;
-    height: 34px !important;
-    min-height: 34px !important;
-    margin: 0 auto 4px !important;
-    width: min(600px, 100%) !important;
+    position: absolute !important;
+    z-index: 20 !important;
+    top: 180px !important;
+    left: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
     overflow: visible !important;
   }
   .aid-game .aid-back {
-    position: absolute !important;
+    position: relative !important;
     top: 0 !important;
     left: 0 !important;
     display: inline-flex !important;
