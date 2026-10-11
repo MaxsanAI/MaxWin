@@ -3271,3 +3271,83 @@ html, body {
     margin: 12px auto 8px !important;
   }
 }
+
+
+/* Book of Ra desktop polish: remove text labels over artwork and give wins a premium celebration. */
+@media (min-width: 721px) {
+  .book-of-ra-slot .bra-final-column .bra-reel small,
+  .book-of-ra-slot .bra-final-column .bra-reel .rf-reel-label,
+  .book-of-ra-slot .bra-reel-column .bra-strip-symbol small {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+.book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  border: 2px solid #ffe8a0 !important;
+  border-radius: 5px !important;
+  background: radial-gradient(ellipse at 50% 45%, #73501c 0%, #35243a 58%, #171323 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px #fff3c8,
+    inset 0 0 24px #ffd45c99,
+    0 0 10px #ffcf59cc,
+    0 0 24px #ffb72f88 !important;
+  animation: bra-premium-win-pulse 760ms ease-in-out infinite alternate !important;
+}
+.book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 3 !important;
+  inset: -45% -80% !important;
+  pointer-events: none !important;
+  background: linear-gradient(112deg, transparent 38%, #fff8c71c 44%, #fff9dcae 50%, #fff1a82a 56%, transparent 63%) !important;
+  transform: translateX(-75%) !important;
+  animation: bra-premium-win-shine 1.35s ease-in-out infinite !important;
+}
+.book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win::after {
+  content: "✦" !important;
+  position: absolute !important;
+  z-index: 4 !important;
+  top: 4px !important;
+  right: 5px !important;
+  color: #fff4b8 !important;
+  font-size: clamp(10px, 1vw, 16px) !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 5px #fff2a8, 0 0 12px #ffbd32 !important;
+  pointer-events: none !important;
+  animation: bra-premium-win-star 900ms ease-in-out infinite alternate !important;
+}
+.book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win .rf-symbol-art {
+  z-index: 2 !important;
+  filter: drop-shadow(0 0 5px #ffe18a) drop-shadow(0 0 13px #ffbd4a) !important;
+  animation: bra-premium-win-symbol 760ms ease-in-out infinite alternate !important;
+}
+.book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win .rf-symbol-art img {
+  filter: drop-shadow(0 0 5px #ffe7a3) drop-shadow(0 0 12px #f9b93e) !important;
+}
+@keyframes bra-premium-win-pulse {
+  from { filter: brightness(1.04); }
+  to { filter: brightness(1.3); }
+}
+@keyframes bra-premium-win-shine {
+  0%, 20% { transform: translateX(-75%); opacity: .15; }
+  70%, 100% { transform: translateX(75%); opacity: .95; }
+}
+@keyframes bra-premium-win-star {
+  from { opacity: .5; transform: scale(.8) rotate(0deg); }
+  to { opacity: 1; transform: scale(1.22) rotate(18deg); }
+}
+@keyframes bra-premium-win-symbol {
+  from { transform: scale(.98); }
+  to { transform: scale(1.035); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win,
+  .book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win::before,
+  .book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win::after,
+  .book-of-ra-slot .bra-final-column .bra-reel.rf-reel-win .rf-symbol-art {
+    animation: none !important;
+  }
+}
