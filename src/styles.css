@@ -3258,3 +3258,15 @@ html, body {
     height: 100% !important;
   }
 }
+
+
+/* On phones, place the lobby button after the paytable instead of over the reels. */
+@media (max-width: 720px) {
+  .book-of-ra-slot .bra-lobby-button {
+    position: static !important;
+    display: inline-flex !important;
+    top: auto !important;
+    left: auto !important;
+    margin: 12px 0 8px !important;
+  }
+}
