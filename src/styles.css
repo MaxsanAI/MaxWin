@@ -2941,9 +2941,9 @@ html, body {
   100% { transform: translate3d(0, -1px, 0); filter: brightness(.92); }
 }
 @keyframes bra-symbol-roll {
-  0% { transform: translate3d(0, -125%, 0) scaleY(.72); opacity: .45; }
-  50% { transform: translate3d(0, 0, 0) scaleY(1.08); opacity: .95; }
-  100% { transform: translate3d(0, 125%, 0) scaleY(.72); opacity: .45; }
+  0% { transform: translate3d(0, -14%, 0) scaleY(1.18); opacity: .94; }
+  50% { transform: translate3d(0, 0, 0) scaleY(1.28); opacity: 1; }
+  100% { transform: translate3d(0, 14%, 0) scaleY(1.18); opacity: .94; }
 }
 @keyframes bra-reel-streak {
   from { background-position: 0 -110%; }
