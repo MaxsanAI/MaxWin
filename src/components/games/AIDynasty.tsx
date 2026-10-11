@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, AudioLines, Crown, Info, RotateCcw, Sparkles, Volume2, VolumeX, Zap } from "lucide-react";
+import { ArrowLeft, AudioLines, Crown, Info, RotateCcw, Sparkles, Volume2, VolumeX } from "lucide-react";
 import "./AIDynasty.css";
 
 type SymbolId = "elon" | "trump" | "altman" | "snoop" | "bitcoin" | "rocket" | "wild" | "boxing";
