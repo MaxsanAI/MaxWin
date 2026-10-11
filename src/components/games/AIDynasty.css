@@ -1007,3 +1007,80 @@
   .aid-symbol b { font-size: clamp(4px, 1.35vw, 6px); }
   .aid-controls { width: 100%; }
 }
+
+
+/* Compact control panel: narrower than the reels, with SPIN centered below them. */
+.aid-controls {
+  width: min(540px, 100%);
+  margin: 8px auto 0;
+  padding: 8px 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 7px 10px;
+  align-items: center;
+}
+.aid-bet-control { grid-column: 1; grid-row: 1; min-width: 0; }
+.aid-speed { grid-column: 2; grid-row: 1; min-width: 0; }
+.aid-balance { grid-column: 3; grid-row: 1; min-width: 0; text-align: center; }
+.aid-spin {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: center;
+  width: min(150px, 100%);
+  min-height: 42px;
+  padding: 5px 10px;
+  gap: 1px;
+  font-size: 12px;
+}
+.aid-spin > span { font-size: 11px; }
+.aid-spin small { font-size: 7px; }
+.aid-bet-control label,
+.aid-balance > span,
+.aid-speed > span { font-size: 7px; letter-spacing: .7px; }
+.aid-bet-control > div { gap: 5px; margin-top: 5px; }
+.aid-bet-control button { width: 21px; height: 21px; border-radius: 5px; }
+.aid-bet-control strong { font-size: 13px; }
+.aid-bet-control small,
+.aid-balance small { margin-top: 3px; font-size: 7px; }
+.aid-speed > div { justify-content: center; gap: 3px; margin-top: 5px; }
+.aid-speed button { padding: 5px 6px; font-size: 7px; }
+.aid-balance strong { margin-top: 4px; font-size: 15px; }
+.aid-reset {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: center;
+  padding: 5px 4px;
+  font-size: 7px;
+  letter-spacing: .4px;
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  .aid-controls {
+    width: min(500px, 100%);
+    padding: 7px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 7px 8px;
+  }
+  .aid-bet-control { grid-column: 1; grid-row: 1; }
+  .aid-speed { grid-column: 1; grid-row: 2; }
+  .aid-balance { grid-column: 2; grid-row: 1; text-align: center; }
+  .aid-spin {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: min(150px, 65%);
+    min-height: 40px;
+  }
+  .aid-reset {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: center;
+    white-space: nowrap;
+    font-size: 7px;
+  }
+}
+@media (max-width: 380px) {
+  .aid-controls { gap: 6px; padding: 6px; }
+  .aid-speed button { padding: 5px 4px; font-size: 6px; }
+  .aid-spin { width: 68%; }
+}
