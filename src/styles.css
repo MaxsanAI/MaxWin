@@ -3764,3 +3764,26 @@ html, body {
     display: inline-flex !important;
   }
 }
+
+
+/* Royal Fortune: real vertical reel strips, isolated from Book of Ra. */
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window {
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:minmax(0,1fr)!important;grid-auto-flow:column!important;overflow:hidden!important;isolation:isolate;background:#100d19!important;
+}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-column {position:relative;min-width:0;min-height:0;height:100%;overflow:hidden;background:#21192b;border:1px solid #ffffff18;border-radius:6px;contain:paint}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-viewport {position:absolute;inset:0;overflow:hidden;background:#21192b}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-strip {position:absolute;top:0;left:0;right:0;height:400%;display:flex;flex-direction:column;transform:translate3d(0,0,0);will-change:transform;opacity:0}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-strip-symbol {position:relative;flex:0 0 6.25%;width:100%;min-height:0;display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,#342641,#17111f)!important;border-bottom:1px solid #ffffff0c}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-strip-symbol img {display:block;width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 3px 5px #0009)}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-column.is-spinning .rf-reel-strip {opacity:1;animation:rf-real-strip-spin 460ms linear infinite}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)).rf-speed-slow .rf-reel-column.is-spinning .rf-reel-strip {animation-duration:760ms}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)).rf-speed-turbo .rf-reel-column.is-spinning .rf-reel-strip {animation-duration:260ms}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-final-column {position:absolute;inset:0;display:grid;grid-template-rows:repeat(4,minmax(0,1fr));background:#21192b;opacity:1}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-final-column.is-hidden {opacity:0;visibility:hidden}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-final-column .rf-reel {min-height:0!important;height:100%;width:100%;border:0;border-bottom:1px solid #ffffff13;border-radius:0!important;background-color:#21192b!important;gap:0;padding:2px}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-final-column .rf-reel:last-child {border-bottom:0}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-final-column .rf-symbol-art img {width:88%;height:88%;max-width:none;max-height:none;object-fit:contain}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-column.is-stopping .rf-final-column .rf-reel {animation:rf-column-land 300ms cubic-bezier(.16,1.2,.3,1) both}
+@keyframes rf-real-strip-spin {from{transform:translate3d(0,-50%,0)}to{transform:translate3d(0,0,0)}}
+@keyframes rf-column-land {0%{transform:translate3d(0,-8px,0)}62%{transform:translate3d(0,2px,0)}82%{transform:translate3d(0,-1px,0)}100%{transform:translate3d(0,0,0)}}
+@media(max-width:720px){.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window{grid-template-rows:minmax(0,1fr)!important}}
