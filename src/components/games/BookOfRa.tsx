@@ -56,10 +56,11 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  };
  const playReelStop=()=>{tone(150,0.12,"triangle",0.13,82);tone(620,0.07,"sine",0.055,460,0.025);};
  const playWin=()=>{
-  tone(523.25,0.22,"sine",0.12,659.25);
-  tone(659.25,0.24,"sine",0.11,783.99,0.10);
-  tone(783.99,0.34,"triangle",0.12,1046.5,0.20);
-  tone(1046.5,0.42,"sine",0.10,880,0.32);
+  // Short, warm premium win chime: soft bell notes with a clean resolving finish.
+  tone(659.25,0.24,"sine",0.085,783.99);
+  tone(830.61,0.28,"sine",0.075,987.77,0.085);
+  tone(987.77,0.38,"sine",0.07,1318.51,0.17);
+  tone(1318.51,0.48,"sine",0.055,1174.66,0.27);
  };
  const playBonus=()=>{
   tone(196,0.28,"triangle",0.15,392);
