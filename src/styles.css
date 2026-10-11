@@ -1732,3 +1732,31 @@ html, body {
 @keyframes bra-expanding-flash { 0%,100% { transform:translateX(-35%) rotate(8deg); opacity:.15; } 50% { transform:translateX(35%) rotate(8deg); opacity:.75; } }
 @keyframes bra-symbol-pulse { from { filter:drop-shadow(0 0 7px rgba(255,210,98,.55)); } to { filter:drop-shadow(0 0 17px rgba(255,210,98,1)); } }
 @media (prefers-reduced-motion:reduce) { .book-of-ra-slot .bra-expanding-reel,.book-of-ra-slot .bra-expanding-reel:before,.book-of-ra-slot .bra-expanding-reel img { animation:none !important; } }
+
+
+/* Book of Ra: each cell flips into the selected expanding symbol in sequence. */
+.book-of-ra-slot .bra-cell-expanding {
+  position:relative;
+  z-index:3;
+  animation:bra-cell-transform .34s cubic-bezier(.16,1,.3,1) both;
+  border-color:rgba(255,218,119,.98)!important;
+  background:radial-gradient(circle,rgba(255,207,91,.32),rgba(35,22,35,.96) 78%)!important;
+  box-shadow:inset 0 0 18px rgba(255,208,93,.34),0 0 17px rgba(255,190,57,.3)!important;
+}
+.book-of-ra .bra-cell-expanding .rf-symbol-art,
+.book-of-ra-slot .bra-cell-expanding .rf-symbol-art {
+  animation:bra-cell-symbol-pop .34s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes bra-cell-transform {
+  0% { transform:scale(.82); filter:brightness(2.2); }
+  55% { transform:scale(1.06); filter:brightness(1.65); }
+  100% { transform:scale(1); filter:brightness(1); }
+}
+@keyframes bra-cell-symbol-pop {
+  0% { opacity:.25; transform:translateY(-9px) scale(.72); }
+  100% { opacity:1; transform:translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .book-of-ra-slot .bra-cell-expanding,
+  .book-of-ra-slot .bra-cell-expanding .rf-symbol-art { animation:none!important; }
+}
