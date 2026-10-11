@@ -2725,3 +2725,153 @@ html, body {
     gap: 6px !important;
   }
 }
+
+
+/* Book of Ra: five controls must remain on one single horizontal row. */
+.book-of-ra-slot .bra-main-controls {
+  display: grid !important;
+  grid-template-columns: minmax(105px, 1fr) minmax(155px, 1.25fr) minmax(112px, .9fr) minmax(105px, 1fr) minmax(132px, 1.15fr) !important;
+  align-items: stretch !important;
+  width: min(100%, 980px) !important;
+  max-width: 980px !important;
+  gap: 7px !important;
+}
+.book-of-ra-slot .bra-main-controls > * {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+.book-of-ra-slot .bra-main-controls .bra-inline-speed {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 5px 4px !important;
+  min-height: 48px !important;
+  border: 1px solid #b99a5b70 !important;
+  border-radius: 8px !important;
+  background: linear-gradient(145deg, #2b2138, #191421) !important;
+}
+.book-of-ra-slot .bra-main-controls .bra-inline-speed > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 8px !important;
+  letter-spacing: .8px !important;
+  white-space: nowrap !important;
+}
+.book-of-ra-slot .bra-main-controls .bra-inline-speed > div {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  width: 100% !important;
+}
+.book-of-ra-slot .bra-main-controls .bra-inline-speed button {
+  min-width: 0 !important;
+  min-height: 22px !important;
+  height: 22px !important;
+  flex: 1 1 0 !important;
+  padding: 2px 3px !important;
+  font-size: 7px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+.book-of-ra-slot .bra-main-controls .bra-buy-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  min-height: 48px !important;
+  padding: 5px 7px !important;
+  white-space: nowrap !important;
+}
+.book-of-ra-slot .bra-main-controls .bra-buy-button > span {
+  min-width: 0 !important;
+  font-size: 9px !important;
+}
+.book-of-ra-slot .bra-main-controls .bra-buy-button small {
+  font-size: 7px !important;
+}
+.book-of-ra-slot .bra-secondary-controls {
+  display: none !important;
+}
+@media (min-width: 721px) {
+  .modal-slot .book-of-ra-slot .bra-main-controls {
+    width: min(100%, 980px) !important;
+    max-width: 980px !important;
+    grid-template-columns: minmax(105px, 1fr) minmax(155px, 1.25fr) minmax(112px, .9fr) minmax(105px, 1fr) minmax(132px, 1.15fr) !important;
+    gap: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control,
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-credit-panel,
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-spin-button,
+  .modal-slot .book-of-ra-slot .bra-main-controls .bra-inline-speed,
+  .modal-slot .book-of-ra-slot .bra-main-controls .bra-buy-button {
+    height: 48px !important;
+    min-height: 48px !important;
+  }
+}
+@media (max-width: 900px) and (min-width: 721px) {
+  .modal-slot .book-of-ra-slot .bra-main-controls {
+    grid-template-columns: minmax(86px, .9fr) minmax(135px, 1.2fr) minmax(90px, .8fr) minmax(86px, .9fr) minmax(112px, 1fr) !important;
+    gap: 4px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .bra-buy-button {
+    gap: 3px !important;
+    padding: 4px !important;
+    font-size: 8px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .bra-inline-speed button {
+    font-size: 6px !important;
+    padding-inline: 2px !important;
+  }
+}
+@media (max-width: 720px) {
+  .book-of-ra-slot .bra-main-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, .95fr) minmax(0, 1fr) minmax(0, 1.1fr) !important;
+    gap: 4px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .rf-bet-control,
+  .book-of-ra-slot .bra-main-controls .rf-credit-panel,
+  .book-of-ra-slot .bra-main-controls .rf-spin-button,
+  .book-of-ra-slot .bra-main-controls .bra-inline-speed,
+  .book-of-ra-slot .bra-main-controls .bra-buy-button {
+    min-height: 48px !important;
+    height: auto !important;
+    padding: 4px 3px !important;
+    border-radius: 7px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .bra-inline-speed > span {
+    font-size: 6px !important;
+    letter-spacing: 0 !important;
+  }
+  .book-of-ra-slot .bra-main-controls .bra-inline-speed button {
+    font-size: 5px !important;
+    padding-inline: 1px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .bra-buy-button {
+    flex-direction: column !important;
+    gap: 2px !important;
+    font-size: 7px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .bra-buy-button > span {
+    font-size: 7px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .bra-buy-button small {
+    font-size: 5px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .rf-bet-control label,
+  .book-of-ra-slot .bra-main-controls .rf-credit-panel > span {
+    font-size: 6px !important;
+    text-align: center !important;
+  }
+  .book-of-ra-slot .bra-main-controls .rf-credit-panel strong {
+    font-size: 12px !important;
+  }
+  .book-of-ra-slot .bra-main-controls .rf-spin-button {
+    font-size: 9px !important;
+  }
+}
