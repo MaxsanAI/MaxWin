@@ -1438,3 +1438,138 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
     max-width: 100% !important;
   }
 }
+
+
+/* Book of Ra mobile: remove the outer modal frame and use the full screen width. */
+@media (max-width: 720px) {
+  .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    background: #080711 !important;
+    backdrop-filter: none !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: max(7px, env(safe-area-inset-top)) 0 max(7px, env(safe-area-inset-bottom)) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    background: linear-gradient(180deg, #171020 0%, #090811 100%) !important;
+    scrollbar-width: none !important;
+  }
+  .modal-slot:has(.book-of-ra-slot)::-webkit-scrollbar { display: none !important; }
+  .modal-slot:has(.book-of-ra-slot) > .modal-close {
+    position: fixed !important;
+    top: max(7px, env(safe-area-inset-top)) !important;
+    right: 7px !important;
+    z-index: 50 !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) > .rf-game {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 0 8px !important;
+    gap: 7px !important;
+    overflow: visible !important;
+  }
+  .book-of-ra-slot {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 7px !important;
+  }
+  .book-of-ra-slot .rf-game-top {
+    min-height: 48px !important;
+    padding: 0 43px 0 10px !important;
+    margin: 0 !important;
+  }
+  .book-of-ra-slot .bra-cabinet {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 7px 0 6px !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-radius: 0 !important;
+  }
+  .book-of-ra-slot .bra-cabinet .rf-cabinet-header {
+    padding: 0 8px !important;
+    margin: 0 !important;
+  }
+  .book-of-ra-slot .bra-reel-window {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: clamp(225px, 36dvh, 310px) !important;
+    min-height: 225px !important;
+    max-height: 310px !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-flow: column !important;
+    gap: 3px !important;
+    padding: 3px !important;
+    margin: 6px 0 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-radius: 0 !important;
+  }
+  .book-of-ra-slot .bra-reel {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 3px 1px !important;
+    gap: 3px !important;
+    border-radius: 4px !important;
+  }
+  .book-of-ra-slot .bra-reel .rf-symbol-art {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+  .book-of-ra-slot .bra-reel .rf-symbol-art img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+  }
+  .book-of-ra-slot .bra-reel small {
+    max-width: 100% !important;
+    font-size: clamp(6px, 1.7vw, 9px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+  }
+  .book-of-ra-slot .rf-machine-footer {
+    padding: 0 6px !important;
+    gap: 4px !important;
+  }
+  .book-of-ra-slot .bra-main-controls,
+  .book-of-ra-slot .bra-secondary-controls {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 7px !important;
+    padding-right: 7px !important;
+  }
+}
