@@ -1706,3 +1706,29 @@ html, body {
 @media (prefers-reduced-motion: reduce) {
   .bra-awakening-backdrop,.bra-opening-book img,.bra-revealed-symbol,.bra-awakening-stars,.bra-opening-book:before,.bra-awakening:before { animation:none !important; }
 }
+
+
+/* Book of Ra expanding-symbol reel animation (visual only; server payout remains authoritative). */
+.book-of-ra-slot .bra-reel-window { position:relative; overflow:hidden; }
+.book-of-ra-slot .bra-expanding-reel {
+  position:absolute; top:4px; bottom:4px; z-index:5; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:5px; overflow:hidden; pointer-events:none;
+  border:1px solid rgba(255,215,111,.9); border-radius:8px;
+  background:radial-gradient(ellipse at center,rgba(255,205,91,.34),rgba(30,17,29,.93) 74%);
+  box-shadow:inset 0 0 24px rgba(255,202,79,.28),0 0 25px rgba(255,190,57,.38);
+  transform-origin:center bottom; animation:bra-reel-expand .58s cubic-bezier(.16,1,.3,1) both;
+}
+.book-of-ra-slot .bra-expanding-reel:before {
+  content:""; position:absolute; inset:-40%; background:linear-gradient(115deg,transparent 35%,rgba(255,244,193,.35) 49%,transparent 62%);
+  animation:bra-expanding-flash 1.4s ease-in-out infinite;
+}
+.book-of-ra-slot .bra-expanding-reel img {
+  position:relative; z-index:1; display:block; width:95%; height:85%; object-fit:contain;
+  filter:drop-shadow(0 0 12px rgba(255,210,98,.8));
+  animation:bra-symbol-pulse 1.15s ease-in-out infinite alternate;
+}
+.book-of-ra-slot .bra-expanding-reel span { position:absolute; z-index:2; top:4px; right:5px; color:#ffe8a3; text-shadow:0 0 8px #ffbf43; font-size:13px; }
+@keyframes bra-reel-expand { 0% { opacity:0; transform:scaleY(.08); filter:brightness(2.3); } 55% { opacity:1; transform:scaleY(1.06); } 100% { opacity:1; transform:scaleY(1); filter:brightness(1); } }
+@keyframes bra-expanding-flash { 0%,100% { transform:translateX(-35%) rotate(8deg); opacity:.15; } 50% { transform:translateX(35%) rotate(8deg); opacity:.75; } }
+@keyframes bra-symbol-pulse { from { filter:drop-shadow(0 0 7px rgba(255,210,98,.55)); } to { filter:drop-shadow(0 0 17px rgba(255,210,98,1)); } }
+@media (prefers-reduced-motion:reduce) { .book-of-ra-slot .bra-expanding-reel,.book-of-ra-slot .bra-expanding-reel:before,.book-of-ra-slot .bra-expanding-reel img { animation:none !important; } }
