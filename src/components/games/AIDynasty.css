@@ -919,3 +919,91 @@
     left: auto;
   }
 }
+
+
+/* Final compact cabinet pass: square symbol tiles, less chrome, side lobby. */
+.aid-machine {
+  width: min(650px, 100%);
+  max-width: 100%;
+  padding: 6px;
+}
+.aid-machine-head,
+.aid-machine-foot {
+  display: none !important;
+}
+.aid-reels {
+  width: 100%;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: 5 / 4 !important;
+  margin: 0 auto;
+  padding: 5px;
+  gap: 5px;
+}
+.aid-reel-column {
+  height: 100%;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.aid-symbol {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1 !important;
+  min-height: 0;
+  padding: 2px;
+  gap: 2px;
+}
+.aid-symbol-mark {
+  width: min(55%, 42px);
+  max-width: 55%;
+  flex: 0 1 auto;
+}
+.aid-symbol b {
+  max-width: 100%;
+  font-size: clamp(5px, .7vw, 8px);
+  line-height: 1;
+}
+.aid-controls {
+  width: min(650px, 100%);
+  padding: 6px;
+  gap: 5px;
+}
+.aid-spin { min-height: 48px; }
+
+/* Align the LOBBY control beside the left edge of the cabinet on desktop. */
+@media (min-width: 1000px) {
+  .aid-back {
+    position: absolute;
+    top: 40px;
+    left: max(0px, calc(50% - 415px));
+  }
+}
+@media (max-width: 999px) {
+  .aid-back { position: static; }
+}
+@media (max-width: 720px) {
+  .aid-machine {
+    width: 100%;
+    padding: 4px;
+  }
+  .aid-reels {
+    width: 100%;
+    height: auto !important;
+    aspect-ratio: 5 / 4 !important;
+    margin: 0 auto;
+    padding: 3px;
+    gap: 2px;
+  }
+  .aid-reel-column { gap: 2px; }
+  .aid-symbol {
+    aspect-ratio: 1 / 1 !important;
+    padding: 1px;
+    gap: 1px;
+  }
+  .aid-symbol-mark {
+    width: min(54%, 27px);
+    font-size: clamp(10px, 3.2vw, 16px);
+  }
+  .aid-symbol b { font-size: clamp(4px, 1.35vw, 6px); }
+  .aid-controls { width: 100%; }
+}
