@@ -1320,3 +1320,23 @@
   .aid-balance,
   .aid-reset { min-height: 0 !important; }
 }
+
+
+/* Small finishing adjustments: lower LOBBY to align with the reels and tone down the title above. */
+@media (min-width: 1000px) {
+  .aid-back {
+    top: 68px !important;
+  }
+}
+.aid-game h1,
+.aid-game h2,
+.aid-game h3,
+.aid-game .aid-title,
+.aid-game .aid-subtitle {
+  font-size: .82em !important;
+  line-height: 1.15 !important;
+}
+.aid-game h1 { font-size: clamp(12px, 1.05vw, 17px) !important; }
+.aid-game h2 { font-size: clamp(11px, .95vw, 15px) !important; }
+.aid-game h3,
+.aid-game .aid-subtitle { font-size: clamp(9px, .75vw, 12px) !important; }
