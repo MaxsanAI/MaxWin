@@ -12,3 +12,139 @@
 .modal-slot:has(.aid-game)>.modal-mark,.modal-slot:has(.aid-game)>.eyebrow,.modal-slot:has(.aid-game)>#modal-title{display:none}
 .modal-slot:has(.aid-game)>.aid-game{flex:1;min-height:0;width:100%;max-height:100%;overflow:auto}
 @media(max-width:600px){.modal-backdrop:has(.modal-slot:has(.aid-game)){padding:3px}.modal-slot:has(.aid-game){width:calc(100vw - 6px);height:calc(100dvh - 6px);max-height:calc(100dvh - 6px);padding:8px 5px 5px}.modal-slot:has(.aid-game)>.modal-close{top:5px;right:5px}}
+
+
+/* Symbol tiles stay square; keep the complete 5 × 4 reel window proportional. */
+.aid-reels {
+  aspect-ratio: 5 / 4;
+  align-items: stretch;
+}
+.aid-reel-column {
+  min-height: 0;
+  height: 100%;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+}
+.aid-symbol {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+  gap: clamp(2px, .45vw, 5px);
+}
+.aid-symbol-mark {
+  width: clamp(22px, 3.6vw, 46px);
+  height: clamp(22px, 3.6vw, 46px);
+}
+.aid-symbol b {
+  font-size: clamp(6px, .75vw, 9px);
+  letter-spacing: clamp(0px, .08vw, .5px);
+}
+
+/* Bonus / free-spin and boxing pop-ups: compact, responsive, and readable. */
+.aid-bonus-backdrop {
+  padding: clamp(6px, 2vw, 14px);
+}
+.aid-bonus-modal {
+  width: min(100%, 410px);
+  max-height: min(90%, calc(100dvh - 28px));
+  padding: clamp(15px, 2.2vh, 21px) clamp(12px, 3vw, 18px);
+}
+.aid-bonus-modal h2 {
+  font-size: clamp(20px, 4vw, 29px);
+  line-height: 1.12;
+}
+.aid-bonus-modal > p {
+  font-size: clamp(11px, 1.8vw, 12px);
+  line-height: 1.5;
+}
+.aid-bonus-visual {
+  min-height: clamp(112px, 22vh, 145px);
+  margin: 8px 0;
+  gap: clamp(7px, 2vw, 13px);
+}
+.aid-boxer {
+  width: clamp(68px, 19vw, 88px);
+  padding: 8px 5px;
+  gap: 5px;
+}
+.aid-boxer > span {
+  width: clamp(43px, 12vw, 56px);
+  height: clamp(47px, 13vw, 61px);
+}
+.aid-fight-scene {
+  min-height: clamp(125px, 25vh, 165px);
+  margin: 9px 0;
+}
+.aid-fight-scene .aid-boxer {
+  width: clamp(64px, 18vw, 80px);
+}
+.aid-fight-flash {
+  padding: 7px;
+  font-size: 11px;
+}
+.aid-bonus-result {
+  padding: 9px 0 3px;
+}
+.aid-winner-badge {
+  width: 62px;
+  height: 62px;
+  margin-bottom: 8px;
+}
+.aid-bonus-result > strong {
+  font-size: clamp(24px, 5vw, 28px);
+}
+.aid-bonus-action {
+  min-height: 42px;
+  margin-top: 9px;
+}
+@media (max-width: 600px) {
+  .aid-reel-column {
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+  }
+  .aid-symbol {
+    gap: 2px;
+    border-radius: 5px;
+  }
+  .aid-symbol-mark {
+    width: clamp(20px, 6vw, 31px);
+    height: clamp(20px, 6vw, 31px);
+    font-size: clamp(12px, 3.5vw, 18px);
+  }
+  .aid-symbol b {
+    font-size: clamp(5px, 1.55vw, 7px);
+    letter-spacing: 0;
+  }
+  .aid-bonus-modal {
+    width: min(100%, 360px);
+    max-height: min(88%, calc(100dvh - 24px));
+    padding: 14px 11px 12px;
+  }
+  .aid-bonus-kicker {
+    font-size: 8px;
+    letter-spacing: 1.3px;
+  }
+  .aid-bonus-modal h2 {
+    margin: 7px 0;
+    font-size: clamp(19px, 5.5vw, 25px);
+  }
+  .aid-bonus-visual {
+    min-height: 112px;
+  }
+  .aid-fight-scene {
+    min-height: 128px;
+  }
+  .aid-bonus-action {
+    font-size: 10px;
+  }
+}
+@media (max-height: 620px) {
+  .aid-bonus-modal {
+    max-height: calc(100dvh - 16px);
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .aid-bonus-modal h2 { margin: 5px 0; }
+  .aid-bonus-visual, .aid-fight-scene { min-height: 96px; margin: 6px 0; }
+  .aid-bonus-result { padding: 5px 0 2px; }
+  .aid-winner-badge { width: 48px; height: 48px; }
+}
