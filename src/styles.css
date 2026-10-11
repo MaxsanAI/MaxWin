@@ -3787,3 +3787,8 @@ html, body {
 @keyframes rf-real-strip-spin {from{transform:translate3d(0,-50%,0)}to{transform:translate3d(0,0,0)}}
 @keyframes rf-column-land {0%{transform:translate3d(0,-8px,0)}62%{transform:translate3d(0,2px,0)}82%{transform:translate3d(0,-1px,0)}100%{transform:translate3d(0,0,0)}}
 @media(max-width:720px){.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window{grid-template-rows:minmax(0,1fr)!important}}
+
+/* Correct Royal Fortune speed selectors: speed class lives on the reel window. */
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window.rf-speed-slow .rf-reel-column.is-spinning .rf-reel-strip{animation-duration:760ms}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window.rf-speed-normal .rf-reel-column.is-spinning .rf-reel-strip{animation-duration:460ms}
+.modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window.rf-speed-turbo .rf-reel-column.is-spinning .rf-reel-strip{animation-duration:260ms}
