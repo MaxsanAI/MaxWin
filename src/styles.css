@@ -3092,3 +3092,69 @@ html, body {
     animation-duration: 1200ms !important;
   }
 }
+
+
+/* Book of Ra recovery: the cabinet must be a 3-row grid stage.
+   The prior strip animation styles could leave the reel window sizing itself
+   from its contents, so only a partial row-height was visible. */
+.book-of-ra-slot .bra-cabinet {
+  display: grid !important;
+  grid-template-rows: 25px minmax(0, 1fr) 16px !important;
+  align-items: stretch !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+.book-of-ra-slot .bra-cabinet > .bra-reel-window {
+  align-self: stretch !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  grid-auto-flow: column !important;
+  overflow: hidden !important;
+}
+.book-of-ra-slot .bra-reel-column,
+.book-of-ra-slot .bra-reel-viewport,
+.book-of-ra-slot .bra-final-column {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+.book-of-ra-slot .bra-strip-symbol {
+  flex: 0 0 6.25% !important;
+  min-height: 0 !important;
+}
+.book-of-ra-slot .bra-strip-symbol img {
+  width: 86% !important;
+  height: 86% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+@media (min-width: 721px) {
+  .modal-slot .book-of-ra-slot .bra-cabinet {
+    width: min(900px, 100%) !important;
+    max-width: 900px !important;
+    height: 500px !important;
+    min-height: 500px !important;
+    max-height: 500px !important;
+    grid-template-rows: 25px minmax(0, 1fr) 16px !important;
+  }
+}
+@media (max-width: 720px) {
+  .book-of-ra-slot .bra-cabinet {
+    grid-template-rows: 22px minmax(220px, 1fr) 14px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+  .book-of-ra-slot .bra-cabinet > .bra-reel-window {
+    height: clamp(240px, 42dvh, 390px) !important;
+    min-height: 240px !important;
+  }
+}
