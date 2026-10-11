@@ -674,3 +674,127 @@
   .aid-symbol b { font-size: 5px; }
   .aid-controls { grid-template-columns: minmax(0,1fr) minmax(78px,1fr) minmax(0,1fr); gap: 3px; }
 }
+
+
+/* FINAL FIX: keep the complete reel cabinet visible; no viewport-height clipping. */
+.aid-game {
+  width: 100%;
+  max-height: none !important;
+  height: auto;
+  min-height: 0;
+  overflow: visible !important;
+  padding: 0 3px 12px;
+}
+.aid-topbar {
+  width: min(820px, 100%);
+  margin: 0 auto;
+  padding: 0 !important;
+  min-height: 38px;
+}
+.aid-machine {
+  width: min(820px, 100%);
+  max-height: none !important;
+  height: auto;
+  overflow: visible !important;
+  padding: clamp(5px, 1vw, 12px);
+}
+.aid-reels {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: 100%;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: 5 / 4;
+  overflow: visible !important;
+  margin: 7px auto;
+  padding: clamp(3px, .65vw, 8px);
+  gap: clamp(2px, .45vw, 6px);
+}
+.aid-reel-column {
+  display: grid;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  gap: clamp(2px, .45vw, 6px);
+}
+.aid-symbol {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: auto;
+  overflow: hidden;
+  padding: 2px;
+  gap: clamp(1px, .3vw, 4px);
+}
+.aid-symbol-mark {
+  width: min(58%, 44px);
+  max-width: 58%;
+  height: auto;
+  flex: 0 1 auto;
+  aspect-ratio: 1 / 1;
+  font-size: clamp(12px, 2vw, 24px);
+}
+.aid-symbol b {
+  max-width: 100%;
+  font-size: clamp(5px, .72vw, 9px);
+  line-height: 1;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.aid-machine-foot { display:flex; justify-content:space-between; gap:5px; }
+.aid-controls {
+  width: min(820px, 100%);
+  margin: 0 auto;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(100px,1.15fr) minmax(0,1fr);
+}
+.aid-reset {
+  grid-column: auto !important;
+  justify-self: stretch;
+  align-self: center;
+  white-space: nowrap;
+}
+@media (min-width: 721px) {
+  .aid-topbar, .aid-machine, .aid-controls, .aid-status, .aid-paytable, .aid-disclaimer {
+    max-width: 820px;
+  }
+  .aid-topbar { margin-left:auto; margin-right:auto; }
+}
+@media (max-width: 720px) {
+  .aid-game { gap: 7px; padding: 0 1px 8px; }
+  .aid-machine { width:100%; padding:6px 4px; }
+  .aid-reels {
+    width:100%;
+    aspect-ratio:5 / 4;
+    height:auto !important;
+    max-height:none !important;
+    padding:3px;
+    gap:2px;
+  }
+  .aid-reel-column { grid-template-rows:repeat(4,minmax(0,1fr)); gap:2px; }
+  .aid-symbol { padding:1px; gap:1px; border-radius:4px; }
+  .aid-symbol-mark { width:min(56%,28px); font-size:clamp(11px,3.4vw,17px); }
+  .aid-symbol b { font-size:clamp(4px,1.5vw,7px); }
+  .aid-controls {
+    grid-template-columns:minmax(0,1fr) minmax(78px,1fr) minmax(0,1fr);
+    gap:4px;
+  }
+  .aid-bet-control { order:1; }
+  .aid-spin { order:2; min-height:50px; }
+  .aid-balance { order:3; }
+  .aid-speed { order:4; grid-column:1 / 3; }
+  .aid-reset {
+    order:5;
+    grid-column:3 !important;
+    justify-self:stretch;
+    white-space:normal;
+    font-size:7px;
+    padding:5px 2px;
+  }
+}
+@media (max-width: 380px) {
+  .aid-machine-head { font-size:6px; }
+  .aid-machine-foot { font-size:5px; }
+  .aid-symbol b { font-size:4px; }
+}
