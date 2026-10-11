@@ -1760,3 +1760,21 @@ html, body {
   .book-of-ra-slot .bra-cell-expanding,
   .book-of-ra-slot .bra-cell-expanding .rf-symbol-art { animation:none!important; }
 }
+
+
+/* Book of Ra cover artwork: responsive desktop/mobile assets */
+.book-cover-art{background:#17101a}
+.book-cover-art:before{background:linear-gradient(180deg,#120c1800 35%,#100b17b8 100%)}
+.book-cover-picture{position:absolute;inset:0;display:block;z-index:0;overflow:hidden}
+.book-cover-picture img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.book-cover-art .art-glow{z-index:1;pointer-events:none;background:#f5c96a1a}
+.book-cover-art .game-tag{z-index:2;box-shadow:0 2px 12px #0008}
+.book-cover-art .play-overlay{z-index:3}
+.book-of-ra-slot .bra-reel{transform:translateZ(0);transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+.book-of-ra-slot .bra-book-trigger{z-index:4;animation:bra-book-pop .78s cubic-bezier(.2,.85,.25,1.2) both;box-shadow:inset 0 0 0 2px #ffe7a0,0 0 22px #ffcb4fbb,0 0 48px #d99724a1;overflow:visible}
+.book-of-ra-slot .bra-book-trigger:before{content:"";position:absolute;inset:-12px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,#fff2b9a8 0 2px,transparent 3px),radial-gradient(circle at 20% 28%,#ffe9a0 0 1.5px,transparent 3px),radial-gradient(circle at 82% 18%,#fff4bf 0 2px,transparent 4px),radial-gradient(circle at 74% 78%,#e9a72e 0 2px,transparent 4px),radial-gradient(circle at 12% 76%,#ffdc76 0 1.5px,transparent 3px);background-size:22px 24px,31px 29px,37px 34px,27px 31px,33px 28px;filter:drop-shadow(0 0 5px #ffd45b);animation:bra-gold-dust .85s ease-out both}
+.book-of-ra-slot .bra-book-trigger .rf-symbol-art{transform:scale(1.09);filter:drop-shadow(0 0 12px #ffd45b)}
+@keyframes bra-book-pop{0%{transform:translateY(0) scale(1);filter:brightness(1)}35%{transform:translateY(-11px) scale(1.1);filter:brightness(1.6)}68%{transform:translateY(2px) scale(1.03);filter:brightness(1.3)}100%{transform:translateY(0) scale(1);filter:brightness(1.15)}}
+@keyframes bra-gold-dust{0%{opacity:0;transform:scale(.45) rotate(0)}30%{opacity:1}100%{opacity:0;transform:scale(1.35) rotate(32deg)}}
+@media(max-width:720px){.book-cover-picture img{object-position:center}.book-of-ra-slot .bra-book-trigger:before{inset:-6px;background-size:18px 19px,25px 23px,29px 27px,22px 24px,25px 22px}}
+@media(prefers-reduced-motion:reduce){.book-of-ra-slot .bra-book-trigger,.book-of-ra-slot .bra-book-trigger:before{animation-duration:.01ms;animation-iteration-count:1}}
