@@ -3745,3 +3745,22 @@ html, body {
     flex: 0 0 auto !important;
   }
 }
+
+
+/* Royal Fortune: keep the sound toggle visible on desktop and mobile. */
+@media (min-width: 721px) {
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-main-controls .rf-speed-panel > span .rf-sound-inline {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-main-controls .rf-speed-panel > span {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+}
+@media (max-width: 380px) {
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-top-actions .rf-icon-button {
+    display: inline-flex !important;
+  }
+}
