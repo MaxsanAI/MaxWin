@@ -238,10 +238,19 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     setSpinNumber((value) => value + 1);
     setBusy(false);
 
-    if (boxingCount >= 3) {
-      setBonus("boxing"); setBonusStep("intro"); setMessage("AI BOXING ARENA UNLOCKED 🥊"); playTone("bonus");
-    } else if (trumpCount >= 4) {
-      setBonus("holdwin"); setBonusStep("intro"); setMessage("TRUMP HOLD & WIN UNLOCKED 🚀"); playTone("bonus");
+    // SPREČAVANJE PREKLOPNOG BONUSA: Aktivacija je moguća ISKLJUČIVO u osnovnoj igri (!usingFreeSpin)
+    if (!usingFreeSpin) {
+      if (boxingCount >= 3) {
+        setBonus("boxing"); 
+        setBonusStep("intro"); 
+        setMessage("AI BOXING ARENA UNLOCKED 🥊"); 
+        playTone("bonus");
+      } else if (trumpCount >= 4) {
+        setBonus("holdwin"); 
+        setBonusStep("intro"); 
+        setMessage("TRUMP HOLD & WIN UNLOCKED 🚀"); 
+        playTone("bonus");
+      }
     }
   };
 
