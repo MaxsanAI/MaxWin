@@ -3161,15 +3161,17 @@ html, body {
 }
 
 
-/* Center the lobby action on desktop; keep it centered below the paytable on phones. */
-.book-of-ra-slot .bra-lobby-button {
-  position: absolute !important;
-  z-index: 12 !important;
-  top: 25px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  margin: 0 !important;
-  white-space: nowrap !important;
+/* Desktop: keep TO LOBBY outside the left edge of the slot. Mobile positioning stays unchanged below. */
+@media (min-width: 721px) {
+  .book-of-ra-slot .bra-lobby-button {
+    position: absolute !important;
+    z-index: 12 !important;
+    top: 25px !important;
+    left: max(12px, calc(50% - 450px - 150px)) !important;
+    transform: none !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
 }
 
 
