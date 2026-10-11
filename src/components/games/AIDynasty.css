@@ -1206,3 +1206,36 @@
     max-width: 128px !important;
   }
 }
+
+
+/* Final sizing adjustment: keep the 650px-wide desktop panel at 100px high. */
+.aid-controls {
+  height: 100px !important;
+  min-height: 100px !important;
+  padding: 7px 10px !important;
+  column-gap: 7px !important;
+}
+.aid-spin {
+  max-width: 98px !important;
+  min-height: 35px !important;
+  padding: 3px !important;
+}
+.aid-bet-control button {
+  width: 18px !important;
+  height: 18px !important;
+}
+.aid-speed button {
+  padding: 3px 3px !important;
+  font-size: 5.8px !important;
+}
+.aid-reset {
+  padding: 4px 2px !important;
+  font-size: 5.8px !important;
+}
+@media (max-width: 720px) {
+  .aid-controls {
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 7px !important;
+  }
+}
