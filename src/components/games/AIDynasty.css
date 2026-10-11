@@ -1486,7 +1486,7 @@
   width: calc(100% + 44px);
   height: calc(100% + 44px);
   object-fit: contain;
-  animation: aid-impact-pop .32s ease-in-out infinite alternate;
+  animation: aid-impact-pop .58s ease-in-out infinite alternate;
   pointer-events: none;
 }
 .aid-fight-flash span {
@@ -1502,8 +1502,8 @@
   place-items: center;
   pointer-events: none;
   opacity: 0;
-  animation: aid-ko-flash 2.3s ease-in-out forwards;
-  animation-delay: 1.15s;
+  animation: aid-ko-flash 2.8s ease-in-out forwards;
+  animation-delay: 2s;
 }
 .aid-fight-ko img {
   width: min(65%, 230px);
@@ -1516,8 +1516,8 @@
   to { transform: scale(1.14) rotate(7deg); opacity: 1; }
 }
 @keyframes aid-ko-flash {
-  0%, 44% { opacity: 0; transform: scale(.55) rotate(-8deg); }
-  52%, 78% { opacity: 1; transform: scale(1.04) rotate(2deg); }
+  0%, 24% { opacity: 0; transform: scale(.55) rotate(-8deg); }
+  34%, 82% { opacity: 1; transform: scale(1.04) rotate(2deg); }
   100% { opacity: 0; transform: scale(1.22) rotate(0); }
 }
 @media(max-width:600px) {
