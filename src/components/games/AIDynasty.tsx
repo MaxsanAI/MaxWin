@@ -27,13 +27,13 @@ const PAYLINES: number[][] = [
 ];
 const randomSymbol = (): SymbolId => {
   const roll = Math.random();
-  if (roll < 0.10) return "elon";
-  if (roll < 0.20) return "trump";
-  if (roll < 0.30) return "altman";
-  if (roll < 0.41) return "snoop";
-  if (roll < 0.54) return "bitcoin";
-  if (roll < 0.70) return "rocket";
-  if (roll < 0.83) return "wild";
+  if (roll < 0.16) return "elon";
+  if (roll < 0.205) return "trump";
+  if (roll < 0.365) return "altman";
+  if (roll < 0.525) return "snoop";
+  if (roll < 0.685) return "bitcoin";
+  if (roll < 0.845) return "rocket";
+  if (roll < 0.955) return "wild";
   return "boxing";
 };
 const makeBoard = (): SymbolId[][] => Array.from({ length: 5 }, () => Array.from({ length: 4 }, randomSymbol));
@@ -109,7 +109,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     let payout = 0;
     PAYLINES.forEach((line, lineIndex) => {
       const first = line.map((row, col) => next[col][row]).find((symbol) => symbol !== "wild");
-      if (!first || first === "boxing" || first === "trump" && false) return;
+      if (!first || first === "boxing") return;
       let count = 0;
       const positions: string[] = [];
       for (let col = 0; col < 5; col++) {
@@ -119,7 +119,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       }
       if (count >= 3) {
         const baseMultiplier = SYMBOL_BY_ID[first].multiplier;
-        payout += Math.round(stake * baseMultiplier * (count === 3 ? 0.12 : count === 4 ? 0.45 : 1) / PAYLINES.length);
+        payout += Math.round(stake * baseMultiplier * (count === 3 ? 1 : count === 4 ? 2 : 5) / PAYLINES.length);
         positions.forEach((position) => winning.add(position));
       }
     });
@@ -190,7 +190,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     {bonus && <div className="aid-bonus-backdrop"><section className={"aid-bonus-modal "+(bonus==="boxing"?"aid-bonus-boxing":"aid-bonus-rocket")} role="dialog" aria-modal="true" aria-labelledby="aid-bonus-title">
       <div className="aid-bonus-stars"/><div className="aid-bonus-kicker">{bonus === "boxing" ? "AI DYNASTY · MAIN EVENT" : "TRUMP AFTER SPINS"}</div><h2 id="aid-bonus-title">{bonus === "boxing" ? "AI BOXING ARENA" : "TO THE MOON!"}</h2>
       {bonusStep === "intro" && <><p>{bonus === "boxing" ? "Two AI titans. One neon ring. Who lands the final punch?" : "Trump is boarding Elon’s rocket. Prepare for lift-off."}</p><div className="aid-bonus-visual">{bonus === "boxing" ? <><div className="aid-boxer aid-boxer-elon"><span>E</span><b>ELON</b></div><div className="aid-vs">VS</div><div className="aid-boxer aid-boxer-altman"><span>AI</span><b>ALTMAN</b></div><div className="aid-ring"><i/><i/><i/></div></> : <><div className="aid-rocket-emoji">🚀</div><div className="aid-trump-rider">T</div><div className="aid-rocket-trail"/></>}</div><button className="aid-bonus-action" type="button" onClick={() => void startBonus()}>{bonus === "boxing" ? "RING THE BELL" : "LAUNCH THE ROCKET"} <span>↗</span></button></>}
-      {bonusStep === "fight" && <div className="aid-fight-scene"><div className={"aid-boxer aid-boxer-elon "+(Math.random()>2?"":"aid-fight-left")}><span>E</span><b>ELON</b></div><div className="aid-vs aid-fight-flash">POW!</div><div className="aid-boxer aid-boxer-altman aid-fight-right"><span>AI</span><b>ALTMAN</b></div><div className="aid-fight-caption">FINAL ROUND · NEON ARENA</div></div>}
+      {bonusStep === "fight" && <div className="aid-fight-scene"><div className="aid-boxer aid-boxer-elon aid-fight-left"><span>E</span><b>ELON</b></div><div className="aid-vs aid-fight-flash">POW!</div><div className="aid-boxer aid-boxer-altman aid-fight-right"><span>AI</span><b>ALTMAN</b></div><div className="aid-fight-caption">FINAL ROUND · NEON ARENA</div></div>}
       {bonusStep === "result" && <><div className="aid-bonus-result">{bonus === "boxing" ? <><div className={"aid-winner-badge "+(boxingWinner==="elon"?"aid-winner-elon":"aid-winner-altman")}>{boxingWinner==="elon"?"E":"AI"}</div><p>{boxingWinner === "elon" ? "ELON LANDS THE FINAL PUNCH!" : "ALTMAN LANDS THE FINAL PUNCH!"}</p><strong>{boxingWinner === "elon" ? "12" : "8"} FREE SPINS</strong></> : <><div className="aid-rocket-emoji">🚀</div><p>TRUMP IS GOING TO THE MOON!</p><strong>10 FREE SPINS</strong></>}</div><button className="aid-bonus-action" type="button" onClick={closeBonus}>COLLECT FREE SPINS <span>✓</span></button></>}
     </section></div>}
   </div>;
