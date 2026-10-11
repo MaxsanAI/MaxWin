@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, AudioLines, Crown, Info, RotateCcw, Sparkles, Volume2, VolumeX } from "lucide-react";
+import { AudioLines, Crown, Info, RotateCcw, Sparkles, Volume2, VolumeX } from "lucide-react";
 import "./AIDynasty.css";
 
 type SymbolId = "elon" | "trump" | "altman" | "snoop" | "bitcoin" | "rocket" | "wild" | "boxing";
@@ -301,7 +301,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   const resetDemo = () => { if (busy) return; setBalance(1000); setBet(10); setFreeSpins(0); setFreeSpinBet(10); setLastWin(0); setWinningCells([]); setMessage("DEMO RESET · 1,000 CREDITS READY"); setBonus(null); setBoxingWinner(null); };
 
   return <div className="aid-game">
-    <div className="aid-topbar"><button className="aid-back" type="button" onClick={onBackToLobby}><ArrowLeft size={16}/> LOBBY</button></div>
+    <div className="aid-topbar"><button className="aid-back" type="button" onClick={onBackToLobby}>TO LOBBY</button></div>
     <section className="aid-machine">
       <div className="aid-machine-head"><span><i/> DYNASTY REELS</span><span>25 WAYS TO WIN <b>✦</b></span></div>
       <div className={"aid-reels" + (busy ? " aid-is-spinning" : "")} aria-label="Five reels with four symbols each">
