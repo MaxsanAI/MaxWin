@@ -1084,3 +1084,51 @@
   .aid-speed button { padding: 5px 4px; font-size: 6px; }
   .aid-spin { width: 68%; }
 }
+
+
+/* Correction: make the controls frame visibly narrower; keep SPIN on the slot centerline. */
+.aid-controls {
+  box-sizing: border-box;
+  width: min(440px, calc(100% - 16px)) !important;
+  max-width: 440px;
+  margin: 8px auto 0 !important;
+  padding: 7px 9px !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) !important;
+  column-gap: 7px !important;
+  row-gap: 6px !important;
+  border-radius: 9px;
+}
+.aid-spin {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  width: min(128px, 100%) !important;
+  min-height: 38px !important;
+  justify-self: center !important;
+  padding: 4px 7px !important;
+}
+.aid-reset {
+  grid-column: 3 !important;
+  grid-row: 2 !important;
+  justify-self: center !important;
+  padding: 4px 2px !important;
+  font-size: 6px !important;
+}
+@media (max-width: 720px) {
+  .aid-controls {
+    width: min(440px, calc(100% - 4px)) !important;
+    max-width: 440px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 8px !important;
+    row-gap: 6px !important;
+  }
+  .aid-bet-control { grid-column: 1 !important; grid-row: 1 !important; }
+  .aid-balance { grid-column: 2 !important; grid-row: 1 !important; }
+  .aid-speed { grid-column: 1 !important; grid-row: 2 !important; }
+  .aid-reset { grid-column: 2 !important; grid-row: 2 !important; }
+  .aid-spin {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+    width: min(128px, 60%) !important;
+  }
+}
