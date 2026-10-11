@@ -1661,3 +1661,48 @@ html, body {
   .hero h1 { font-size: 37px; }
   .hero-actions .btn-large { font-size: 12px; }
 }
+
+
+/* Book of Ra: Sacred Book reveal before bonus spins. */
+.bra-awakening-backdrop {
+  position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center;
+  padding: 18px; overflow-y: auto;
+  background: radial-gradient(ellipse at 50% 38%, rgba(154,92,35,.28), transparent 48%), rgba(5,5,13,.92);
+  backdrop-filter: blur(9px);
+  animation: bra-awakening-fade .35s ease both;
+}
+.bra-awakening {
+  position: relative; width: min(440px,100%); padding: 25px 24px 23px; text-align: center;
+  border: 1px solid rgba(245,199,103,.5); border-radius: 22px;
+  background: radial-gradient(ellipse at 50% 20%, #56351f 0, #211629 43%, #100f1b 100%);
+  box-shadow: 0 0 70px rgba(227,159,53,.18), inset 0 0 36px rgba(246,197,94,.06);
+  overflow: hidden;
+}
+.bra-awakening:before { content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit; background:linear-gradient(125deg,transparent 25%,rgba(255,224,151,.08) 48%,transparent 65%); animation:bra-awakening-sheen 3s ease-in-out infinite; }
+.bra-awakening-stars { color:#f7d98b; letter-spacing:12px; font-size:19px; text-shadow:0 0 18px #f0b943; animation:bra-star-pulse 1.7s ease-in-out infinite; }
+.bra-opening-book { position:relative; display:grid; place-items:center; width:112px; height:130px; margin:9px auto 15px; perspective:500px; }
+.bra-opening-book:before { content:""; position:absolute; inset:22px -16px; border-radius:50%; background:#e9a83b; filter:blur(27px); opacity:.42; animation:bra-book-glow 1.8s ease-in-out infinite alternate; }
+.bra-opening-book img { position:relative; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 0 14px rgba(246,192,76,.55)); transform-origin:left center; animation:bra-book-open 1.15s cubic-bezier(.2,.75,.2,1) both; }
+.bra-awakening-kicker { color:#e9c579; font-size:10px; font-weight:800; letter-spacing:2.2px; }
+.bra-awakening h2 { color:#fff5d9; font:800 clamp(21px,5vw,27px)/1.2 Manrope,sans-serif; margin:9px 0 13px; }
+.bra-revealed-symbol { display:flex; align-items:center; justify-content:center; gap:13px; width:fit-content; min-width:190px; margin:0 auto 13px; padding:9px 17px; border:1px solid rgba(255,213,119,.52); border-radius:13px; background:linear-gradient(120deg,rgba(248,197,91,.16),rgba(125,73,28,.1)); box-shadow:0 0 28px rgba(245,186,63,.12); animation:bra-symbol-reveal .75s .55s cubic-bezier(.16,1,.3,1) both; }
+.bra-revealed-symbol img { width:65px; height:65px; object-fit:contain; filter:drop-shadow(0 0 10px rgba(255,204,90,.7)); }
+.bra-revealed-symbol span { color:#ffe7a7; font-weight:800; letter-spacing:1.1px; font-size:13px; }
+.bra-awakening p { color:#f6d17d; font-size:13px; font-weight:800; letter-spacing:1.3px; margin:13px 0 7px; }
+.bra-awakening > small { display:block; color:#b6adc4; font-size:11px; line-height:1.5; }
+.bra-awakening-start { position:relative; z-index:1; width:100%; margin-top:19px; min-height:47px; letter-spacing:.5px; }
+.bra-awakening-start span { margin-left:9px; }
+@keyframes bra-awakening-fade { from {opacity:0} to {opacity:1} }
+@keyframes bra-book-open { 0% {opacity:0;transform:rotateY(-78deg) scale(.76)} 55% {opacity:1;transform:rotateY(12deg) scale(1.06)} 100% {opacity:1;transform:rotateY(0) scale(1)} }
+@keyframes bra-symbol-reveal { 0% {opacity:0;transform:translateY(18px) scale(.65);filter:brightness(2)} 65% {opacity:1;transform:translateY(-3px) scale(1.08);filter:brightness(1.5)} 100% {opacity:1;transform:translateY(0) scale(1);filter:brightness(1)} }
+@keyframes bra-book-glow { from {opacity:.2;transform:scale(.8)} to {opacity:.6;transform:scale(1.15)} }
+@keyframes bra-star-pulse { 0%,100% {opacity:.65} 50% {opacity:1} }
+@keyframes bra-awakening-sheen { 0%,100% {transform:translateX(-70%)} 50% {transform:translateX(70%)} }
+@media (max-width:480px) {
+  .bra-awakening { padding:20px 16px 17px; border-radius:17px; }
+  .bra-opening-book { width:91px; height:105px; margin:7px auto 12px; }
+  .bra-revealed-symbol img { width:56px; height:56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bra-awakening-backdrop,.bra-opening-book img,.bra-revealed-symbol,.bra-awakening-stars,.bra-opening-book:before,.bra-awakening:before { animation:none !important; }
+}
