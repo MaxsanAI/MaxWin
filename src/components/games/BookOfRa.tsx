@@ -31,6 +31,7 @@ export default function BookOfRaSlot(){
  const [expandingSymbol,setExpandingSymbol]=useState<SymbolName|null>(null);
  const [buyConfirm,setBuyConfirm]=useState(false);
  const [bonusReveal,setBonusReveal]=useState<{symbol:SymbolName;spins:number;mode:"spin"|"buyBonus"}|null>(null);
+ const [expandedReels,setExpandedReels]=useState<number[]>([]);
  const defaultGrid:SymbolName[]=["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten","book","pharaoh","scarab","statue","ace"];
  const [displaySymbols,setDisplaySymbols]=useState<SymbolName[]>(defaultGrid);
  const rollTimer=useRef<number|undefined>(undefined);
@@ -49,7 +50,8 @@ export default function BookOfRaSlot(){
   if(busy||balance===null)return;
   if(action==="buyBonus"&&balance<bet*75){setError("Not enough demo credits for Buy Bonus.");return;}
   if(action==="spin"&&freeSpins<=0&&balance<bet){setError("Not enough demo credits.");return;}
-  setBusy(true);setError("");setBuyConfirm(false);setReelStops(0);
+  const isBonusSpin=action==="spin"&&freeSpins>0;
+  setBusy(true);setError("");setBuyConfirm(false);setReelStops(0);setExpandedReels([]);
   setMessage(action==="buyBonus"?"Opening the Sacred Book…":freeSpins>0?"Free spin in progress…":"Reels spinning…");
   const pool:SymbolName[]=["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"];
   const interval=speed==="slow"?120:speed==="normal"?75:35;
@@ -66,6 +68,9 @@ export default function BookOfRaSlot(){
     setReelStops(reel+1);
    }
    setResult(data.result);setBalance(Number(data.balance));setFreeSpins(Number(data.freeSpins||0));
+   if(isBonusSpin&&data.expandingSymbol&&data.result.wins?.some((w:{line:number;symbol:SymbolName})=>w.line===0&&w.symbol===data.expandingSymbol)){
+    setExpandedReels([0,1,2,3,4].filter(reel=>finalSymbols.slice(reel*3,reel*3+3).includes(data.expandingSymbol as SymbolName)));
+   }
    if(data.expandingSymbol)setExpandingSymbol(data.expandingSymbol);
    if(Number(data.result.awardedFreeSpins)>0 && data.expandingSymbol){
     setBonusReveal({symbol:data.expandingSymbol as SymbolName,spins:Number(data.result.awardedFreeSpins),mode:action});
@@ -81,7 +86,7 @@ export default function BookOfRaSlot(){
  return <div className="rf-game book-of-ra-slot">
   <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>BOOK OF <em>RA</em></h3><p>5 reels · 3 rows · Demo credits</p></div></div><div className="rf-top-actions"><span className="rf-status"><span/> DEMO MODE</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute sound":"Enable sound"} title={soundOn?"Mute sound":"Sound off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button></div></div>
   <div className="rf-cabinet bra-cabinet"><div className="rf-cabinet-header"><span><Crown size={13}/> TEMPLE OF RA</span><span><i/> 5 REELS <i/> 3 ROWS <i/> SACRED BOOK</span></div>
-   <div className="rf-reel-window bra-reel-window" aria-label="Book of Ra slot reels">{displaySymbols.slice(0,15).map((name,i)=>{const item=symbolMeta[name]||symbolMeta.book;return <div key={i} className={"rf-reel bra-reel "+item.className+(winning.has(i)?" rf-reel-win":"")+(busy&&reelStops<=Math.floor(i/3)?" rf-reel-spinning":"")}><span className="rf-reel-glow"/><span className="rf-symbol-art"><img src={"/images/book-of-ra/"+name+".jpg"} alt={item.label} draggable={false} decoding="async" /></span><small>{item.label}</small></div>;})}</div>
+   <div className="rf-reel-window bra-reel-window" aria-label="Book of Ra slot reels">{displaySymbols.slice(0,15).map((name,i)=>{const item=symbolMeta[name]||symbolMeta.book;return <div key={i} className={"rf-reel bra-reel "+item.className+(winning.has(i)?" rf-reel-win":"")+(busy&&reelStops<=Math.floor(i/3)?" rf-reel-spinning":"")}><span className="rf-reel-glow"/><span className="rf-symbol-art"><img src={"/images/book-of-ra/"+name+".jpg"} alt={item.label} draggable={false} decoding="async" /></span><small>{item.label}</small></div>;})}{expandedReels.map(reel=><div key={"expanded-"+reel} className="bra-expanding-reel" style={{left:`calc(${reel} * 20% + 3px)`,width:"calc(20% - 6px)"}}><img src={"/images/book-of-ra/"+(result?.expandingSymbol||expandingSymbol)+".jpg"} alt={(symbolMeta[result?.expandingSymbol||expandingSymbol||"book"]?.label||"Expanding symbol")+" expanded"} /><span>✦</span></div>)}</div>
    <div className="rf-machine-footer"><span>ANCIENT EGYPTIAN FORTUNE</span><span>•</span><span>PLAY FOR FUN · NO CASH VALUE</span></div>
   </div>
   {freeSpins>0&&<div className="rf-locked-notice bra-free-spins"><Sparkles size={18}/><span><b>{freeSpins} FREE SPINS REMAINING</b><small>{expandingSymbol?"Expanding symbol: "+(symbolMeta[expandingSymbol]?.label||expandingSymbol):"Your bonus spins are ready to play."}</small></span></div>}
