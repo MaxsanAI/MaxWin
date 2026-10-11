@@ -3792,3 +3792,51 @@ html, body {
 .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window.rf-speed-slow .rf-reel-column.is-spinning .rf-reel-strip{animation-duration:760ms}
 .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window.rf-speed-normal .rf-reel-column.is-spinning .rf-reel-strip{animation-duration:460ms}
 .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window.rf-speed-turbo .rf-reel-column.is-spinning .rf-reel-strip{animation-duration:260ms}
+
+
+/* AI NEON DYNASTY lobby cover: landscape desktop and true square mobile art. */
+.neon-cover-art:before { background: #0a0b18 !important; }
+.neon-cover-art .art-glow,
+.neon-cover-art .art-symbol,
+.neon-cover-art .art-title { display: none !important; }
+.neon-cover-picture {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+.neon-cover-picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.neon-cover-art .game-tag { z-index: 2; }
+.neon-cover-art .play-overlay { z-index: 3; }
+@media (min-width: 721px) {
+  .game-card-preview .game-art.neon-cover-art {
+    aspect-ratio: 16 / 9;
+    height: auto;
+    min-height: 0;
+  }
+}
+@media (max-width: 720px) {
+  .game-card-preview .game-art.neon-cover-art {
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    min-height: 0 !important;
+  }
+  .neon-cover-art .neon-cover-picture,
+  .neon-cover-art .neon-cover-picture img {
+    width: 100%;
+    height: 100%;
+  }
+  .neon-cover-art .neon-cover-picture img {
+    object-fit: cover;
+    object-position: center;
+  }
+}
