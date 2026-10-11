@@ -2389,3 +2389,22 @@ html, body {
     font-size: 8px !important;
   }
 }
+
+
+/* Temporary desktop-only sizing test: Book of Ra reels 900 × 500. */
+@media (min-width: 721px) {
+  .modal-slot .book-of-ra-slot .bra-cabinet {
+    width: min(900px, 100%) !important;
+    max-width: 900px !important;
+    height: 500px !important;
+    min-height: 500px !important;
+    max-height: 500px !important;
+    aspect-ratio: 9 / 5 !important;
+    grid-template-rows: 25px minmax(0, 1fr) 16px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel-window {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+}
