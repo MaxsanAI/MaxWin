@@ -2585,3 +2585,143 @@ html, body {
     scroll-margin-block: 16px !important;
   }
 }
+
+
+/* Book of Ra: compact gold lobby action and tidy control hierarchy. */
+.book-of-ra-slot {
+  position: relative;
+}
+.book-of-ra-slot .bra-lobby-button {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 112px;
+  min-height: 34px;
+  padding: 0 15px;
+  margin: 0 0 2px 1px;
+  border: 1px solid #ffe5a0;
+  border-radius: 999px;
+  color: #271708;
+  background: linear-gradient(180deg, #fff0b7 0%, #e9bd55 44%, #b97b22 100%);
+  box-shadow: 0 3px 0 #754512, 0 5px 14px #0005, inset 0 1px 0 #fff9d9;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+}
+.book-of-ra-slot .bra-lobby-button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 #754512, 0 7px 17px #0006, inset 0 1px 0 #fff9d9;
+}
+.book-of-ra-slot .bra-lobby-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #754512, inset 0 1px 4px #75451266;
+}
+.book-of-ra-slot .bra-lobby-button svg {
+  color: #4a2c0b;
+  flex: 0 0 auto;
+}
+.book-of-ra-slot .bra-secondary-controls {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  width: min(100%, 620px) !important;
+  max-width: 620px !important;
+  gap: 8px !important;
+  margin: 7px auto 3px !important;
+}
+.book-of-ra-slot .bra-secondary-controls .rf-speed-panel {
+  flex: 0 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 360px !important;
+}
+.book-of-ra-slot .bra-secondary-controls .rf-buy-button {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 132px !important;
+  max-width: 190px !important;
+  white-space: nowrap !important;
+}
+.book-of-ra-slot .bra-main-controls {
+  width: min(100%, 620px) !important;
+  max-width: 620px !important;
+  grid-template-columns: minmax(0, 1fr) minmax(112px, .82fr) minmax(0, 1fr) !important;
+  gap: 8px !important;
+  margin: 3px auto 5px !important;
+}
+.book-of-ra-slot .bra-main-controls .rf-bet-control,
+.book-of-ra-slot .bra-main-controls .rf-credit-panel {
+  min-width: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.book-of-ra-slot .bra-main-controls .rf-spin-button {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+.book-of-ra-slot .bra-paytable {
+  width: min(100%, 620px) !important;
+  max-width: 620px !important;
+  margin: 8px auto 4px !important;
+}
+.book-of-ra-slot .bra-message,
+.book-of-ra-slot .rf-last-result,
+.book-of-ra-slot .rf-demo-disclaimer {
+  width: min(100%, 620px) !important;
+  max-width: 620px !important;
+  box-sizing: border-box !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+@media (min-width: 721px) {
+  .modal-slot .book-of-ra-slot .bra-lobby-button {
+    min-height: 30px !important;
+    height: 30px !important;
+    min-width: 108px !important;
+    padding: 0 13px !important;
+    margin-bottom: 0 !important;
+    font-size: 9px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls {
+    grid-template-columns: none !important;
+    width: min(100%, 620px) !important;
+    max-width: 620px !important;
+    margin-top: 4px !important;
+    margin-bottom: 2px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls {
+    width: min(100%, 620px) !important;
+    max-width: 620px !important;
+  }
+}
+@media (max-width: 720px) {
+  .book-of-ra-slot .bra-lobby-button {
+    min-height: 36px;
+    min-width: 116px;
+    font-size: 10px;
+  }
+  .book-of-ra-slot .bra-secondary-controls {
+    width: 100% !important;
+    gap: 7px !important;
+  }
+  .book-of-ra-slot .bra-secondary-controls .rf-speed-panel {
+    flex: 1 1 180px !important;
+  }
+  .book-of-ra-slot .bra-secondary-controls .rf-buy-button {
+    flex: 0 0 auto !important;
+    min-width: 128px !important;
+  }
+  .book-of-ra-slot .bra-main-controls {
+    width: 100% !important;
+    grid-template-columns: minmax(0, 1fr) minmax(92px, .9fr) minmax(0, 1fr) !important;
+    gap: 6px !important;
+  }
+}
