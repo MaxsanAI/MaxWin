@@ -4,7 +4,7 @@ import "./AIDynasty.css";
 
 type SymbolId = "elon" | "trump" | "altman" | "snoop" | "bitcoin" | "rocket" | "wild" | "boxing";
 type SlotSymbol = { id: SymbolId; label: string; mark: string; className: string; multiplier: number };
-type BonusKind = "rocket" | "boxing" | null;
+type BonusKind = "holdwin" | "boxing" | null;
 
 const SYMBOLS: SlotSymbol[] = [
   { id: "elon", label: "ELON", mark: "E", className: "aid-symbol-elon", multiplier: 12 },
@@ -55,7 +55,10 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   const [lastWin, setLastWin] = useState(0);
   const [winningCells, setWinningCells] = useState<string[]>([]);
   const [bonus, setBonus] = useState<BonusKind>(null);
-  const [bonusStep, setBonusStep] = useState<"intro" | "fight" | "result">("intro");
+  const [bonusStep, setBonusStep] = useState<"intro" | "fight" | "hold" | "result">("intro");
+  const [holdCards, setHoldCards] = useState<(number | null)[]>(Array(20).fill(null));
+  const [holdSpins, setHoldSpins] = useState(3);
+  const [holdBusy, setHoldBusy] = useState(false);
   const [boxingWinner, setBoxingWinner] = useState<"elon" | "altman" | null>(null);
   const [spinNumber, setSpinNumber] = useState(0);
 
@@ -171,37 +174,78 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     if (boxingCount >= 3) {
       setBonus("boxing"); setBonusStep("intro"); setMessage("AI BOXING ARENA UNLOCKED"); playTone("bonus");
     } else if (trumpCount >= 3) {
-      setBonus("rocket"); setBonusStep("intro"); setMessage("TRUMP AFTER SPINS UNLOCKED"); playTone("bonus");
+      setBonus("holdwin"); setBonusStep("intro"); setMessage("TRUMP HOLD & WIN UNLOCKED"); playTone("bonus");
     }
   };
 
   const startBonus = async () => {
     if (!bonus || bonusStep !== "intro") return;
+    if (bonus === "holdwin") {
+      setHoldCards(Array(20).fill(null));
+      setHoldSpins(3);
+      setBonusStep("hold");
+      setMessage("TRUMP HOLD & WIN · 3 RESPINS");
+      playTone("bonus");
+      return;
+    }
     setBonusStep("fight");
-    if (bonus === "boxing") {
-      playTone("bell");
-      window.setTimeout(() => playTone("punch"), 500);
-      window.setTimeout(() => playTone("punch"), 1250);
-    }
+    playTone("bell");
+    window.setTimeout(() => playTone("punch"), 500);
+    window.setTimeout(() => playTone("punch"), 1250);
     await new Promise((resolve) => window.setTimeout(resolve, 2300));
-    if (bonus === "boxing") {
-      const winner = Math.random() < 0.5 ? "elon" : "altman";
-      const awarded = winner === "elon" ? 12 : 8;
-      setBoxingWinner(winner);
-      playTone("crowd");
-      setFreeSpinBet(bet);
-      setFreeSpins((value) => value + awarded);
-      setMessage((winner === "elon" ? "ELON LANDS THE FINAL PUNCH · 12 FREE SPINS!" : "ALTMAN LANDS THE FINAL PUNCH · 8 FREE SPINS!"));
-      setBonusStep("result");
-    } else {
-      setFreeSpinBet(bet);
-      setFreeSpins((value) => value + 10);
-      setMessage("TRUMP IS GOING TO THE MOON · 10 FREE SPINS!");
-      setBonusStep("result");
-    }
+    const winner = Math.random() < 0.5 ? "elon" : "altman";
+    const awarded = winner === "elon" ? 12 : 8;
+    setBoxingWinner(winner);
+    playTone("crowd");
+    setFreeSpinBet(bet);
+    setFreeSpins((value) => value + awarded);
+    setMessage(winner === "elon" ? "ELON LANDS THE FINAL PUNCH · 12 FREE SPINS!" : "ALTMAN LANDS THE FINAL PUNCH · 8 FREE SPINS!");
+    setBonusStep("result");
   };
 
-  const closeBonus = () => { setBonus(null); setBonusStep("intro"); setBoxingWinner(null); };
+  const spinHoldWin = async () => {
+    if (bonus !== "holdwin" || bonusStep !== "hold" || holdBusy || holdSpins <= 0) return;
+    setHoldBusy(true);
+    playTone("spin");
+    await new Promise((resolve) => window.setTimeout(resolve, speed === "turbo" ? 380 : 650));
+    const nextCards = [...holdCards];
+    const cardMultipliers = [1, 1, 2, 2, 3, 3, 5, 8, 10];
+    let locked = 0;
+    for (let i = 0; i < nextCards.length; i++) {
+      if (nextCards[i] === null && Math.random() < 0.145) {
+        nextCards[i] = bet * cardMultipliers[Math.floor(Math.random() * cardMultipliers.length)];
+        locked++;
+      }
+    }
+    const total = nextCards.reduce<number>((sum, value) => sum + (value ?? 0), 0);
+    setHoldCards(nextCards);
+    playTone(locked > 0 ? "win" : "stop");
+    if (nextCards.every((value) => value !== null)) {
+      setHoldSpins(0);
+      setBalance((value) => value + total);
+      setLastWin(total);
+      setMessage("MOON WIN · " + total.toLocaleString() + " DEMO CREDITS");
+      playTone("bonus");
+      setBonusStep("result");
+    } else if (locked > 0) {
+      setHoldSpins(3);
+      setMessage(locked + " NEW CARD" + (locked === 1 ? "" : "S") + " LOCKED · RESPINS RESET TO 3");
+    } else {
+      const remaining = holdSpins - 1;
+      setHoldSpins(remaining);
+      if (remaining === 0) {
+        setBalance((value) => value + total);
+        setLastWin(total);
+        setMessage("HOLD & WIN COMPLETE · " + total.toLocaleString() + " DEMO CREDITS");
+        setBonusStep("result");
+      } else {
+        setMessage("NO NEW CARDS · " + remaining + " RESPIN" + (remaining === 1 ? "" : "S") + " LEFT");
+      }
+    }
+    setHoldBusy(false);
+  };
+
+  const closeBonus = () => { setBonus(null); setBonusStep("intro"); setBoxingWinner(null); setHoldCards(Array(20).fill(null)); setHoldSpins(3); setHoldBusy(false); };
   const resetDemo = () => { if (busy) return; setBalance(1000); setBet(10); setFreeSpins(0); setFreeSpinBet(10); setLastWin(0); setWinningCells([]); setMessage("DEMO RESET · 1,000 CREDITS READY"); setBonus(null); setBoxingWinner(null); };
 
   return <div className="aid-game">
@@ -224,13 +268,21 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       <button className="aid-reset" type="button" disabled={busy} onClick={resetDemo}><RotateCcw size={14}/> RESET DEMO</button>
     </div>
     <div className={"aid-status" + (lastWin > 0 ? " aid-status-win" : "")} role="status" aria-live="polite"><span>{lastWin > 0 ? "LAST WIN" : "GAME STATUS"}</span><b>{message}</b><small>Demo-only outcomes · no monetary value · no real-money wagering</small></div>
-    <details className="aid-paytable"><summary><Info size={15}/> PAYTABLE & BONUS RULES</summary><div className="aid-paytable-grid">{SYMBOLS.filter((symbol) => symbol.multiplier > 0).map((symbol) => <div key={symbol.id}><span className={"aid-pay-icon "+symbol.className}>{symbol.mark}</span><span><b>{symbol.label}</b><small>3 match: {symbol.multiplier}× · 4 match: {symbol.multiplier*2}× · 5 match: {symbol.multiplier*5}× base rate</small></span></div>)}</div><p>Wins are demo-only and generated locally. Three or more Trump symbols unlock 10 Rocket Free Spins. Three or more Boxing Scatter symbols start the AI Boxing Arena: if Elon lands the final punch, 12 Free Spins are awarded; if Altman lands the final punch, 8 Free Spins are awarded. This demo RTP has not been independently certified.</p></details>
+    <details className="aid-paytable"><summary><Info size={15}/> PAYTABLE & BONUS RULES</summary><div className="aid-paytable-grid">{SYMBOLS.filter((symbol) => symbol.multiplier > 0).map((symbol) => <div key={symbol.id}><span className={"aid-pay-icon "+symbol.className}>{symbol.mark}</span><span><b>{symbol.label}</b><small>3 match: {symbol.multiplier}× · 4 match: {symbol.multiplier*2}× · 5 match: {symbol.multiplier*5}× base rate</small></span></div>)}</div><p>Wins are demo-only and generated locally. Three or more Trump symbols unlock the separate Trump Hold & Win rocket bonus. It starts with 3 respins; every newly locked credit card resets the counter to 3, and each card shows its credit value. Fill all 20 positions for MOON WIN, or collect the sum of locked cards when respins run out. Three or more Boxing Scatter symbols start the AI Boxing Arena: if Elon lands the final punch, 12 Free Spins are awarded; if Altman lands the final punch, 8 Free Spins are awarded. This demo RTP has not been independently certified.</p></details>
     <div className="aid-disclaimer">DEMO ONLY · NO DEPOSITS · NO CASH PAYOUTS · 18+</div>
     {bonus && <div className="aid-bonus-backdrop"><section className={"aid-bonus-modal "+(bonus==="boxing"?"aid-bonus-boxing":"aid-bonus-rocket")} role="dialog" aria-modal="true" aria-labelledby="aid-bonus-title">
-      <div className="aid-bonus-stars"/><div className="aid-bonus-kicker">{bonus === "boxing" ? "AI DYNASTY · MAIN EVENT" : "TRUMP AFTER SPINS"}</div><h2 id="aid-bonus-title">{bonus === "boxing" ? "AI BOXING ARENA" : "TO THE MOON!"}</h2>
-      {bonusStep === "intro" && <><p>{bonus === "boxing" ? "Two AI titans. One neon ring. Who lands the final punch?" : "Trump is boarding Elon’s rocket. Prepare for lift-off."}</p><div className="aid-bonus-visual">{bonus === "boxing" ? <><div className="aid-boxer aid-boxer-elon"><span>E</span><b>ELON</b></div><div className="aid-vs">VS</div><div className="aid-boxer aid-boxer-altman"><span>AI</span><b>ALTMAN</b></div><div className="aid-ring"><i/><i/><i/></div></> : <><div className="aid-rocket-emoji">🚀</div><div className="aid-trump-rider">T</div><div className="aid-rocket-trail"/></>}</div><button className="aid-bonus-action" type="button" onClick={() => void startBonus()}>{bonus === "boxing" ? "RING THE BELL" : "LAUNCH THE ROCKET"} <span>↗</span></button></>}
+      <div className="aid-bonus-stars"/><div className="aid-bonus-kicker">{bonus === "boxing" ? "AI DYNASTY · MAIN EVENT" : "TRUMP ROCKET · HOLD & WIN"}</div><h2 id="aid-bonus-title">{bonus === "boxing" ? "AI BOXING ARENA" : "TRUMP HOLD & WIN"}</h2>
+      {bonusStep === "intro" && <><p>{bonus === "boxing" ? "Two AI titans. One neon ring. Who lands the final punch?" : "Lock credit cards, reset the three respins, and fill the frame to reach the Moon."}</p><div className="aid-bonus-visual">{bonus === "boxing" ? <><div className="aid-boxer aid-boxer-elon"><span>E</span><b>ELON</b></div><div className="aid-vs">VS</div><div className="aid-boxer aid-boxer-altman"><span>AI</span><b>ALTMAN</b></div><div className="aid-ring"><i/><i/><i/></div></> : <><div className="aid-rocket-emoji">🚀</div><div className="aid-trump-rider">T</div><div className="aid-rocket-trail"/></>}</div><button className="aid-bonus-action" type="button" onClick={() => void startBonus()}>{bonus === "boxing" ? "RING THE BELL" : "START HOLD & WIN"} <span>↗</span></button></>}
+      {bonusStep === "hold" && bonus === "holdwin" && <div className="aid-holdwin-panel">
+        <div className="aid-holdwin-space"><span className="aid-holdwin-moon">🌕</span><span className="aid-holdwin-rocket">🚀</span><span className="aid-holdwin-trump">TRUMP</span><span className="aid-holdwin-trail"/></div>
+        <div className="aid-holdwin-counter"><span>RESPINS LEFT</span><strong>{holdSpins}</strong><small>New card = reset to 3</small></div>
+        <div className="aid-holdwin-grid" aria-label="Hold and Win credit card frame">{holdCards.map((value, index) => <div key={index} className={"aid-holdwin-cell" + (value !== null ? " is-locked" : "")}>{value !== null ? <><span>✦</span><strong>{value.toLocaleString()}</strong><small>CREDITS</small></> : <span className="aid-holdwin-empty">+</span>}</div>)}</div>
+        <div className="aid-holdwin-total"><span>LOCKED CREDIT TOTAL</span><strong>{holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0).toLocaleString()}</strong></div>
+        {holdSpins > 0 && <button className="aid-bonus-action" type="button" disabled={holdBusy} onClick={() => void spinHoldWin()}>{holdBusy ? "ROCKET IN FLIGHT…" : "SPIN TO THE MOON"} <span>↗</span></button>}
+        <small className="aid-holdwin-rule">{holdSpins === 0 ? "ROUND COMPLETE · COLLECT YOUR CREDITS" : "A new card resets the respins to 3."}</small>
+      </div>}
       {bonusStep === "fight" && <div className="aid-fight-scene"><div className="aid-boxer aid-boxer-elon aid-fight-left"><span>E</span><b>ELON</b></div><div className="aid-vs aid-fight-flash">POW!</div><div className="aid-boxer aid-boxer-altman aid-fight-right"><span>AI</span><b>ALTMAN</b></div><div className="aid-fight-caption">FINAL ROUND · NEON ARENA</div></div>}
-      {bonusStep === "result" && <><div className="aid-bonus-result">{bonus === "boxing" ? <><div className={"aid-winner-badge "+(boxingWinner==="elon"?"aid-winner-elon":"aid-winner-altman")}>{boxingWinner==="elon"?"E":"AI"}</div><p>{boxingWinner === "elon" ? "ELON LANDS THE FINAL PUNCH!" : "ALTMAN LANDS THE FINAL PUNCH!"}</p><strong>{boxingWinner === "elon" ? "12" : "8"} FREE SPINS</strong></> : <><div className="aid-rocket-emoji">🚀</div><p>TRUMP IS GOING TO THE MOON!</p><strong>10 FREE SPINS</strong></>}</div><button className="aid-bonus-action" type="button" onClick={closeBonus}>COLLECT FREE SPINS <span>✓</span></button></>}
+      {bonusStep === "result" && <><div className="aid-bonus-result">{bonus === "boxing" ? <><div className={"aid-winner-badge "+(boxingWinner==="elon"?"aid-winner-elon":"aid-winner-altman")}>{boxingWinner==="elon"?"E":"AI"}</div><p>{boxingWinner === "elon" ? "ELON LANDS THE FINAL PUNCH!" : "ALTMAN LANDS THE FINAL PUNCH!"}</p><strong>{boxingWinner === "elon" ? "12" : "8"} FREE SPINS</strong></> : <><div className="aid-rocket-emoji">🚀</div><p>{holdCards.every((value) => value !== null) ? "MOON WIN · FRAME COMPLETE!" : "TRUMP HOLD & WIN COMPLETE!"}</p><strong>{holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0).toLocaleString()} DEMO CREDITS</strong></>}</div><button className="aid-bonus-action" type="button" onClick={closeBonus}>{bonus === "boxing" ? "COLLECT FREE SPINS" : "COLLECT CREDITS"} <span>✓</span></button></>}
     </section></div>}
   </div>;
 }
