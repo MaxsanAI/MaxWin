@@ -1354,49 +1354,49 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 }
 
 
-/* Book of Ra final fit: modal stays at the top; reel cells stay square instead of stretched. */
+/* Book of Ra correction: restore full-height reels and keep controls proportionate. */
 @media (min-width: 721px) {
   .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
     align-items: flex-start !important;
-    padding: 10px 14px !important;
+    padding: 12px 14px !important;
   }
   .modal-slot:has(.book-of-ra-slot) {
-    width: min(1400px, calc(100vw - 28px)) !important;
-    max-width: 1400px !important;
+    width: min(1100px, calc(100vw - 28px)) !important;
+    max-width: 1100px !important;
     margin: 0 auto !important;
     height: auto !important;
-    max-height: calc(100dvh - 20px) !important;
+    max-height: calc(100dvh - 24px) !important;
     overflow-y: auto !important;
-    padding: 14px 22px 14px !important;
+    padding: 14px 18px 14px !important;
   }
   .modal-slot:has(.book-of-ra-slot) > .rf-game {
     width: 100% !important;
     max-width: none !important;
   }
   .book-of-ra-slot,
-  .book-of-ra-slot .bra-cabinet { width: 100% !important; max-width: none !important; }
+  .book-of-ra-slot .bra-cabinet {
+    width: 100% !important;
+    max-width: none !important;
+  }
   .book-of-ra-slot .bra-reel-window {
-    height: clamp(390px, 55vh, 620px) !important;
+    height: clamp(390px, 52vh, 510px) !important;
     min-height: 390px !important;
-    max-height: 620px !important;
+    max-height: 510px !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
     grid-auto-flow: column !important;
   }
-}
-/* Square symbol windows on both desktop and mobile; preserve the 5 × 3 reel grid. */
-.book-of-ra-slot .bra-reel {
-  aspect-ratio: 1 / 1 !important;
-  width: 100% !important;
-  height: auto !important;
-  min-height: 0 !important;
-  align-self: center !important;
-  justify-self: stretch !important;
-  overflow: hidden !important;
-}
-.book-of-ra-slot .bra-reel .rf-symbol-art {
-  min-height: 0 !important;
-  flex: 1 1 auto !important;
+  /* Keep the action controls centered and compact instead of stretching across the cabinet. */
+  .book-of-ra-slot .bra-main-controls {
+    width: min(100%, 760px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .book-of-ra-slot .bra-secondary-controls {
+    width: min(100%, 900px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
 }
 @media (max-width: 720px) {
   .book-of-ra-slot .bra-reel-window {
@@ -1404,9 +1404,9 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
     grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
     grid-auto-flow: column !important;
   }
-  .book-of-ra-slot .bra-reel {
-    padding: 3px 1px !important;
-    gap: 2px !important;
-    border-radius: 5px !important;
+  .book-of-ra-slot .bra-main-controls,
+  .book-of-ra-slot .bra-secondary-controls {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
