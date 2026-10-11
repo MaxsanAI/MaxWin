@@ -2408,3 +2408,135 @@ html, body {
     max-height: none !important;
   }
 }
+
+
+/* Desktop viewport fit: keep the 900 × 500 Book of Ra cabinet unchanged;
+   compact only the surrounding layout and control panels. */
+@media (min-width: 721px) {
+  .modal-slot {
+    box-sizing: border-box !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    padding: 6px 10px !important;
+    overflow: hidden !important;
+    justify-content: flex-start !important;
+  }
+  .modal-slot > .rf-game {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    padding: 0 0 4px !important;
+    gap: 3px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+  }
+  .modal-slot .book-of-ra-slot {
+    flex: 0 0 auto !important;
+    gap: 3px !important;
+  }
+  .modal-slot .book-of-ra-slot .rf-game-top {
+    min-height: 25px !important;
+    height: 25px !important;
+    margin: 0 auto !important;
+    padding: 0 2px !important;
+    font-size: 9px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls {
+    margin-top: 3px !important;
+    gap: 5px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control,
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-credit-panel {
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 3px 7px !important;
+    gap: 1px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control label,
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-credit-panel > span {
+    font-size: 7px !important;
+    line-height: 1 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control button {
+    width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    padding: 0 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control strong {
+    font-size: 11px !important;
+    line-height: 1 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control small,
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-credit-panel small {
+    font-size: 6px !important;
+    line-height: 1 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-credit-panel strong {
+    font-size: 15px !important;
+    line-height: 1 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-spin-button {
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 3px 8px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-spin-button small {
+    font-size: 6px !important;
+    line-height: 1 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls {
+    grid-template-columns: minmax(0, .95fr) minmax(0, 1.1fr) auto !important;
+    gap: 5px !important;
+    margin-top: 3px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-speed-panel {
+    min-height: 30px !important;
+    height: 30px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 3px 6px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-speed-panel > span {
+    font-size: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-speed-panel button {
+    min-height: 21px !important;
+    height: 21px !important;
+    padding: 2px 5px !important;
+    font-size: 6px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-buy-button,
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .bra-paytable-toggle {
+    min-height: 30px !important;
+    height: 30px !important;
+    padding: 3px 7px !important;
+    gap: 4px !important;
+    font-size: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-buy-button > span {
+    font-size: 8px !important;
+    line-height: 1 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-buy-button small {
+    font-size: 6px !important;
+    line-height: 1 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .bra-paytable-toggle {
+    white-space: nowrap !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-message,
+  .modal-slot .book-of-ra-slot .rf-demo-disclaimer {
+    margin-top: 1px !important;
+    margin-bottom: 0 !important;
+    font-size: 7px !important;
+    line-height: 1.1 !important;
+  }
+}
