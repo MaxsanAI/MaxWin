@@ -3158,3 +3158,19 @@ html, body {
     min-height: 240px !important;
   }
 }
+
+
+/* Keep the lobby action out of document flow and align it with the reel-stage start. */
+.book-of-ra-slot .bra-lobby-button {
+  position: absolute !important;
+  z-index: 12 !important;
+  top: 25px !important;
+  left: 0 !important;
+  margin: 0 !important;
+}
+@media (max-width: 720px) {
+  .book-of-ra-slot .bra-lobby-button {
+    top: 22px !important;
+    left: 0 !important;
+  }
+}
