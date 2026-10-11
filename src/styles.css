@@ -3456,7 +3456,7 @@ html, body {
     position: absolute !important;
     z-index: 20 !important;
     top: 25px !important;
-    left: max(8px, calc(50% - 410px - 132px)) !important;
+    left: max(4px, calc(50% - 410px - 172px)) !important;
     right: auto !important;
     transform: none !important;
     margin: 0 !important;
