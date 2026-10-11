@@ -2149,3 +2149,243 @@ html, body {
     gap: 6px;
   }
 }
+
+
+/* Book of Ra: classic 800 × 600 desktop playfield with casino-purple side gutters. */
+@media (min-width: 721px) {
+  .modal-backdrop:has(.modal-slot) {
+    background: radial-gradient(ellipse at 50% 42%, #39264f 0%, #21182f 48%, #141120 100%) !important;
+  }
+  .modal-slot {
+    width: min(1000px, calc(100vw - 32px)) !important;
+    height: min(900px, calc(100dvh - 24px)) !important;
+    padding: 16px 18px 10px !important;
+    align-items: center !important;
+    background: radial-gradient(ellipse at 50% 0%, #4b2c62 0%, #241a34 54%, #171322 100%) !important;
+    border-color: #b895e45c !important;
+  }
+  .modal-slot > .rf-game {
+    width: 100% !important;
+    align-items: center !important;
+    overflow: auto !important;
+    padding: 0 0 8px !important;
+    gap: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot {
+    width: min(800px, 100%) !important;
+    max-width: 800px !important;
+    margin-inline: auto !important;
+    gap: 6px !important;
+  }
+  .modal-slot .book-of-ra-slot .rf-game-top {
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    min-height: 42px !important;
+    padding: 0 2px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-cabinet {
+    display: grid !important;
+    grid-template-rows: 27px minmax(0, 1fr) 18px !important;
+    width: 100% !important;
+    max-width: 800px !important;
+    height: 600px !important;
+    min-height: 600px !important;
+    max-height: 600px !important;
+    aspect-ratio: 4 / 3 !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #e3bd6b99 !important;
+    border-radius: 6px !important;
+    background: linear-gradient(145deg, #382748 0%, #1d1729 56%, #171322 100%) !important;
+    box-shadow: 0 12px 32px #08061055, inset 0 0 22px #0004 !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-cabinet::before {
+    display: none !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-cabinet .rf-cabinet-header {
+    display: flex !important;
+    min-width: 0 !important;
+    padding: 5px 9px 4px !important;
+    margin: 0 !important;
+    font-size: 10px !important;
+    letter-spacing: .65px !important;
+    overflow: hidden !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-cabinet .rf-cabinet-header span:last-child {
+    font-size: 9px !important;
+    white-space: nowrap !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel-window {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-flow: column !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-top: 1px solid #f4d68b55 !important;
+    border-bottom: 1px solid #f4d68b55 !important;
+    border-radius: 0 !important;
+    background: #171322 !important;
+    box-shadow: inset 0 0 24px #09071088 !important;
+    overflow: hidden !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel {
+    position: relative !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: linear-gradient(160deg, #30233e, #20172c 70%, #181321) !important;
+    box-shadow: inset -1px 0 #e7c5758a, inset 0 -1px #e7c5754f !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel:nth-child(5n) {
+    box-shadow: inset 0 -1px #e7c5754f !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel:nth-child(n+11) {
+    box-shadow: inset -1px 0 #e7c5758a !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel:nth-child(5n):nth-child(n+11) {
+    box-shadow: none !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel .rf-reel-glow {
+    display: none !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel .rf-symbol-art {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    flex: none !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel .rf-symbol-art img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    filter: saturate(1.08) contrast(1.04) !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-reel small {
+    position: absolute !important;
+    z-index: 2 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    padding: 7px 2px 5px !important;
+    margin: 0 !important;
+    color: #fff2ce !important;
+    font-size: 9px !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    text-shadow: 0 1px 4px #000, 0 1px 8px #000 !important;
+    background: linear-gradient(transparent, #100b19dc) !important;
+  }
+  .modal-slot .book-of-ra-slot .rf-machine-footer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    margin: 0 !important;
+    padding: 2px 4px !important;
+    font-size: 7px !important;
+    letter-spacing: .4px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls,
+  .modal-slot .book-of-ra-slot .bra-secondary-controls {
+    width: 100% !important;
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    gap: 5px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(130px, .9fr) minmax(0, 1fr) !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control,
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-credit-panel {
+    min-height: 48px !important;
+    padding: 4px 8px !important;
+    gap: 2px !important;
+    border-radius: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control label,
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-credit-panel > span {
+    font-size: 8px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control button {
+    width: 21px !important;
+    height: 21px !important;
+    min-height: 21px !important;
+    font-size: 12px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-bet-control strong {
+    font-size: 13px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-credit-panel strong {
+    font-size: 18px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-spin-button {
+    min-height: 48px !important;
+    height: 48px !important;
+    padding: 5px 8px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-main-controls .rf-spin-button small {
+    font-size: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-speed-panel {
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    padding: 4px 7px !important;
+    border-radius: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-speed-panel > span {
+    font-size: 8px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-speed-panel button {
+    min-height: 24px !important;
+    padding: 3px 6px !important;
+    font-size: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-buy-button,
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .bra-paytable-toggle {
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 4px 8px !important;
+    border-radius: 7px !important;
+    font-size: 8px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-buy-button > span {
+    font-size: 9px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-secondary-controls .rf-buy-button small {
+    font-size: 7px !important;
+  }
+  .modal-slot .book-of-ra-slot .bra-message,
+  .modal-slot .book-of-ra-slot .rf-demo-disclaimer {
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    font-size: 8px !important;
+  }
+}
