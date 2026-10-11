@@ -3705,3 +3705,43 @@ html, body {
     object-position: center !important;
   }
 }
+
+
+/* Royal Fortune desktop lobby button: aligned with the left edge of the reel cabinet. */
+.rf-lobby-button { display: none; }
+@media (min-width: 721px) {
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-lobby-button {
+    position: absolute !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    z-index: 30 !important;
+    top: 25px !important;
+    left: max(4px, calc(50% - 410px - 172px)) !important;
+    right: auto !important;
+    width: 108px !important;
+    min-width: 108px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    margin: 0 !important;
+    padding: 0 10px !important;
+    border: 1px solid #e8c46a99 !important;
+    border-radius: 6px !important;
+    background: linear-gradient(180deg,#ffe4a0 0%,#d7a64b 52%,#9b672b 100%) !important;
+    color: #33200d !important;
+    box-shadow: 0 3px 0 #754512, 0 6px 15px #0006, inset 0 1px 0 #fff9d9 !important;
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    letter-spacing: .6px !important;
+    cursor: pointer !important;
+  }
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-lobby-button:hover {
+    filter: brightness(1.1) !important;
+    transform: translateY(-1px) !important;
+  }
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-lobby-button svg {
+    color: #4a2c0b !important;
+    flex: 0 0 auto !important;
+  }
+}
