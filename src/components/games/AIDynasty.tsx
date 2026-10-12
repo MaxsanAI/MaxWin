@@ -31,14 +31,15 @@ const PAYLINES: number[][] = [
 // Pravilno balansirana raspodela simbola po polju (RTP ~95%)
 const randomSymbol = (): SymbolId => {
   const roll = Math.random();
-  if (roll < 0.04) return "elon";      // 4%  (Najjači premijum)
-  if (roll < 0.10) return "trump";     // 6%  (Potrebna 4 za Hold & Win)
-  if (roll < 0.18) return "altman";    // 8%  
-  if (roll < 0.30) return "snoop";     // 12% 
-  if (roll < 0.46) return "bitcoin";   // 16% 
-  if (roll < 0.68) return "rocket";    // 22% (Umeren najslabiji simbol)
-  if (roll < 0.74) return "wild";      // 6%  (Wild)
-  return "boxing";                     // 26% (Prostor za ostale i 3 scatter-a)
+  if (roll < 0.04) return "elon";      // 4%
+  if (roll < 0.10) return "trump";     // 6%
+  if (roll < 0.18) return "altman";    // 8%
+  if (roll < 0.30) return "snoop";     // 12%
+  if (roll < 0.48) return "bitcoin";   // 18%
+  if (roll < 0.73) return "rocket";    // 25%
+  if (roll < 0.83) return "wild";      // 10%
+  if (roll < 0.985) return "rocket";   // Prazan/osnovni simbol (15.5%)
+  return "boxing";                     // Samo 1.5% šanse za Boxing Scatter!
 };
 
 const makeBoard = (): SymbolId[][] => Array.from({ length: 5 }, () => Array.from({ length: 4 }, randomSymbol));
