@@ -246,7 +246,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
         setBonusStep("intro"); 
         setMessage("AI BOXING ARENA UNLOCKED 🥊"); 
         playTone("bonus");
-      } else if (trumpCount >= 4) {
+      } else if (trumpCount >= 5) {
         setBonus("holdwin"); 
         setBonusStep("intro"); 
         setMessage("TRUMP HOLD & WIN UNLOCKED 🚀"); 
