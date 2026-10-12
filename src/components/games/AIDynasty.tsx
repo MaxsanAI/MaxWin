@@ -28,27 +28,27 @@ const PAYLINES: number[][] = [
   [0,2,1,2,0],[3,1,2,1,3],[1,0,1,0,1],[2,3,2,3,2],[0,3,1,3,0],
 ];
 
-// Matematički korigovane verovatnoće za ~95% RTP (House Edge ~5%)
+// STROGA KAZINO DISPERZIJA SIMBOLA (Matematika za 20 polja)
 const randomSymbol = (): SymbolId => {
   const roll = Math.random();
-  if (roll < 0.035) return "elon";      // 3.5% (Najjači simbol)
-  if (roll < 0.080) return "trump";     // 4.5%
-  if (roll < 0.140) return "altman";    // 6.0%
-  if (roll < 0.220) return "snoop";     // 8.0%
-  if (roll < 0.320) return "bitcoin";   // 10.0%
-  if (roll < 0.600) return "rocket";    // 28.0% (Mali simbol)
-  if (roll < 0.820) return "wild";      // 22.0% (Wild za linije)
-  return "boxing";                      // 18.0% (Scatter za bonus)
+  if (roll < 0.02) return "elon";       // 2%   (Top simbol - retkost)
+  if (roll < 0.05) return "trump";      // 3%   (Trump bonus scatter / premijum)
+  if (roll < 0.09) return "altman";     // 4%
+  if (roll < 0.15) return "snoop";      // 6%
+  if (roll < 0.23) return "bitcoin";    // 8%
+  if (roll < 0.30) return "wild";       // 7%   (Wild)
+  if (roll < 0.33) return "boxing";     // 3%   (Boxing scatter - retka aktivacija)
+  return "rocket";                      // 67%  (Osnovni filler simbol)
 };
 
 const makeBoard = (): SymbolId[][] => Array.from({ length: 5 }, () => Array.from({ length: 4 }, randomSymbol));
 
 const initialBoard: SymbolId[][] = [
-  ["elon","bitcoin","snoop","rocket"],
-  ["trump","altman","bitcoin","elon"],
-  ["snoop","rocket","wild","trump"],
-  ["bitcoin","elon","altman","rocket"],
-  ["altman","snoop","trump","bitcoin"],
+  ["rocket","bitcoin","snoop","rocket"],
+  ["rocket","altman","rocket","elon"],
+  ["snoop","rocket","rocket","trump"],
+  ["bitcoin","rocket","altman","rocket"],
+  ["altman","snoop","rocket","bitcoin"],
 ];
 
 function countSymbols(board: SymbolId[], id: SymbolId) {
@@ -189,7 +189,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     let payout = 0;
     const betPerLine = stake / PAYLINES.length;
 
-    // Korigovan obračun po linijama za balansiranu matematiku kazina
+    // Proračun linija
     PAYLINES.forEach((line) => {
       const lineSymbols = line.map((row, col) => next[col][row]);
       const firstRealSymbol = lineSymbols.find((symbol) => symbol !== "wild" && symbol !== "boxing");
@@ -210,8 +210,8 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
 
       if (count >= 3) {
         const baseMultiplier = SYMBOL_BY_ID[firstRealSymbol].multiplier;
-        // Skala prilagođena realnim slot mašinama (RTP ~95%)
-        const scale = count === 3 ? 0.35 : count === 4 ? 1.2 : 3.5;
+        // Skala za dobitke
+        const scale = count === 3 ? 0.3 : count === 4 ? 1.0 : 3.0;
         const linePayout = Math.round(betPerLine * baseMultiplier * scale);
         
         if (linePayout > 0) {
@@ -238,7 +238,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     setSpinNumber((value) => value + 1);
     setBusy(false);
 
-    // SPREČAVANJE PREKLOPNOG BONUSA: Aktivacija je moguća ISKLJUČIVO u osnovnoj igri (!usingFreeSpin)
+    // Aktivacija bonusa ISKLJUČIVO u osnovnoj igri
     if (!usingFreeSpin) {
       if (boxingCount >= 3) {
         setBonus("boxing"); 
@@ -293,7 +293,8 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       let locked = 0;
 
       for (let i = 0; i < nextCards.length; i++) {
-        if (nextCards[i] === null && Math.random() < 0.065) {
+        // Kontrolisana šansa u Hold & Win
+        if (nextCards[i] === null && Math.random() < 0.05) {
           nextCards[i] = bet * cardMultipliers[Math.floor(Math.random() * cardMultipliers.length)];
           locked++;
         }
