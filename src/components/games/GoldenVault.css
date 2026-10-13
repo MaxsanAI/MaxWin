@@ -348,3 +348,41 @@
   .mafia-vault .gv-spin strong{font-size:9px!important}
   .mafia-vault .gv-spin small{font-size:5px!important}
 }
+
+
+/* Golden Vault: make the BET / SPIN / BALANCE frame a slim, readable strip. */
+.mafia-vault .gv-controls{
+  padding:4px!important;
+  gap:4px!important;
+  margin-top:4px!important;
+  border-radius:7px!important;
+}
+.mafia-vault .gv-bet,
+.mafia-vault .gv-stat{
+  padding:1px 0!important;
+  gap:0!important;
+}
+.mafia-vault .gv-bet>small,
+.mafia-vault .gv-stat small{font-size:6px!important;line-height:1!important}
+.mafia-vault .gv-bet button{width:17px!important;height:17px!important;font-size:12px!important}
+.mafia-vault .gv-bet strong,
+.mafia-vault .gv-stat strong{font-size:12px!important;line-height:1!important}
+.mafia-vault .gv-bet>span,
+.mafia-vault .gv-stat>span{font-size:6px!important;line-height:1!important}
+.mafia-vault .gv-spin{
+  min-height:24px!important;
+  height:24px!important;
+  padding:1px!important;
+  gap:0!important;
+  border-radius:5px!important;
+}
+.mafia-vault .gv-spin svg{width:11px!important;height:11px!important}
+.mafia-vault .gv-spin strong{font-size:9px!important;line-height:1!important}
+.mafia-vault .gv-spin small{font-size:5px!important;line-height:1!important}
+@media(max-width:650px){
+  .mafia-vault .gv-controls{padding:3px!important;gap:3px!important;margin-top:4px!important}
+  .mafia-vault .gv-bet button{width:16px!important;height:16px!important;font-size:11px!important}
+  .mafia-vault .gv-bet strong,
+  .mafia-vault .gv-stat strong{font-size:11px!important}
+  .mafia-vault .gv-spin{min-height:23px!important;height:23px!important}
+}
