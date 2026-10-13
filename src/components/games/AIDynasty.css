@@ -2133,3 +2133,43 @@
     box-shadow: none !important;
   }
 }
+
+
+/* Trump credit symbols drop from above and lock into their hold-and-win cells. */
+.aid-holdwin-cell.is-locked {
+  position: relative;
+}
+.aid-holdwin-trump-symbol {
+  display: block;
+  width: clamp(25px, 54%, 58px);
+  height: clamp(25px, 54%, 58px);
+  flex: 0 0 auto;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 1px solid #ffe08a;
+  background: #171025;
+  filter: drop-shadow(0 0 5px #f5cf78aa);
+}
+.aid-holdwin-cell.is-falling .aid-holdwin-trump-symbol {
+  animation: aid-trump-credit-drop .82s cubic-bezier(.14,.84,.26,1.18) both;
+  animation-delay: calc(var(--fall-order, 0) * 45ms);
+}
+.aid-holdwin-cell.is-falling {
+  animation: aid-trump-cell-lock .36s ease-out both;
+}
+@keyframes aid-trump-credit-drop {
+  0% { opacity: 0; transform: translateY(-170px) rotate(-18deg) scale(.72); filter: drop-shadow(0 0 14px #ffe08a); }
+  68% { opacity: 1; transform: translateY(5px) rotate(4deg) scale(1.08); }
+  84% { transform: translateY(-3px) rotate(-2deg) scale(.98); }
+  100% { opacity: 1; transform: translateY(0) rotate(0) scale(1); filter: drop-shadow(0 0 5px #f5cf78aa); }
+}
+@keyframes aid-trump-cell-lock {
+  0% { box-shadow: inset 0 0 0 2px #fff2b9, 0 0 26px #ffd85d; }
+  100% { box-shadow: inset 0 0 10px #f5cf7822, 0 0 8px #f5cf781c; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aid-holdwin-cell.is-falling,
+  .aid-holdwin-cell.is-falling .aid-holdwin-trump-symbol {
+    animation: none !important;
+  }
+}
