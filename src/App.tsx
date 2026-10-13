@@ -228,9 +228,14 @@ function App() {
   const filtered = useMemo(() => games.filter(g => (active === "All Games" || g.category === active) && g.title.toLowerCase().includes(search.toLowerCase())), [active, search]);
   const openGame = (game: Game, playMode: "demo" | "real" = "demo") => { setSelectedGame(game); setSelectedPlayMode(playMode); setModal("game"); };
   const closeModal = () => {
-    const shouldResetDemo = modal === "game" && selectedGame?.title === "Royal Fortune" && selectedPlayMode === "demo" && Boolean(authUser);
-    if (!shouldResetDemo) { setModal(null); return; }
-    void fetch("/api/games/royal-fortune", {
+    const isDemoSlot = modal === "game" && selectedPlayMode === "demo" && Boolean(authUser);
+    const gameToReset = selectedGame?.title === "Royal Fortune"
+      ? "/api/games/royal-fortune"
+      : selectedGame?.title === "Book of Ra"
+        ? "/api/games/book-of-ra"
+        : null;
+    if (!isDemoSlot || !gameToReset) { setModal(null); return; }
+    void fetch(gameToReset, {
       method: "POST", credentials: "same-origin", cache: "no-store",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "resetDemo" })
