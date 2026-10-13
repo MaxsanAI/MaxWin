@@ -19,3 +19,37 @@
 /* Real downward reel motion while spinning */
 @keyframes gv-roll-down{0%{transform:translateY(-10px) scaleY(.96);filter:blur(1.1px) brightness(1.08)}100%{transform:translateY(10px) scaleY(1.02);filter:blur(.35px) brightness(.94)}}
 .gv-reels.spinning .gv-symbol:nth-child(5n+1){animation-delay:-.02s}.gv-reels.spinning .gv-symbol:nth-child(5n+2){animation-delay:-.05s}.gv-reels.spinning .gv-symbol:nth-child(5n+3){animation-delay:-.08s}.gv-reels.spinning .gv-symbol:nth-child(5n+4){animation-delay:-.03s}
+
+/* Golden Vault spacing and controls matched to AI NEON DYNASTY */
+.gv-reel-panel{padding-top:12px!important}
+.gv-reels{margin-top:3px}
+.gv-controls{
+  gap:10px!important;
+  margin-top:13px!important;
+  padding:13px!important;
+  border:1px solid #a17eff26!important;
+  border-radius:11px!important;
+  background:linear-gradient(120deg,#171329,#10111e)!important;
+}
+.gv-spin{
+  min-height:60px!important;
+  border-radius:14px!important;
+  box-shadow:0 5px 25px #f5bd4c26,inset 0 1px #fff9d7!important;
+}
+.gv-bet,.gv-stat{background:transparent!important;border:0!important;padding:3px!important}
+.gv-bet button{border-radius:7px!important}
+@media(max-width:650px){
+  .gv-reel-panel{padding-top:10px!important}
+  .gv-controls{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:11px!important;
+    padding:10px!important;
+    margin-top:11px!important;
+  }
+  .gv-bet{grid-column:1!important;grid-row:1!important}
+  .gv-controls>.gv-stat:not(.gv-last){grid-column:2!important;grid-row:1!important}
+  .gv-spin{grid-column:1/-1!important;grid-row:2!important;min-height:54px!important;flex-direction:row!important;gap:8px!important;border-radius:14px!important}
+  .gv-spin strong{font-size:14px!important}
+  .gv-spin small{font-size:8px!important}
+  .gv-last{display:none!important}
+}
