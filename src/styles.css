@@ -4065,3 +4065,58 @@ html, body {
  .bra-bonus-finish-backdrop,.bra-bonus-finish,.bra-bonus-finish-backdrop:before,.bra-bonus-finish:after,
  .bra-finish-smoke,.bra-finish-stars,.bra-finish-lamp:before,.bra-finish-lamp:after{animation:none!important}
 }
+
+
+/* FIX: scatter books must rise with visible dust even when the same cell is also a winning symbol. */
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-final-column .bra-reel.bra-book-trigger.rf-reel-win {
+  overflow: visible !important;
+  isolation: auto !important;
+  z-index: 40 !important;
+  animation: bra-book-trigger-rise .62s cubic-bezier(.16,1.3,.3,1) forwards !important;
+  border: 1px solid #ffe59a !important;
+  background: radial-gradient(ellipse at 50% 42%,#fff0a64d 0%,#a869222e 50%,#211629 100%) !important;
+  box-shadow: inset 0 0 0 1px #ffe7a0,0 0 22px #ffcb4fbb,0 0 46px #d99724a1 !important;
+}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-final-column .bra-reel.bra-book-trigger.rf-reel-win::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -15px !important;
+  z-index: 5 !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+  background:
+    radial-gradient(circle at 50% 14%,#fff8c9 0 1.5px,transparent 3px),
+    radial-gradient(circle at 18% 26%,#ffe9a0 0 2px,transparent 3.5px),
+    radial-gradient(circle at 80% 20%,#fff4bf 0 2px,transparent 4px),
+    radial-gradient(circle at 74% 78%,#e9a72e 0 2px,transparent 4px),
+    radial-gradient(circle at 12% 76%,#ffdc76 0 1.5px,transparent 3px),
+    radial-gradient(circle at 48% 88%,#fff0a0 0 1.5px,transparent 3px) !important;
+  background-size: 22px 24px,31px 29px,37px 34px,27px 31px,33px 28px,29px 27px !important;
+  filter: drop-shadow(0 0 7px #ffd45b) !important;
+  animation: bra-gold-dust-stay 1.05s ease-in-out infinite !important;
+}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-final-column .bra-reel.bra-book-trigger.rf-reel-win::after {
+  display: none !important;
+}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-final-column .bra-reel.bra-book-trigger.rf-reel-win .rf-symbol-art {
+  z-index: 2 !important;
+  transform: scale(1.13) !important;
+  filter: drop-shadow(0 0 8px #ffd45b) drop-shadow(0 0 15px #ffba35) !important;
+  animation: none !important;
+}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-final-column .bra-reel.bra-book-trigger.rf-reel-win .rf-symbol-art img {
+  filter: drop-shadow(0 0 8px #ffd45b) drop-shadow(0 0 15px #ffba35) !important;
+}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-column:nth-child(1) .bra-book-trigger { animation-delay: 0ms !important; }
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-column:nth-child(2) .bra-book-trigger { animation-delay: 65ms !important; }
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-column:nth-child(3) .bra-book-trigger { animation-delay: 130ms !important; }
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-column:nth-child(4) .bra-book-trigger { animation-delay: 195ms !important; }
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-column:nth-child(5) .bra-book-trigger { animation-delay: 260ms !important; }
+@media (prefers-reduced-motion: reduce) {
+  .book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-final-column .bra-reel.bra-book-trigger.rf-reel-win,
+  .book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-final-column .bra-reel.bra-book-trigger.rf-reel-win::before,
+  .book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-column .bra-book-trigger {
+    animation: none !important;
+    animation-delay: 0ms !important;
+  }
+}
