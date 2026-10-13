@@ -35,7 +35,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  const [buyConfirm,setBuyConfirm]=useState(false);
  const [bonusReveal,setBonusReveal]=useState<{symbol:SymbolName;spins:number;mode:"spin"|"buyBonus"}|null>(null);
  const [scatterReveal,setScatterReveal]=useState<{spins:number;books:number;mode:"spin"|"buyBonus"}|null>(null);
- const [scatterContinueReady,setScatterModalReady]=useState(false);
+ const [scatterContinueReady,setScatterContinueReady]=useState(false);
  const [showBookCelebration,setShowBookCelebration]=useState(false);
  const [rollingSymbol,setRollingSymbol]=useState<SymbolName>("pharaoh");
  const [symbolRollComplete,setSymbolRollComplete]=useState(false);
@@ -145,7 +145,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   const stripPool:SymbolName[]=["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"];
   setReelStrips(Array.from({length:5},()=>Array.from({length:8},()=>stripPool[Math.floor(Math.random()*stripPool.length)])));
   setBusy(true);setError("");setBuyConfirm(false);setReelStops(0);
-  setShowBookCelebration(false);setScatterReveal(null);setScatterModalReady(false);
+  setShowBookCelebration(false);setScatterReveal(null);setScatterContinueReady(false);
   setMessage(action==="buyBonus"?"Opening the Sacred Book…":freeSpins>0?"Free spin in progress…":"Reels spinning…");
   const spinStartedAt=performance.now();
   try{
@@ -182,10 +182,10 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     const bookCount=finalSymbols.filter((symbol:SymbolName)=>symbol==="book").length;
     setShowBookCelebration(true);
     setScatterReveal({spins:Number(data.result.awardedFreeSpins),books:bookCount,mode:action});
-    setScatterModalReady(false);
+    setScatterContinueReady(false);
     setMessage("THE SACRED BOOKS HAVE AWAKENED");
     await new Promise(resolve=>window.setTimeout(resolve,1150));
-    setScatterModalReady(true);
+    setScatterContinueReady(true);
     setMessage("SACRED BOOKS AWAKENED · CONTINUE TO BONUS");
    }else{
     if(Number(data.result.payout)>0)playWin();
