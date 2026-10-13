@@ -34,6 +34,11 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  const [expandingSymbol,setExpandingSymbol]=useState<SymbolName|null>(null);
  const [buyConfirm,setBuyConfirm]=useState(false);
  const [bonusReveal,setBonusReveal]=useState<{symbol:SymbolName;spins:number;mode:"spin"|"buyBonus"}|null>(null);
+ const [scatterReveal,setScatterReveal]=useState<{spins:number;books:number;mode:"spin"|"buyBonus"}|null>(null);
+ const [scatterModalReady,setScatterModalReady]=useState(false);
+ const [showBookCelebration,setShowBookCelebration]=useState(false);
+ const [rollingSymbol,setRollingSymbol]=useState<SymbolName>("pharaoh");
+ const [symbolRollComplete,setSymbolRollComplete]=useState(false);
  const [expandingPosition,setExpandingPosition]=useState<number|null>(null);
  const audioContext=useRef<AudioContext|null>(null);
  const lastSpinTick=useRef(0);
@@ -77,6 +82,17 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   tone(760,0.12,"triangle",0.055,420,0.025);
  };
  const defaultGrid:SymbolName[]=["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten","book","pharaoh","scarab","statue","ace"];
+ useEffect(()=>{
+  if(!bonusReveal){setSymbolRollComplete(false);return;}
+  const choices:SymbolName[]=["pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"];
+  let index=0;
+  setSymbolRollComplete(false);
+  setRollingSymbol(choices[0]);
+  const interval=window.setInterval(()=>{index=(index+1)%choices.length;setRollingSymbol(choices[index]);},95);
+  const timeout=window.setTimeout(()=>{window.clearInterval(interval);setRollingSymbol(bonusReveal.symbol);setSymbolRollComplete(true);},2300);
+  return ()=>{window.clearInterval(interval);window.clearTimeout(timeout);};
+ },[bonusReveal]);
+
  const [displaySymbols,setDisplaySymbols]=useState<SymbolName[]>(defaultGrid);
  const [reelStrips,setReelStrips]=useState<SymbolName[][]>(Array.from({length:5},()=>Array.from({length:8},(_,i)=>defaultGrid[i%defaultGrid.length])));
  const rollTimer=useRef<number|undefined>(undefined);
@@ -116,6 +132,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   const stripPool:SymbolName[]=["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"];
   setReelStrips(Array.from({length:5},()=>Array.from({length:8},()=>stripPool[Math.floor(Math.random()*stripPool.length)])));
   setBusy(true);setError("");setBuyConfirm(false);setReelStops(0);
+  setShowBookCelebration(false);setScatterReveal(null);setScatterModalReady(false);
   setMessage(action==="buyBonus"?"Opening the Sacred Book…":freeSpins>0?"Free spin in progress…":"Reels spinning…");
   const spinStartedAt=performance.now();
   try{
@@ -149,8 +166,14 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    if(data.expandingSymbol)setExpandingSymbol(data.expandingSymbol);
    if(Number(data.result.awardedFreeSpins)>0 && data.expandingSymbol){
     playBonus();
-    setBonusReveal({symbol:data.expandingSymbol as SymbolName,spins:Number(data.result.awardedFreeSpins),mode:action});
-    setMessage("THE SACRED BOOK HAS AWAKENED");
+    const bookCount=finalSymbols.filter((symbol:SymbolName)=>symbol==="book").length;
+    setShowBookCelebration(true);
+    setScatterReveal({spins:Number(data.result.awardedFreeSpins),books:bookCount,mode:action});
+    setScatterModalReady(false);
+    setMessage("THE SACRED BOOKS HAVE AWAKENED");
+    await new Promise(resolve=>window.setTimeout(resolve,1150));
+    setScatterModalReady(true);
+    setMessage("SACRED BOOKS AWAKENED · CONTINUE TO BONUS");
    }else{
     if(Number(data.result.payout)>0)playWin();
     setMessage(data.result.payout>0?"WIN · "+data.result.payout.toLocaleString()+" CREDITS":data.result.awardedFreeSpins?"SACRED BOOK TRIGGERED · "+data.result.awardedFreeSpins+" FREE SPINS":"No match this time. Try another spin.");
@@ -173,7 +196,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
      return <div key={reel} className={"bra-reel-column"+(spinning?" is-spinning":"")+(busy&&!spinning?" is-stopping":"")}>
       <div className="bra-reel-viewport">
        <div className="bra-reel-strip" aria-hidden="true">{strip.map((name,index)=>{const item=symbolMeta[name]||symbolMeta.book;return <div key={index} className={"bra-strip-symbol "+item.className}><img src={"/images/book-of-ra/"+name+".jpg"} alt="" draggable={false} decoding="async"/></div>;})}</div>
-       <div className={"bra-final-column"+(spinning?" is-hidden":"")}>{finalColumn.map((name,row)=>{const i=reel*3+row;const item=symbolMeta[name]||symbolMeta.book;return <div key={i} className={"rf-reel bra-reel "+item.className+(winning.has(i)?" rf-reel-win":"")+(expandingPosition===i?" bra-cell-expanding":"")+(bonusReveal&&name==="book"?" bra-book-trigger":"")}><span className="rf-reel-glow"/><span className="rf-symbol-art"><img src={"/images/book-of-ra/"+name+".jpg"} alt={item.label} draggable={false} decoding="async"/></span></div>;})}</div>
+       <div className={"bra-final-column"+(spinning?" is-hidden":"")}>{finalColumn.map((name,row)=>{const i=reel*3+row;const item=symbolMeta[name]||symbolMeta.book;return <div key={i} className={"rf-reel bra-reel "+item.className+(winning.has(i)?" rf-reel-win":"")+(expandingPosition===i?" bra-cell-expanding":"")+(showBookCelebration&&name==="book"?" bra-book-trigger":"")}><span className="rf-reel-glow"/><span className="rf-symbol-art"><img src={"/images/book-of-ra/"+name+".jpg"} alt={item.label} draggable={false} decoding="async"/></span></div>;})}</div>
       </div>
      </div>;
     })}
@@ -193,16 +216,27 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>BOOK OF RA · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{symbol==="book"?"Wild / Scatter feature":["pharaoh","anubis","scarab","statue"].includes(symbol)?"Premium symbol":"Classic symbol"}</b></div>;})}</div><p>Demo presentation only. Actual line rules and awards are determined by the game service.</p></details>
   <button className="bra-lobby-button" type="button" onClick={onBackToLobby}><Crown size={15} strokeWidth={2.2}/> <span>TO LOBBY</span></button>
   <div className="rf-demo-disclaimer">DEMO ONLY · CREDITS HAVE NO CASH VALUE · NO DEPOSITS OR WITHDRAWALS · PLAY RESPONSIBLY · 18+</div>
+  {scatterReveal&&scatterModalReady&&<div className="bra-scatter-backdrop" role="presentation">
+   <section className="bra-scatter-modal" role="dialog" aria-modal="true" aria-labelledby="bra-scatter-title">
+    <div className="bra-awakening-stars" aria-hidden="true">✦ · ✧ · ✦</div>
+    <div className="bra-scatter-books">{Array.from({length:Math.min(scatterReveal.books,5)},(_,i)=><img key={i} src="/images/book-of-ra/book.jpg" alt="" style={{animationDelay:(i*100)+"ms"}} />)}</div>
+    <div className="bra-awakening-kicker">THE SACRED BOOKS HAVE AWAKENED</div>
+    <h2 id="bra-scatter-title">{scatterReveal.books} SACRED BOOKS</h2>
+    <p>{scatterReveal.spins} FREE SPINS UNLOCKED</p>
+    <small>The books stay on the reels. Continue when you are ready to reveal the expanding symbol.</small>
+    <button className="btn btn-gold bra-awakening-start" type="button" onClick={()=>{const symbol=expandingSymbol;if(!symbol)return;setScatterReveal(null);setBonusReveal({symbol,spins:scatterReveal.spins,mode:scatterReveal.mode});setMessage("CHOOSING YOUR EXPANDING SYMBOL…");}}>CONTINUE TO BONUS <span>›</span></button>
+   </section>
+  </div>}
   {bonusReveal&&<div className="bra-awakening-backdrop" role="presentation">
    <section className="bra-awakening" role="dialog" aria-modal="true" aria-labelledby="bra-awakening-title">
     <div className="bra-awakening-stars" aria-hidden="true">✦ · ✧ · ✦</div>
     <div className="bra-opening-book"><img src="/images/book-of-ra/book.jpg" alt="The Sacred Book opening" /></div>
     <div className="bra-awakening-kicker">THE SACRED BOOK HAS CHOSEN</div>
     <h2 id="bra-awakening-title">Your expanding symbol</h2>
-    <div className="bra-revealed-symbol"><img src={"/images/book-of-ra/"+bonusReveal.symbol+".jpg"} alt={symbolMeta[bonusReveal.symbol].label}/><span>{symbolMeta[bonusReveal.symbol].label}</span></div>
-    <p>{bonusReveal.spins} FREE SPINS ARE WAITING</p>
-    <small>The symbol and bonus were selected by the game server.</small>
-    <button className="btn btn-gold bra-awakening-start" type="button" onClick={()=>{setBonusReveal(null);setMessage("BONUS ROUND · "+(symbolMeta[expandingSymbol||"book"]?.label||"EXPANDING SYMBOL"));}}>OPEN BONUS ROUND <span>→</span></button>
+    <div className={"bra-revealed-symbol"+(!symbolRollComplete?" bra-symbol-rolling":"")}><img src={"/images/book-of-ra/"+rollingSymbol+".jpg"} alt={symbolRollComplete?symbolMeta[rollingSymbol].label:"Choosing expanding symbol"}/><span>{symbolRollComplete?symbolMeta[rollingSymbol].label:"CHOOSING…"}</span></div>
+    <p>{symbolRollComplete?bonusReveal.spins+" FREE SPINS ARE WAITING":"THE EXPANDING SYMBOL IS BEING CHOSEN"}</p>
+    <small>{symbolRollComplete?"The selected symbol is locked in. Start the bonus round when ready.":"Watch the symbols spin and settle on your expanding symbol."}</small>
+    <button className="btn btn-gold bra-awakening-start" type="button" disabled={!symbolRollComplete} onClick={()=>{setBonusReveal(null);setShowBookCelebration(false);setMessage("BONUS ROUND · "+(symbolMeta[bonusReveal.symbol]?.label||"EXPANDING SYMBOL"));}}>START FREE SPINS <span>›</span></button>
    </section>
   </div>}
   {buyConfirm&&<div className="modal-backdrop rf-bonus-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setBuyConfirm(false);}}><section className="modal rf-bonus-modal" role="dialog" aria-modal="true" aria-labelledby="bra-bonus-title"><button className="modal-close" type="button" onClick={()=>setBuyConfirm(false)} aria-label="Close bonus confirmation">×</button><div className="modal-mark"><BookOpen size={25}/></div><div className="eyebrow">SACRED BOOK BONUS</div><h2 id="bra-bonus-title">Unlock Free Spins?</h2><p>Trigger the bonus round for demo credits only. No cash value.</p><div className="rf-bonus-price">{(bet*75).toLocaleString()} <small>DEMO CREDITS</small></div><div className="rf-bonus-actions"><button className="btn btn-gold modal-done" type="button" onClick={()=>void play("buyBonus")}>Confirm bonus</button><button className="auth-switch" type="button" onClick={()=>setBuyConfirm(false)}>Cancel</button></div></section></div>}
