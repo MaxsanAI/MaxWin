@@ -3840,3 +3840,24 @@ html, body {
     object-position: center;
   }
 }
+
+
+/* Book of Ra: keep the scatter books visible before opening the expanding-symbol picker. */
+.bra-scatter-backdrop{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:18px;overflow-y:auto;background:radial-gradient(ellipse at 50% 40%,rgba(154,92,35,.22),transparent 52%),rgba(5,5,13,.9);backdrop-filter:blur(8px);animation:bra-awakening-fade .35s ease both}
+.bra-scatter-modal{position:relative;width:min(460px,100%);padding:24px 22px 22px;text-align:center;border:1px solid rgba(245,199,103,.56);border-radius:22px;background:radial-gradient(ellipse at 50% 18%,#56351f 0,#211629 45%,#100f1b 100%);box-shadow:0 0 70px rgba(227,159,53,.2),inset 0 0 36px rgba(246,197,94,.07);overflow:hidden}
+.bra-scatter-modal:before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,transparent 25%,rgba(255,224,151,.08) 48%,transparent 65%);animation:bra-awakening-sheen 3s ease-in-out infinite}
+.bra-scatter-books{position:relative;display:flex;justify-content:center;align-items:center;gap:clamp(1px,1.5vw,9px);min-height:108px;margin:5px auto 14px}
+.bra-scatter-books img{position:relative;width:clamp(43px,12vw,66px);height:clamp(55px,15vw,82px);object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,204,90,.8));animation:bra-scatter-book-pop .78s cubic-bezier(.2,.85,.25,1.2) both}
+.bra-scatter-books img:nth-child(even){animation-name:bra-scatter-book-pop-alt}
+.bra-scatter-modal h2{position:relative;color:#fff5d9;font:800 clamp(22px,5vw,28px)/1.2 Manrope,sans-serif;margin:10px 0 12px}
+.bra-scatter-modal p{position:relative;color:#f6d17d;font-size:13px;font-weight:800;letter-spacing:1.3px;margin:12px 0 8px}
+.bra-scatter-modal small{position:relative;display:block;color:#c2b6cb;font-size:11px;line-height:1.55;max-width:340px;margin:0 auto}
+.bra-scatter-modal .bra-awakening-start{position:relative}
+.bra-awakening-start:disabled{opacity:.55;filter:saturate(.55);cursor:wait}
+.bra-symbol-rolling{animation:bra-symbol-roll-flash .14s linear infinite alternate!important}
+.bra-symbol-rolling img{filter:drop-shadow(0 0 14px rgba(255,204,90,.9));transform:scale(.92)}
+@keyframes bra-scatter-book-pop{0%{opacity:0;transform:translateY(28px) scale(.45) rotate(-12deg);filter:brightness(2.2) drop-shadow(0 0 0 #ffd45b)}36%{opacity:1;transform:translateY(-15px) scale(1.18) rotate(4deg);filter:brightness(1.8) drop-shadow(0 0 17px #ffd45b)}68%{transform:translateY(3px) scale(.98) rotate(-1deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0);filter:brightness(1.12) drop-shadow(0 0 10px rgba(255,204,90,.8))}}
+@keyframes bra-scatter-book-pop-alt{0%{opacity:0;transform:translateY(22px) scale(.5) rotate(12deg);filter:brightness(2.2) drop-shadow(0 0 0 #ffd45b)}36%{opacity:1;transform:translateY(-18px) scale(1.2) rotate(-5deg);filter:brightness(1.8) drop-shadow(0 0 17px #ffd45b)}68%{transform:translateY(3px) scale(.98) rotate(1deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0);filter:brightness(1.12) drop-shadow(0 0 10px rgba(255,204,90,.8))}}
+@keyframes bra-symbol-roll-flash{from{filter:brightness(1)}to{filter:brightness(1.4)}}
+@media(max-width:480px){.bra-scatter-modal{padding:20px 15px 17px;border-radius:17px}.bra-scatter-books{min-height:92px}.bra-scatter-books img{width:clamp(39px,11vw,56px);height:clamp(51px,14vw,70px)}}
+@media(prefers-reduced-motion:reduce){.bra-scatter-backdrop,.bra-scatter-modal:before,.bra-scatter-books img,.bra-symbol-rolling{animation:none!important}}
