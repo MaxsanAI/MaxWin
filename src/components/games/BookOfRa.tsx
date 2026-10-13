@@ -35,7 +35,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  const [buyConfirm,setBuyConfirm]=useState(false);
  const [bonusReveal,setBonusReveal]=useState<{symbol:SymbolName;spins:number;mode:"spin"|"buyBonus"}|null>(null);
  const [scatterReveal,setScatterReveal]=useState<{spins:number;books:number;mode:"spin"|"buyBonus"}|null>(null);
- const [scatterModalReady,setScatterModalReady]=useState(false);
+ const [scatterContinueReady,setScatterModalReady]=useState(false);
  const [showBookCelebration,setShowBookCelebration]=useState(false);
  const [rollingSymbol,setRollingSymbol]=useState<SymbolName>("pharaoh");
  const [symbolRollComplete,setSymbolRollComplete]=useState(false);
@@ -201,7 +201,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   <audio ref={winAudio} src="/audio/egypt-win.mp3" preload="auto" aria-hidden="true" />
   <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>BOOK OF <em>RA</em></h3><p>5 reels · 3 rows · Demo credits</p></div></div><div className="rf-top-actions"><span className="rf-status"><span/> DEMO MODE</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute game sound effects":"Enable game sound effects"} title={soundOn?"Game sound effects on":"Game sound effects off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button><button className="rf-icon-button" type="button" onClick={()=>setMusicOn(v=>{const next=!v;const audio=musicAudio.current;if(audio){if(next){audio.volume=0.02;void audio.play().catch(()=>{});}else audio.pause();}return next;})} aria-label={musicOn?"Turn background music off":"Turn background music on"} title={musicOn?"Background music on · low volume":"Background music off"}>{musicOn?<Music size={16}/>:<Music size={16} style={{opacity:0.45}}/>}</button></div></div>
   <div className="rf-cabinet bra-cabinet"><div className="rf-cabinet-header"><span><Crown size={13}/> TEMPLE OF RA</span><span><i/> 5 REELS <i/> 3 ROWS <i/> SACRED BOOK</span></div>
-   <div className="rf-reel-window bra-reel-window bra-strip-reels" aria-label="Book of Ra slot reels">
+   <div className={"rf-reel-window bra-reel-window bra-strip-reels"+(showBookCelebration?" bra-scatter-active":"")} aria-label="Book of Ra slot reels">
     {Array.from({length:5},(_,reel)=>{
      const spinning=busy&&reelStops<=reel;
      const finalColumn=displaySymbols.slice(reel*3,reel*3+3);
@@ -216,30 +216,22 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    </div>
    <div className="rf-machine-footer"><span>ANCIENT EGYPTIAN FORTUNE</span><span>•</span><span>PLAY FOR FUN · NO CASH VALUE</span></div>
   </div>
-  {freeSpins>0&&<div className="rf-locked-notice bra-free-spins"><Sparkles size={18}/><span><b>{freeSpins} FREE SPINS REMAINING</b><small>{expandingSymbol?"Expanding symbol: "+(symbolMeta[expandingSymbol]?.label||expandingSymbol):"Your bonus spins are ready to play."}</small></span></div>}
+  {scatterReveal&&scatterContinueReady&&<div className="bra-continue-wrap">
+   <button className="bra-continue-button" type="button" onClick={()=>{const reveal=scatterReveal;const symbol=expandingSymbol;if(!reveal||!symbol)return;setScatterReveal(null);setScatterContinueReady(false);setShowBookCelebration(false);setBonusReveal({symbol,spins:reveal.spins,mode:reveal.mode});setMessage("CHOOSING YOUR EXPANDING SYMBOL…");}}>CONTINUE TO BONUS <span>›</span></button>
+  </div>}
+  {freeSpins>0&&!scatterReveal&&<div className="rf-locked-notice bra-free-spins"><Sparkles size={18}/><span><b>{freeSpins} FREE SPINS REMAINING</b><small>{expandingSymbol?"Expanding symbol: "+(symbolMeta[expandingSymbol]?.label||expandingSymbol):"Your bonus spins are ready to play."}</small></span></div>}
   <div className="rf-main-controls bra-main-controls">
    <div className="rf-bet-control rf-bet-side"><label htmlFor="bra-bet">TOTAL BET</label><div><button type="button" aria-label="Decrease bet" disabled={busy||freeSpins>0||bet<=5} onClick={()=>setBet(v=>Math.max(5,v-5))}>−</button><strong id="bra-bet">{bet.toLocaleString()}</strong><button type="button" aria-label="Increase bet" disabled={busy||freeSpins>0||bet>=100} onClick={()=>setBet(v=>Math.min(100,v+5))}>+</button></div><small>Per spin</small></div>
    <div className="rf-speed-panel bra-inline-speed"><span><Gauge size={14}/> SPEED</span><div>{(["slow","normal","turbo"] as const).map(s=><button type="button" key={s} className={speed===s?"active":""} onClick={()=>setSpeed(s)} disabled={busy}>{s.toUpperCase()}</button>)}</div></div>
-   <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||balance===null||(balance<bet&&freeSpins===0)} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {freeSpins>0?"FREE SPIN":"SPIN"}<small>{freeSpins>0?"BONUS ROUND":bet+" CREDITS"}</small></>}</button>
+   <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||balance===null||(balance<bet&&freeSpins===0)} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {freeSpins>0?"FREE SPIN":"SPIN"}<small>{freeSpins>0?"BONUS ROUND":bet+" CREDITS"}</small></>}</button>
    <div className="rf-credit-panel rf-balance-side"><span>DEMO BALANCE</span><strong>{balance===null?"—":balance.toLocaleString()}</strong><small>Demo credits</small></div>
-   <button className="rf-buy-button bra-buy-button" type="button" disabled={busy||bonusReveal!==null||balance===null||balance<bet*75||freeSpins>0} onClick={()=>setBuyConfirm(true)}><Sparkles size={16}/><span>BUY BONUS<small>{"75× BET · "+(bet*75).toLocaleString()+" CR"}</small></span></button>
+   <button className="rf-buy-button bra-buy-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||balance===null||balance<bet*75||freeSpins>0} onClick={()=>setBuyConfirm(true)}><Sparkles size={16}/><span>BUY BONUS<small>{"75× BET · "+(bet*75).toLocaleString()+" CR"}</small></span></button>
   </div>
   {message&&<p className={"rf-message bra-message"+(result?.payout?" is-win":"")} role="status">{message}</p>}{error&&<p className="rf-error" role="alert">{error}</p>}
   {result&&<div className="rf-last-result"><span>LAST RESULT<small>{result.wins?.length?result.wins.length+" winning line(s)":result.awardedFreeSpins?"Bonus triggered":"Round complete"}</small></span><strong>{result.payout.toLocaleString()}<small>CREDITS WON</small></strong></div>}
   <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>BOOK OF RA · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{symbol==="book"?"Wild / Scatter feature":["pharaoh","anubis","scarab","statue"].includes(symbol)?"Premium symbol":"Classic symbol"}</b></div>;})}</div><p>Demo presentation only. Actual line rules and awards are determined by the game service.</p></details>
   <button className="bra-lobby-button" type="button" onClick={onBackToLobby}><Crown size={15} strokeWidth={2.2}/> <span>TO LOBBY</span></button>
   <div className="rf-demo-disclaimer">DEMO ONLY · CREDITS HAVE NO CASH VALUE · NO DEPOSITS OR WITHDRAWALS · PLAY RESPONSIBLY · 18+</div>
-  {scatterReveal&&scatterModalReady&&<div className="bra-scatter-backdrop" role="presentation">
-   <section className="bra-scatter-modal" role="dialog" aria-modal="true" aria-labelledby="bra-scatter-title">
-    <div className="bra-awakening-stars" aria-hidden="true">✦ · ✧ · ✦</div>
-    <div className="bra-scatter-books">{Array.from({length:Math.min(scatterReveal.books,5)},(_,i)=><img key={i} src="/images/book-of-ra/book.jpg" alt="" style={{animationDelay:(i*100)+"ms"}} />)}</div>
-    <div className="bra-awakening-kicker">THE SACRED BOOKS HAVE AWAKENED</div>
-    <h2 id="bra-scatter-title">{scatterReveal.books} SACRED BOOKS</h2>
-    <p>{scatterReveal.spins} FREE SPINS UNLOCKED</p>
-    <small>The books stay on the reels. Continue when you are ready to reveal the expanding symbol.</small>
-    <button className="btn btn-gold bra-awakening-start" type="button" onClick={()=>{const symbol=expandingSymbol;if(!symbol)return;setScatterReveal(null);setBonusReveal({symbol,spins:scatterReveal.spins,mode:scatterReveal.mode});setMessage("CHOOSING YOUR EXPANDING SYMBOL…");}}>CONTINUE TO BONUS <span>›</span></button>
-   </section>
-  </div>}
   {bonusReveal&&<div className="bra-awakening-backdrop" role="presentation">
    <section className="bra-awakening" role="dialog" aria-modal="true" aria-labelledby="bra-awakening-title">
     <div className="bra-awakening-stars" aria-hidden="true">✦ · ✧ · ✦</div>
