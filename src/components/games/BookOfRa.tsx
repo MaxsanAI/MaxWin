@@ -217,7 +217,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    <div className="rf-machine-footer"><span>ANCIENT EGYPTIAN FORTUNE</span><span>•</span><span>PLAY FOR FUN · NO CASH VALUE</span></div>
   </div>
   {scatterReveal&&scatterContinueReady&&<div className="bra-continue-wrap">
-   <button className="bra-continue-button" type="button" onClick={()=>{const reveal=scatterReveal;const symbol=expandingSymbol;if(!reveal||!symbol)return;setScatterReveal(null);setScatterContinueReady(false);setShowBookCelebration(false);setBonusReveal({symbol,spins:reveal.spins,mode:reveal.mode});setMessage("CHOOSING YOUR EXPANDING SYMBOL…");}}>CONTINUE TO BONUS <span>›</span></button>
+   <button className="bra-continue-button" type="button" onClick={()=>{const reveal=scatterReveal;const symbol=expandingSymbol;if(!reveal||!symbol)return;setScatterReveal(null);setScatterContinueReady(false);setShowBookCelebration(false);setBonusReveal({symbol,spins:reveal.spins,mode:reveal.mode});setMessage("CHOOSING YOUR EXPANDING SYMBOL…");}}>CONTINUE TO BONUS</button>
   </div>}
   {freeSpins>0&&!scatterReveal&&<div className="rf-locked-notice bra-free-spins"><Sparkles size={18}/><span><b>{freeSpins} FREE SPINS REMAINING</b><small>{expandingSymbol?"Expanding symbol: "+(symbolMeta[expandingSymbol]?.label||expandingSymbol):"Your bonus spins are ready to play."}</small></span></div>}
   <div className="rf-main-controls bra-main-controls">
