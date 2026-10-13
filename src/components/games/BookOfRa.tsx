@@ -4,7 +4,7 @@ import { BookOpen, Crown, Shield, Flame, Sparkles, Volume2, VolumeX, Music, Gaug
 type SymbolName = "book" | "pharaoh" | "anubis" | "scarab" | "statue" | "ace" | "king" | "queen" | "jack" | "ten";
 type SpinResult = { id:string; symbols:SymbolName[]; outcome:string; bet:number; payout:number; balance:number; mode:"spin"|"buyBonus"; awardedFreeSpins?:number; freeSpinsRemaining?:number; winningPositions?:number[]; wins?:{line:number;symbol:SymbolName;count:number;payout:number;positions:number[]}[]; expandingSymbol?:SymbolName|null };
 const symbolMeta:Record<SymbolName,{label:string;Icon:typeof BookOpen;color:string;className:string}> = {
- book:{label:"BOOK OF RA",Icon:BookOpen,color:"#ffd779",className:"bra-symbol-book"},
+ book:{label:"BOOK OF SUNFIRE",Icon:BookOpen,color:"#ffd779",className:"bra-symbol-book"},
  pharaoh:{label:"PHARAOH",Icon:Crown,color:"#f4ca72",className:"bra-symbol-pharaoh"},
  anubis:{label:"ANUBIS",Icon:Shield,color:"#c7a4ff",className:"bra-symbol-anubis"},
  scarab:{label:"SCARAB",Icon:Sun,color:"#79e8ff",className:"bra-symbol-scarab"},
@@ -134,7 +134,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    const d=await r.json();
    if(live&&r.ok){setBalance(Number(d.balance));setFreeSpins(Number(d.freeSpins||0));if(d.expandingSymbol)setExpandingSymbol(d.expandingSymbol);}
    else if(live)setError(d.error||"Could not load the demo balance.");
-  }).catch(()=>{if(live)setError("Could not connect to the Book of Ra game service.");});
+  }).catch(()=>{if(live)setError("Could not connect to the Book of Sunfire game service.");});
   return ()=>{live=false;if(rollTimer.current)clearInterval(rollTimer.current);};
  },[]);
 
@@ -243,7 +243,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   <audio ref={winAudio} src="/audio/egypt-win.mp3" preload="auto" aria-hidden="true" />
   <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>BOOK OF <em>RA</em></h3><p>5 reels · 3 rows · Demo credits</p></div></div><div className="rf-top-actions"><span className="rf-status"><span/> DEMO MODE</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute game sound effects":"Enable game sound effects"} title={soundOn?"Game sound effects on":"Game sound effects off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button><button className="rf-icon-button" type="button" onClick={()=>setMusicOn(v=>{const next=!v;const audio=musicAudio.current;if(audio){if(next){audio.volume=0.02;void audio.play().catch(()=>{});}else audio.pause();}return next;})} aria-label={musicOn?"Turn background music off":"Turn background music on"} title={musicOn?"Background music on · low volume":"Background music off"}>{musicOn?<Music size={16}/>:<Music size={16} style={{opacity:0.45}}/>}</button></div></div>
   <div className="rf-cabinet bra-cabinet"><div className="rf-cabinet-header"><span><Crown size={13}/> TEMPLE OF RA</span><span><i/> 5 REELS <i/> 3 ROWS <i/> SACRED BOOK</span></div>
-   <div className={"rf-reel-window bra-reel-window bra-strip-reels"+(showBookCelebration?" bra-scatter-active":"")} aria-label="Book of Ra slot reels">
+   <div className={"rf-reel-window bra-reel-window bra-strip-reels"+(showBookCelebration?" bra-scatter-active":"")} aria-label="Book of Sunfire slot reels">
     {Array.from({length:5},(_,reel)=>{
      const spinning=busy&&reelStops<=reel;
      const finalColumn=displaySymbols.slice(reel*3,reel*3+3);
@@ -271,7 +271,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   </div>
   {message&&<p className={"rf-message bra-message"+(result?.payout?" is-win":"")} role="status">{message}</p>}{error&&<p className="rf-error" role="alert">{error}</p>}
   {result&&<div className="rf-last-result"><span>LAST RESULT<small>{result.wins?.length?result.wins.length+" winning line(s)":result.awardedFreeSpins?"Bonus triggered":"Round complete"}</small></span><strong>{result.payout.toLocaleString()}<small>CREDITS WON</small></strong></div>}
-  <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>BOOK OF RA · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{symbol==="book"?"Wild / Scatter feature":["pharaoh","anubis","scarab","statue"].includes(symbol)?"Premium symbol":"Classic symbol"}</b></div>;})}</div><p>Demo presentation only. Actual line rules and awards are determined by the game service.</p></details>
+  <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>BOOK OF SUNFIRE · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{symbol==="book"?"Wild / Scatter feature":["pharaoh","anubis","scarab","statue"].includes(symbol)?"Premium symbol":"Classic symbol"}</b></div>;})}</div><p>Demo presentation only. Actual line rules and awards are determined by the game service.</p></details>
   <button className="bra-lobby-button" type="button" disabled={busy||resettingDemo} onClick={()=>void leaveDemo()}><Crown size={15} strokeWidth={2.2}/> <span>{resettingDemo?"RESETTING DEMO…":"TO LOBBY"}</span></button>
   <div className="rf-demo-disclaimer">DEMO ONLY · CREDITS HAVE NO CASH VALUE · NO DEPOSITS OR WITHDRAWALS · PLAY RESPONSIBLY · 18+</div>
   {bonusReveal&&<div className="bra-awakening-backdrop" role="presentation">
@@ -291,7 +291,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     <div className="bra-finish-smoke bra-finish-smoke-back" aria-hidden="true"/>
     <div className="bra-finish-stars" aria-hidden="true">✦　✧　✦　✧　✦</div>
     <div className="bra-finish-lamp" aria-hidden="true">✧</div>
-    <div className="bra-finish-kicker">BOOK OF RA · BONUS ROUND COMPLETE</div>
+    <div className="bra-finish-kicker">BOOK OF SUNFIRE · BONUS ROUND COMPLETE</div>
     {bonusFinish.total>0?<>
      <h2 id="bra-bonus-finish-title">CONGRATULATIONS!</h2>
      <div className="bra-finish-win-label">YOU WIN</div>
