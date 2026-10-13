@@ -4244,3 +4244,38 @@ html, body {
   .hero-bottom strong{font-size:10px!important}
   .hero-bottom span{font-size:9px!important;line-height:1.25!important}
 }
+
+
+/* MAXWIN internal proprietary license page */
+.license-page{
+  width:min(1120px,calc(100% - 48px));
+  min-height:calc(100vh - 190px);
+  margin:34px auto 56px;
+  padding:clamp(20px,4vw,48px);
+  border:1px solid rgba(168,125,255,.2);
+  border-radius:24px;
+  background:radial-gradient(ellipse at 85% 0%,rgba(125,70,235,.16),transparent 36%),linear-gradient(145deg,rgba(15,20,46,.98),rgba(8,12,29,.98));
+  box-shadow:0 24px 80px rgba(0,0,0,.22);
+}
+.license-page-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:clamp(28px,5vw,56px)}
+.license-page-top>span{display:flex;align-items:center;gap:8px;color:#c8b2ff;font-size:11px;font-weight:800;letter-spacing:1.7px}
+.license-document{max-width:820px;margin:0 auto}
+.license-document>.eyebrow{color:#d9b56c;font-size:11px;font-weight:800;letter-spacing:2px}
+.license-document h1{margin:14px 0 18px;color:#fff;font-size:clamp(34px,5.5vw,58px);line-height:1.08;letter-spacing:-1.8px}
+.license-document h1 em{color:#d8b66e;font-style:normal}
+.license-lead{max-width:760px;color:#d4d8e9;font-size:clamp(16px,2vw,19px);line-height:1.8}
+.license-effective{margin:22px 0 36px;color:#929bb9;font-size:12px}
+.license-document h2{margin:32px 0 10px;color:#f2d38d;font-size:17px;letter-spacing:.1px}
+.license-document p:not(.license-lead):not(.license-effective):not(.license-copyright){color:#b9c1d8;font-size:14px;line-height:1.85}
+.license-notice{display:flex;align-items:flex-start;gap:12px;margin:36px 0 20px;padding:18px;border:1px solid rgba(176,139,255,.24);border-radius:14px;background:rgba(117,79,204,.09);color:#cbb5ff}
+.license-notice svg{flex-shrink:0;margin-top:3px}
+.license-notice p{margin:0;color:#c8cce0!important;font-size:13px!important}
+.license-document .license-copyright{margin-top:28px;padding-top:20px;border-top:1px solid rgba(157,168,205,.15);color:#8f99b6;font-size:12px;line-height:1.7}
+@media(max-width:640px){
+  .license-page{width:calc(100% - 22px);margin:14px auto 32px;padding:18px 16px;border-radius:18px;min-height:calc(100vh - 160px)}
+  .license-page-top{align-items:flex-start;margin-bottom:32px}
+  .license-page-top .btn{padding:10px 12px;font-size:12px}
+  .license-page-top>span{font-size:9px;letter-spacing:1px;margin-top:12px}
+  .license-document h1{letter-spacing:-1px}
+  .license-document h2{margin-top:27px}
+}
