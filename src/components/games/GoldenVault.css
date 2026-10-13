@@ -291,3 +291,19 @@
   padding:7px 6px 14px!important;
  }
 }
+
+
+/* Golden Vault: reduce the lobby/navigation button width by 70%. */
+.mafia-vault .gv-below-slot .gv-topbar .gv-lobby{
+ width:30%!important;
+ min-width:0!important;
+ box-sizing:border-box!important;
+ justify-self:start!important;
+}
+@media(max-width:650px){
+ .mafia-vault .gv-below-slot .gv-topbar .gv-lobby{
+  width:30%!important;
+ min-width:0!important;
+ padding:7px 3px!important;
+ }
+}
