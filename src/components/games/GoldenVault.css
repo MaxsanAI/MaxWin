@@ -259,3 +259,35 @@
 @media(prefers-reduced-motion:reduce){
  .mafia-vault .gv-reels.spinning .gv-symbol.gv-column-spinning{animation:none!important;filter:none!important}
 }
+
+
+/* Golden Vault: keep the game modal compact instead of filling the entire screen. */
+.modal-slot:has(>.gv-game.mafia-vault){
+ width:min(900px,calc(100vw - 32px))!important;
+ height:min(600px,calc(100dvh - 32px))!important;
+ max-width:900px!important;
+ max-height:600px!important;
+ min-height:0!important;
+ margin:auto!important;
+ overflow:hidden!important;
+}
+.modal-slot:has(>.gv-game.mafia-vault)>.gv-game.mafia-vault{
+ width:100%!important;
+ max-width:100%!important;
+ height:100%!important;
+ min-height:0!important;
+ max-height:100%!important;
+ padding:8px 10px 16px!important;
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+}
+@media(max-width:650px){
+ .modal-slot:has(>.gv-game.mafia-vault){
+  width:calc(100vw - 12px)!important;
+  height:min(600px,calc(100dvh - 16px))!important;
+  max-height:calc(100dvh - 16px)!important;
+ }
+ .modal-slot:has(>.gv-game.mafia-vault)>.gv-game.mafia-vault{
+  padding:7px 6px 14px!important;
+ }
+}
