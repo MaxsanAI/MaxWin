@@ -380,6 +380,7 @@ body[data-theme="light"] { background: #f4f6fc; color: #20243a; }
 .modal-slot>.modal-mark,.modal-slot>.eyebrow,.modal-slot>#modal-title{display:none}
 .modal-slot>.modal-close{z-index:10;top:13px;right:13px;background:#090914bd;border:1px solid #ffffff1c;color:#f6dfaa}
 .modal-slot>.rf-game{flex:1;min-height:0;width:100%;overflow:auto;overscroll-behavior:contain;padding:0 3px 8px;scrollbar-width:thin;scrollbar-color:#66517d #0c0b18}
+.modal-slot>.gv-game{flex:1;min-height:0;width:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:0 3px 14px;scrollbar-width:thin;scrollbar-color:#66517d #0c0b18}
 .rf-game{--rf-gold:#f4ca72;--rf-ink:#100c20;display:flex;flex-direction:column;gap:13px;color:#f9f3e6}
 .rf-game-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-right:40px}
 .rf-title-lockup{display:flex;align-items:center;gap:12px;min-width:0}
