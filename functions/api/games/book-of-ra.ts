@@ -129,7 +129,8 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
 
     const expandCount = reelHasExpanding.filter(Boolean).length;
     const regKey = expandingSymbol as Exclude<SymbolName, "book">;
-    const minCount = PAYOUTS[regKey][2] !== undefined ? 2 : 3;
+    // Expanding Symbol activates only on three or more reels, consistently with the slot animation.
+    const minCount = 3;
 
     if (expandCount >= minCount) {
       const mult = PAYOUTS[regKey][expandCount as 2 | 3 | 4 | 5] || 0;
