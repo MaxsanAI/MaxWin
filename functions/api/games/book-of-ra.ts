@@ -187,6 +187,22 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const body = await readJson(request);
   if (!body) return json({ error: "Invalid payload." }, 400);
 
+  // Exiting the demo starts the next visit with a fresh demo wallet and no leftover bonus.
+  if (body.action === "resetDemo") {
+    try {
+      await ensureSchema(env.DB);
+      await getOrCreateWallet(env.DB, user.id);
+      const resetAt = new Date().toISOString();
+      await env.DB.prepare("UPDATE book_of_ra_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?")
+        .bind(resetAt, user.id).run();
+      await env.DB.prepare("UPDATE book_of_ra_demo_features SET free_spins = 0, free_spin_bet = 10, expanding_symbol = NULL, updated_at = ? WHERE user_id = ?")
+        .bind(resetAt, user.id).run();
+      return json({ ok: true, balance: 1000, freeSpins: 0, freeSpinBet: 10, expandingSymbol: null, mode: "demo" });
+    } catch {
+      return json({ error: "Could not reset demo balance." }, 500);
+    }
+  }
+
   const action = body.action === "buyBonus" ? "buyBonus" : body.action === "spin" ? "spin" : null;
   const bet = Number(body.bet);
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
