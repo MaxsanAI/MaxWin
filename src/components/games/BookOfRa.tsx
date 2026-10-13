@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Crown, Shield, Flame, Sparkles, Volume2, VolumeX, Gauge, Info, Coins, Gem, Sun, Plus, Minus, Zap } from "lucide-react";
+import { BookOpen, Crown, Shield, Flame, Sparkles, Volume2, VolumeX, Music, Gauge, Info, Coins, Gem, Sun, Plus, Minus, Zap } from "lucide-react";
 
 type SymbolName = "book" | "pharaoh" | "anubis" | "scarab" | "statue" | "ace" | "king" | "queen" | "jack" | "ten";
 type SpinResult = { id:string; symbols:SymbolName[]; outcome:string; bet:number; payout:number; balance:number; mode:"spin"|"buyBonus"; awardedFreeSpins?:number; freeSpinsRemaining?:number; winningPositions?:number[]; wins?:{line:number;symbol:SymbolName;count:number;payout:number;positions:number[]}[]; expandingSymbol?:SymbolName|null };
@@ -26,6 +26,8 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  const [error,setError]=useState("");
  const [message,setMessage]=useState("Choose your bet and spin the ancient reels.");
  const [soundOn,setSoundOn]=useState(true);
+ const [musicOn,setMusicOn]=useState(true);
+ const musicAudio=useRef<HTMLAudioElement|null>(null);
  const [speed,setSpeed]=useState<"slow"|"normal"|"turbo">("slow");
  const [freeSpins,setFreeSpins]=useState(0);
  const [expandingSymbol,setExpandingSymbol]=useState<SymbolName|null>(null);
@@ -76,6 +78,21 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  const [displaySymbols,setDisplaySymbols]=useState<SymbolName[]>(defaultGrid);
  const [reelStrips,setReelStrips]=useState<SymbolName[][]>(Array.from({length:5},()=>Array.from({length:8},(_,i)=>defaultGrid[i%defaultGrid.length])));
  const rollTimer=useRef<number|undefined>(undefined);
+
+ useEffect(()=>{
+  const audio=musicAudio.current;
+  if(!audio)return;
+  audio.loop=true;
+  audio.volume=0.08;
+  const tryStart=()=>{if(musicOn){audio.volume=0.08;void audio.play().catch(()=>{});}};
+  tryStart();
+  window.addEventListener("pointerdown",tryStart,{once:true});
+  window.addEventListener("keydown",tryStart,{once:true});
+  return ()=>{
+   window.removeEventListener("pointerdown",tryStart);
+   window.removeEventListener("keydown",tryStart);
+  };
+ },[musicOn]);
 
  useEffect(()=>{
   let live=true;
@@ -142,7 +159,8 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  const winning=new Set(result?.winningPositions||[]);
 
  return <div className={"rf-game book-of-ra-slot rf-speed-"+speed}>
-  <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>BOOK OF <em>RA</em></h3><p>5 reels · 3 rows · Demo credits</p></div></div><div className="rf-top-actions"><span className="rf-status"><span/> DEMO MODE</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute sound":"Enable sound"} title={soundOn?"Mute sound":"Sound off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button></div></div>
+  <audio ref={musicAudio} src="/audio/book-of-ra-music.mp3" loop preload="auto" aria-hidden="true" />
+  <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>BOOK OF <em>RA</em></h3><p>5 reels · 3 rows · Demo credits</p></div></div><div className="rf-top-actions"><span className="rf-status"><span/> DEMO MODE</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute game sound effects":"Enable game sound effects"} title={soundOn?"Game sound effects on":"Game sound effects off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button><button className="rf-icon-button" type="button" onClick={()=>setMusicOn(v=>{const next=!v;const audio=musicAudio.current;if(audio){if(next){audio.volume=0.08;void audio.play().catch(()=>{});}else audio.pause();}return next;})} aria-label={musicOn?"Turn background music off":"Turn background music on"} title={musicOn?"Background music on · low volume":"Background music off"}>{musicOn?<Music size={16}/>:<Music size={16} style={{opacity:0.45}}/>}</button></div></div>
   <div className="rf-cabinet bra-cabinet"><div className="rf-cabinet-header"><span><Crown size={13}/> TEMPLE OF RA</span><span><i/> 5 REELS <i/> 3 ROWS <i/> SACRED BOOK</span></div>
    <div className="rf-reel-window bra-reel-window bra-strip-reels" aria-label="Book of Ra slot reels">
     {Array.from({length:5},(_,reel)=>{
