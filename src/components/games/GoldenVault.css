@@ -386,3 +386,25 @@
   .mafia-vault .gv-stat strong{font-size:11px!important}
   .mafia-vault .gv-spin{min-height:23px!important;height:23px!important}
 }
+
+
+/* Put reel speed beneath SPIN so the reels get more vertical room. */
+.mafia-vault .gv-controls .gv-bet{grid-column:1;grid-row:1}
+.mafia-vault .gv-controls .gv-spin{grid-column:2;grid-row:1}
+.mafia-vault .gv-controls .gv-stat:not(.gv-last){grid-column:3;grid-row:1}
+.mafia-vault .gv-controls .gv-speed{
+  grid-column:2!important;
+  grid-row:2!important;
+  width:100%!important;
+  justify-content:center!important;
+  gap:3px!important;
+  margin:0!important;
+  padding:0!important;
+}
+.mafia-vault .gv-controls .gv-speed>span{display:none!important}
+.mafia-vault .gv-controls .gv-speed button{
+  padding:3px 5px!important;
+  border-radius:4px!important;
+  font-size:6px!important;
+  line-height:1!important;
+}
