@@ -241,3 +241,21 @@
  .mafia-vault .gv-hold-status{gap:4px}
  .mafia-vault .gv-hold-status strong{font-size:7px;padding:6px 5px}
 }
+
+
+/* Golden Vault: each reel spins vertically and stops one by one from left to right. */
+.mafia-vault .gv-reels.spinning .gv-symbol.gv-column-spinning{
+ animation:gv-vault-reel-spin .105s linear infinite!important;
+ filter:blur(.65px) brightness(1.08)!important;
+ will-change:transform,filter;
+}
+.mafia-vault .gv-reels.spinning .gv-symbol:not(.gv-column-spinning){
+ animation:none!important;filter:none!important;transform:none!important;
+}
+@keyframes gv-vault-reel-spin{
+ 0%{transform:translateY(-9px);filter:blur(1.2px) brightness(1.08)}
+ 100%{transform:translateY(9px);filter:blur(.25px) brightness(.96)}
+}
+@media(prefers-reduced-motion:reduce){
+ .mafia-vault .gv-reels.spinning .gv-symbol.gv-column-spinning{animation:none!important;filter:none!important}
+}
