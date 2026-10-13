@@ -70,3 +70,8 @@
 @keyframes gv-particle{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.15);opacity:0}}
 @media(max-width:650px){.gv-speed{gap:4px;margin-bottom:6px}.gv-speed>span{font-size:7px}.gv-speed button{padding:6px 7px;font-size:7px}}
 @media(prefers-reduced-motion:reduce){.gv-reels.cascade-flash .gv-symbol.winning,.gv-reels.cascade-drop .gv-symbol.cascading-out,.gv-particles i{animation:none!important}}
+
+/* Golden Vault: standard reels, simple winning-symbol glow only */
+.gv-reels.spinning .gv-symbol{animation:none!important;filter:none!important;transform:none!important;will-change:auto!important}
+.gv-symbol.winning{animation:gv-simple-win .42s ease-in-out infinite alternate!important;border-color:#fff0a4!important;box-shadow:0 0 14px #ffd66c9c,inset 0 0 12px #ffe9a555!important}
+@keyframes gv-simple-win{from{filter:brightness(1.05)}to{filter:brightness(1.8)}}
