@@ -30,3 +30,8 @@ To enable issuance, open the MAXWIN Pages project in Cloudflare, add `MAXWIN_ADM
 ## Financial status
 
 Deposits are not automatically credited, withdrawals remain disabled, and the game catalogue is not a certified real-money gaming provider. Do not send funds or represent bonus requests as paid wallet credit until the corresponding chain verification, ledger, withdrawal signer, and game integrations are implemented and tested.
+
+
+## Proprietary license and rights
+
+MAXWIN is a proprietary project. The repository's `LICENSE.md` describes the usage restrictions for original MAXWIN-owned materials throughout the casino platform, not only the slot games. No open-source license is granted. Third-party libraries, fonts, services, media, or other assets remain subject to their respective owners' terms and licenses. Public repository visibility does not by itself grant permission to deploy, redistribute, modify, or commercially reuse MAXWIN-owned materials.
