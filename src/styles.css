@@ -3861,3 +3861,70 @@ html, body {
 @keyframes bra-symbol-roll-flash{from{filter:brightness(1)}to{filter:brightness(1.4)}}
 @media(max-width:480px){.bra-scatter-modal{padding:20px 15px 17px;border-radius:17px}.bra-scatter-books{min-height:92px}.bra-scatter-books img{width:clamp(39px,11vw,56px);height:clamp(51px,14vw,70px)}}
 @media(prefers-reduced-motion:reduce){.bra-scatter-backdrop,.bra-scatter-modal:before,.bra-scatter-books img,.bra-symbol-rolling{animation:none!important}}
+
+
+/* Book of Ra: triggered books pop above the actual reel frame and stay there until Continue. */
+.book-of-ra-slot .bra-cabinet:has(.bra-scatter-active){position:relative;z-index:4;overflow:visible!important}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active{position:relative;z-index:5;overflow:visible!important;isolation:isolate}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-column{overflow:visible!important;contain:none!important}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-column:has(.bra-book-trigger){position:relative;z-index:20}
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-reel-viewport,
+.book-of-ra-slot .bra-reel-window.bra-scatter-active .bra-final-column{overflow:visible!important;contain:none!important}
+.book-of-ra-slot .bra-book-trigger{
+  position:relative!important;z-index:30!important;overflow:visible!important;
+  transform-origin:center center!important;
+  animation:bra-book-trigger-rise .52s cubic-bezier(.16,1.3,.3,1) forwards!important;
+  border:1px solid #ffe59a!important;
+  background:radial-gradient(ellipse at 50% 42%,#fff0a64d 0%,#a869222e 50%,#211629 100%)!important;
+  box-shadow:inset 0 0 0 1px #ffe7a0,0 0 22px #ffcb4fbb,0 0 46px #d99724a1!important;
+}
+.book-of-ra-slot .bra-book-trigger .rf-symbol-art{
+  transform:scale(1.13)!important;
+  filter:drop-shadow(0 0 8px #ffd45b) drop-shadow(0 0 15px #ffba35)!important;
+}
+.book-of-ra-slot .bra-book-trigger .rf-symbol-art img{
+  filter:drop-shadow(0 0 8px #ffd45b) drop-shadow(0 0 15px #ffba35)!important;
+}
+.book-of-ra-slot .bra-book-trigger:before{
+  content:""!important;position:absolute!important;inset:-15px!important;z-index:4!important;
+  border-radius:50%!important;pointer-events:none!important;
+  background:radial-gradient(circle,#fff2b9d9 0 2px,transparent 3px),radial-gradient(circle at 20% 28%,#ffe9a0 0 1.5px,transparent 3px),radial-gradient(circle at 82% 18%,#fff4bf 0 2px,transparent 4px),radial-gradient(circle at 74% 78%,#e9a72e 0 2px,transparent 4px),radial-gradient(circle at 12% 76%,#ffdc76 0 1.5px,transparent 3px);
+  background-size:22px 24px,31px 29px,37px 34px,27px 31px,33px 28px;
+  filter:drop-shadow(0 0 7px #ffd45b);
+  animation:bra-gold-dust-stay 1.05s ease-in-out infinite!important;
+}
+@keyframes bra-book-trigger-rise{
+  0%{transform:translateY(2px) scale(.94);filter:brightness(1)}
+  62%{transform:translateY(-17px) scale(1.17);filter:brightness(1.65)}
+  100%{transform:translateY(-12px) scale(1.13);filter:brightness(1.24)}
+}
+@keyframes bra-gold-dust-stay{
+  0%,100%{opacity:.55;transform:scale(.82) rotate(-5deg)}
+  50%{opacity:1;transform:scale(1.16) rotate(9deg)}
+}
+.bra-continue-wrap{
+  position:relative;z-index:6;display:flex;justify-content:center;align-items:center;
+  width:100%;margin:7px auto 3px;padding:0 10px;pointer-events:auto;
+  animation:bra-continue-enter .42s ease-out both;
+}
+.bra-continue-button{
+  display:flex;align-items:center;justify-content:center;width:min(360px,100%);
+  min-height:47px;padding:12px 22px;border:1px solid #ffe09a;border-radius:11px;
+  color:#271708;background:linear-gradient(180deg,#fff0b4 0%,#f8ce66 43%,#c98624 100%);
+  box-shadow:0 0 22px #e9ae4050,inset 0 1px #fff9d9;
+  font:900 12px/1.2 Manrope,sans-serif;letter-spacing:1.2px;text-align:center;
+  cursor:pointer;animation:bra-continue-glow 1.7s ease-in-out infinite;
+}
+.bra-continue-button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.bra-continue-button:active{transform:translateY(1px)}
+@keyframes bra-continue-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bra-continue-glow{0%,100%{box-shadow:0 0 14px #e9ae403d,inset 0 1px #fff9d9}50%{box-shadow:0 0 25px #ffd15c8c,inset 0 1px #fff9d9}}
+@media(max-width:720px){
+ .book-of-ra-slot .bra-reel-window.bra-scatter-active{z-index:5}
+ .book-of-ra-slot .bra-book-trigger:before{inset:-9px!important;background-size:18px 19px,25px 23px,29px 27px,22px 24px,25px 22px}
+ .bra-continue-wrap{margin:6px auto 2px;padding:0 9px}
+ .bra-continue-button{min-height:44px;padding:11px 14px;font-size:11px;letter-spacing:1px}
+}
+@media(prefers-reduced-motion:reduce){
+ .book-of-ra-slot .bra-book-trigger,.book-of-ra-slot .bra-book-trigger:before,.bra-continue-wrap,.bra-continue-button{animation:none!important}
+}
