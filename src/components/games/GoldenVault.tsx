@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Coins, Crown, Gem, KeyRound, RotateCw, ShieldCheck, Sparkles, Vault } from "lucide-react";
 import "./GoldenVault.css";
 type S="key"|"vault"|"chest"|"crown"|"emerald"|"ruby"|"sapphire"|"watch"|"coins"|"scatter";
@@ -8,8 +8,18 @@ const rid=()=>typeof crypto.randomUUID==="function"?crypto.randomUUID():Array.fr
 type Round={symbols:S[];payout:number;awardedFreeSpins:number;holdWin?:{values:number[];total:number}};
 export default function GoldenVault({onBackToLobby}:{onBackToLobby:()=>void}){
  const [balance,setBalance]=useState<number|null>(null),[bet,setBet]=useState(5),[free,setFree]=useState(0),[symbols,setSymbols]=useState<S[]>(Array.from({length:15},(_,i)=>pool[i%pool.length])),[busy,setBusy]=useState(false),[round,setRound]=useState<Round|null>(null),[hold,setHold]=useState(false),[message,setMessage]=useState("Unlock the vault. Find the hidden treasure."),[error,setError]=useState("");
+ const audioContext=useRef<AudioContext|null>(null);
+ const rollTick=()=>{try{if(typeof window==="undefined"||typeof window.AudioContext==="undefined")return;const ctx=audioContext.current||(audioContext.current=new window.AudioContext());if(ctx.state==="suspended")void ctx.resume();const now=ctx.currentTime;const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="triangle";osc.frequency.setValueAtTime(240,now);osc.frequency.exponentialRampToValueAtTime(115,now+0.065);gain.gain.setValueAtTime(0.0001,now);gain.gain.exponentialRampToValueAtTime(0.055,now+0.008);gain.gain.exponentialRampToValueAtTime(0.0001,now+0.075);osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+0.08);}catch{}};
  useEffect(()=>{let live=true;fetch("/api/games/golden-vault",{cache:"no-store",credentials:"same-origin"}).then(async r=>{const d=await r.json();if(!r.ok)throw Error(d.error||"Could not load Golden Vault.");if(live){setBalance(Number(d.balance));setFree(Number(d.freeSpins||0));}}).catch(e=>{if(live)setError(e instanceof Error?e.message:"Could not load game.");});return()=>{live=false}},[]);
- const spin=async()=>{if(busy||balance===null)return;if(free===0&&balance<bet){setError("Not enough demo credits.");return}setBusy(true);setError("");setRound(null);setHold(false);setMessage("The vault mechanism is turning…");try{const r=await fetch("/api/games/golden-vault",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"spin",bet,requestId:rid()})});const d=await r.json();if(!r.ok)throw Error(d.error||"Spin failed.");for(let i=0;i<3;i++){setSymbols(Array.from({length:15},()=>pool[Math.floor(Math.random()*pool.length)]));await new Promise(res=>setTimeout(res,170));}const result=d.result as Round;setSymbols(result.symbols);setRound(result);setBalance(Number(d.balance));setFree(Number(d.freeSpins||0));if(result.holdWin){setHold(true);setMessage("VAULT HOLD & WIN · TREASURE LOCKED IN")}else if(result.awardedFreeSpins)setMessage("THE VAULT OPENS · "+result.awardedFreeSpins+" FREE SPINS AWARDED");else setMessage(result.payout>0?"TREASURE FOUND · "+result.payout.toLocaleString()+" CREDITS":"The vault stays locked this time.");}catch(e){setError(e instanceof Error?e.message:"Spin failed.");}finally{setBusy(false)}};
+ const spin=async()=>{if(busy||balance===null)return;if(free===0&&balance<bet){setError("Not enough demo credits.");return}setBusy(true);setError("");setRound(null);setHold(false);setMessage("The vault mechanism is turning…");
+  const spinStarted=performance.now();
+  const rollInterval=window.setInterval(()=>setSymbols(Array.from({length:15},()=>pool[Math.floor(Math.random()*pool.length)])),75);
+  const soundInterval=window.setInterval(rollTick,115);
+  rollTick();
+  try{const r=await fetch("/api/games/golden-vault",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"spin",bet,requestId:rid()})});const d=await r.json();if(!r.ok)throw Error(d.error||"Spin failed.");
+   const remaining=1050-(performance.now()-spinStarted);if(remaining>0)await new Promise(res=>setTimeout(res,remaining));
+   const result=d.result as Round;setSymbols(result.symbols);setRound(result);setBalance(Number(d.balance));setFree(Number(d.freeSpins||0));if(result.holdWin){setHold(true);setMessage("VAULT HOLD & WIN · TREASURE LOCKED IN")}else if(result.awardedFreeSpins)setMessage("THE VAULT OPENS · "+result.awardedFreeSpins+" FREE SPINS AWARDED");else setMessage(result.payout>0?"TREASURE FOUND · "+result.payout.toLocaleString()+" CREDITS":"The vault stays locked this time.");
+  }catch(e){setError(e instanceof Error?e.message:"Spin failed.");}finally{window.clearInterval(rollInterval);window.clearInterval(soundInterval);setBusy(false)}};
  const leave=async()=>{if(busy)return;try{await fetch("/api/games/golden-vault",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"resetDemo"})})}finally{onBackToLobby()}};
  return <div className="gv-game">
 
