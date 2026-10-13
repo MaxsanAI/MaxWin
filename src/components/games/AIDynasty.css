@@ -2080,3 +2080,56 @@
     justify-content: center !important;
   }
 }
+
+
+/* AI NEON DYNASTY mobile rule: no outer frame; let reels use the full phone width. Keep every control style unchanged. */
+@media (max-width: 720px) {
+  .modal-backdrop:has(.modal-slot:has(.aid-game)) {
+    width: 100vw !important;
+    height: 100dvh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .modal-slot:has(.aid-game) {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: max(6px, env(safe-area-inset-top)) 0 max(6px, env(safe-area-inset-bottom)) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+  }
+  .modal-slot:has(.aid-game) > .aid-game {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .modal-slot:has(.aid-game) .aid-machine {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .modal-slot:has(.aid-game) .aid-reels {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
