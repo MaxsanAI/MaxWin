@@ -53,3 +53,20 @@
   .gv-spin small{font-size:8px!important}
   .gv-last{display:none!important}
 }
+
+/* Reel speed selector */
+.gv-speed{width:min(100%,680px);display:flex;align-items:center;justify-content:flex-end;gap:5px;margin:0 auto 7px}
+.gv-speed>span{margin-right:auto;color:#9298b7;font-size:8px;font-weight:900;letter-spacing:1px}
+.gv-speed button{border:1px solid #a17eff35;border-radius:7px;padding:6px 10px;background:#121326;color:#aaa6c6;font-size:8px;font-weight:900;letter-spacing:.5px;cursor:pointer}
+.gv-speed button.active{border-color:#f3ce74;background:linear-gradient(135deg,#49351f,#29213d);color:#ffe39b;box-shadow:0 0 12px #f5c96b20}
+.gv-speed button:disabled{opacity:.65;cursor:default}
+.gv-reels.cascade-flash .gv-symbol.winning{position:relative;z-index:2;animation:gv-cascade-flash .22s ease-in-out infinite alternate;border-color:#fff2b4;box-shadow:0 0 18px #ffdc68, inset 0 0 18px #ffe8a5a8}
+.gv-reels.cascade-drop .gv-symbol.cascading-out{animation:gv-symbol-burst .38s ease-in forwards}
+.gv-particles{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:4}
+.gv-particles i{position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:#fff3a5;box-shadow:0 0 7px #ffd45f;animation:gv-particle .48s ease-out forwards}
+.gv-particles i:nth-child(1){--dx:-24px;--dy:-26px}.gv-particles i:nth-child(2){--dx:23px;--dy:-23px}.gv-particles i:nth-child(3){--dx:-29px;--dy:2px}.gv-particles i:nth-child(4){--dx:27px;--dy:8px}.gv-particles i:nth-child(5){--dx:-12px;--dy:28px}.gv-particles i:nth-child(6){--dx:13px;--dy:25px}
+@keyframes gv-cascade-flash{from{transform:scale(1);filter:brightness(1.1)}to{transform:scale(1.07);filter:brightness(2.1)}}
+@keyframes gv-symbol-burst{0%{transform:scale(1);opacity:1;filter:brightness(1.8)}55%{transform:scale(1.18);opacity:.8}100%{transform:translateY(115%) scale(.65);opacity:0;filter:brightness(2.4)}}
+@keyframes gv-particle{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.15);opacity:0}}
+@media(max-width:650px){.gv-speed{gap:4px;margin-bottom:6px}.gv-speed>span{font-size:7px}.gv-speed button{padding:6px 7px;font-size:7px}}
+@media(prefers-reduced-motion:reduce){.gv-reels.cascade-flash .gv-symbol.winning,.gv-reels.cascade-drop .gv-symbol.cascading-out,.gv-particles i{animation:none!important}}
