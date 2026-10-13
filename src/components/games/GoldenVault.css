@@ -293,17 +293,18 @@
 }
 
 
-/* Golden Vault: reduce the lobby/navigation button width by 70%. */
+/* Golden Vault: compact the actual bet/spin/balance controls below the reels. */
 .mafia-vault .gv-below-slot .gv-topbar .gv-lobby{
- width:30%!important;
+ width:auto!important;
  min-width:0!important;
- box-sizing:border-box!important;
- justify-self:start!important;
+}
+.mafia-vault .gv-controls{
+ width:70%!important;
+ margin-left:auto!important;
+ margin-right:auto!important;
 }
 @media(max-width:650px){
- .mafia-vault .gv-below-slot .gv-topbar .gv-lobby{
-  width:30%!important;
- min-width:0!important;
- padding:7px 3px!important;
+ .mafia-vault .gv-controls{
+  width:94%!important;
  }
 }
