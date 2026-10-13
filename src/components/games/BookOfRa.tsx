@@ -32,6 +32,8 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  const winAudio=useRef<HTMLAudioElement|null>(null);
  const [speed,setSpeed]=useState<"slow"|"normal"|"turbo">("slow");
  const [freeSpins,setFreeSpins]=useState(0);
+ const [bonusFinish,setBonusFinish]=useState<{total:number}|null>(null);
+ const bonusWinTotal=useRef(0);
  const [expandingSymbol,setExpandingSymbol]=useState<SymbolName|null>(null);
  const [buyConfirm,setBuyConfirm]=useState(false);
  const [bonusReveal,setBonusReveal]=useState<{symbol:SymbolName;spins:number;mode:"spin"|"buyBonus"}|null>(null);
@@ -137,7 +139,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  },[]);
 
  const play=async(action:"spin"|"buyBonus")=>{
-  if(busy||balance===null)return;
+  if(busy||balance===null||bonusFinish!==null)return;
   if(action==="buyBonus"&&balance<bet*75){setError("Not enough demo credits for Buy Bonus.");return;}
   if(action==="spin"&&freeSpins<=0&&balance<bet){setError("Not enough demo credits.");return;}
   const isBonusSpin=action==="spin"&&freeSpins>0;
@@ -179,9 +181,15 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     }
     setExpandingPosition(null);
    }
+   let bonusTotalThisRound=bonusWinTotal.current;
+   if(isBonusSpin){
+    bonusTotalThisRound+=Number(data.result.payout||0);
+    bonusWinTotal.current=bonusTotalThisRound;
+   }
    setResult(data.result);setBalance(Number(data.balance));setFreeSpins(Number(data.freeSpins||0));
-   if(data.expandingSymbol)setExpandingSymbol(data.expandingSymbol);
+   setExpandingSymbol((data.expandingSymbol||null) as SymbolName|null);
    if(Number(data.result.awardedFreeSpins)>0 && data.expandingSymbol){
+    if(!isBonusSpin){bonusWinTotal.current=0;setBonusFinish(null);}
     playBonus();
     const bookCount=finalSymbols.filter((symbol:SymbolName)=>symbol==="book").length;
     setShowBookCelebration(true);
@@ -194,6 +202,10 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    }else{
     if(Number(data.result.payout)>0)playWin();
     setMessage(data.result.payout>0?"WIN · "+data.result.payout.toLocaleString()+" CREDITS":data.result.awardedFreeSpins?"SACRED BOOK TRIGGERED · "+data.result.awardedFreeSpins+" FREE SPINS":"No match this time. Try another spin.");
+    if(isBonusSpin&&Number(data.freeSpins||0)===0){
+     setBonusFinish({total:bonusTotalThisRound});
+     setMessage("BONUS ROUND COMPLETE");
+    }
    }
   }catch(e:unknown){setError(e instanceof Error?e.message:"Error during spin.");}
   finally{setReelStops(5);setBusy(false);}
@@ -208,6 +220,8 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    if(!response.ok)throw new Error(data.error||"Could not reset demo balance.");
    setBalance(Number(data.balance??1000));
    setFreeSpins(0);
+   bonusWinTotal.current=0;
+   setBonusFinish(null);
    setExpandingSymbol(null);
    setResult(null);
    setScatterReveal(null);
@@ -251,9 +265,9 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   <div className="rf-main-controls bra-main-controls">
    <div className="rf-bet-control rf-bet-side"><label htmlFor="bra-bet">TOTAL BET</label><div><button type="button" aria-label="Decrease bet" disabled={busy||freeSpins>0||bet<=5} onClick={()=>setBet(v=>Math.max(5,v-5))}>−</button><strong id="bra-bet">{bet.toLocaleString()}</strong><button type="button" aria-label="Increase bet" disabled={busy||freeSpins>0||bet>=100} onClick={()=>setBet(v=>Math.min(100,v+5))}>+</button></div><small>Per spin</small></div>
    <div className="rf-speed-panel bra-inline-speed"><span><Gauge size={14}/> SPEED</span><div>{(["slow","normal","turbo"] as const).map(s=><button type="button" key={s} className={speed===s?"active":""} onClick={()=>setSpeed(s)} disabled={busy}>{s.toUpperCase()}</button>)}</div></div>
-   <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||balance===null||(balance<bet&&freeSpins===0)} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {freeSpins>0?"FREE SPIN":"SPIN"}<small>{freeSpins>0?"BONUS ROUND":bet+" CREDITS"}</small></>}</button>
+   <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null||(balance<bet&&freeSpins===0)} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {freeSpins>0?"FREE SPIN":"SPIN"}<small>{freeSpins>0?"BONUS ROUND":bet+" CREDITS"}</small></>}</button>
    <div className="rf-credit-panel rf-balance-side"><span>DEMO BALANCE</span><strong>{balance===null?"—":balance.toLocaleString()}</strong><small>Demo credits</small></div>
-   <button className="rf-buy-button bra-buy-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||balance===null||balance<bet*75||freeSpins>0} onClick={()=>setBuyConfirm(true)}><Sparkles size={16}/><span>BUY BONUS<small>{"75× BET · "+(bet*75).toLocaleString()+" CR"}</small></span></button>
+   <button className="rf-buy-button bra-buy-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null||balance<bet*75||freeSpins>0} onClick={()=>setBuyConfirm(true)}><Sparkles size={16}/><span>BUY BONUS<small>{"75× BET · "+(bet*75).toLocaleString()+" CR"}</small></span></button>
   </div>
   {message&&<p className={"rf-message bra-message"+(result?.payout?" is-win":"")} role="status">{message}</p>}{error&&<p className="rf-error" role="alert">{error}</p>}
   {result&&<div className="rf-last-result"><span>LAST RESULT<small>{result.wins?.length?result.wins.length+" winning line(s)":result.awardedFreeSpins?"Bonus triggered":"Round complete"}</small></span><strong>{result.payout.toLocaleString()}<small>CREDITS WON</small></strong></div>}
@@ -270,6 +284,27 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     <p>{symbolRollComplete?bonusReveal.spins+" FREE SPINS ARE WAITING":"THE EXPANDING SYMBOL IS BEING CHOSEN"}</p>
     <small>{symbolRollComplete?"The selected symbol is locked in. Start the bonus round when ready.":"Watch the symbols spin and settle on your expanding symbol."}</small>
     <button className="btn btn-gold bra-awakening-start" type="button" disabled={!symbolRollComplete} onClick={()=>{setBonusReveal(null);setShowBookCelebration(false);setMessage("BONUS ROUND · "+(symbolMeta[bonusReveal.symbol]?.label||"EXPANDING SYMBOL"));}}>START FREE SPINS <span>›</span></button>
+   </section>
+  </div>}
+  {bonusFinish&&<div className="bra-bonus-finish-backdrop" role="presentation">
+   <section className={"bra-bonus-finish"+(bonusFinish.total>0?" is-winner":" is-no-win")} role="dialog" aria-modal="true" aria-labelledby="bra-bonus-finish-title">
+    <div className="bra-finish-smoke bra-finish-smoke-back" aria-hidden="true"/>
+    <div className="bra-finish-stars" aria-hidden="true">✦　✧　✦　✧　✦</div>
+    <div className="bra-finish-lamp" aria-hidden="true">✧</div>
+    <div className="bra-finish-kicker">BOOK OF RA · BONUS ROUND COMPLETE</div>
+    {bonusFinish.total>0?<>
+     <h2 id="bra-bonus-finish-title">CONGRATULATIONS!</h2>
+     <div className="bra-finish-win-label">YOU WIN</div>
+     <div className="bra-finish-total">{bonusFinish.total.toLocaleString()} <span>CREDITS</span></div>
+     <p className="bra-finish-copy">The ancient treasure is yours.</p>
+    </>:<>
+     <h2 id="bra-bonus-finish-title">THE TREASURE SLEEPS</h2>
+     <div className="bra-finish-win-label bra-finish-sorry">SORRY, NO WIN THIS TIME</div>
+     <p className="bra-finish-copy">The sands have settled. Fortune may return on your next spin.</p>
+    </>}
+    <div className="bra-finish-divider"><span/>✦<span/></div>
+    <button className="bra-finish-continue" type="button" onClick={()=>{setBonusFinish(null);bonusWinTotal.current=0;setMessage("BONUS ROUND COMPLETE · READY TO SPIN");}}>CONTINUE TO SPIN</button>
+    <div className="bra-finish-footnote">DEMO CREDITS · NO CASH VALUE</div>
    </section>
   </div>}
   {buyConfirm&&<div className="modal-backdrop rf-bonus-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setBuyConfirm(false);}}><section className="modal rf-bonus-modal" role="dialog" aria-modal="true" aria-labelledby="bra-bonus-title"><button className="modal-close" type="button" onClick={()=>setBuyConfirm(false)} aria-label="Close bonus confirmation">×</button><div className="modal-mark"><BookOpen size={25}/></div><div className="eyebrow">SACRED BOOK BONUS</div><h2 id="bra-bonus-title">Unlock Free Spins?</h2><p>Trigger the bonus round for demo credits only. No cash value.</p><div className="rf-bonus-price">{(bet*75).toLocaleString()} <small>DEMO CREDITS</small></div><div className="rf-bonus-actions"><button className="btn btn-gold modal-done" type="button" onClick={()=>void play("buyBonus")}>Confirm bonus</button><button className="auth-switch" type="button" onClick={()=>setBuyConfirm(false)}>Cancel</button></div></section></div>}
