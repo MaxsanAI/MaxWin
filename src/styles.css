@@ -4130,3 +4130,35 @@ html, body {
 @media(max-width:650px){
  .modal-slot:has(>.gv-game)>.gv-game{padding:0 2px 12px!important}
 }
+
+
+/* Golden Vault mobile viewport alignment: start flush at the visible browser viewport */
+@media(max-width:650px){
+  .modal-backdrop:has(.modal-slot>.gv-game){
+    position:fixed!important;
+    inset:0!important;
+    width:100vw!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    margin:0!important;
+    padding:0!important;
+    align-items:stretch!important;
+    justify-items:stretch!important;
+  }
+  .modal-slot:has(>.gv-game){
+    position:fixed!important;
+    inset:0!important;
+    width:100vw!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    margin:0!important;
+    padding:0!important;
+    transform:none!important;
+  }
+  .modal-slot:has(>.gv-game)>.gv-game{
+    margin-top:0!important;
+    padding-top:0!important;
+    scroll-padding-top:0!important;
+  }
+}
