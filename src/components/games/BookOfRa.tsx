@@ -22,6 +22,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  const [bet,setBet]=useState(5);
  const [result,setResult]=useState<SpinResult|null>(null);
  const [busy,setBusy]=useState(false);
+ const [resettingDemo,setResettingDemo]=useState(false);
  const [reelStops,setReelStops]=useState(5);
  const [error,setError]=useState("");
  const [message,setMessage]=useState("Choose your bet and spin the ancient reels.");
@@ -194,6 +195,30 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   }catch(e:unknown){setError(e instanceof Error?e.message:"Error during spin.");}
   finally{setReelStops(5);setBusy(false);}
  };
+ const leaveDemo=async()=>{
+  if(busy||resettingDemo)return;
+  setResettingDemo(true);
+  setError("");
+  try{
+   const response=await fetch("/api/games/book-of-ra",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"resetDemo"})});
+   const data=await response.json();
+   if(!response.ok)throw new Error(data.error||"Could not reset demo balance.");
+   setBalance(Number(data.balance??1000));
+   setFreeSpins(0);
+   setExpandingSymbol(null);
+   setResult(null);
+   setScatterReveal(null);
+   setScatterContinueReady(false);
+   setShowBookCelebration(false);
+   setBonusReveal(null);
+   setBuyConfirm(false);
+   onBackToLobby();
+  }catch(e:unknown){
+   setError(e instanceof Error?e.message:"Could not reset demo balance.");
+  }finally{
+   setResettingDemo(false);
+  }
+ };
  const winning=new Set(result?.winningPositions||[]);
 
  return <div className={"rf-game book-of-ra-slot rf-speed-"+speed}>
@@ -230,7 +255,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   {message&&<p className={"rf-message bra-message"+(result?.payout?" is-win":"")} role="status">{message}</p>}{error&&<p className="rf-error" role="alert">{error}</p>}
   {result&&<div className="rf-last-result"><span>LAST RESULT<small>{result.wins?.length?result.wins.length+" winning line(s)":result.awardedFreeSpins?"Bonus triggered":"Round complete"}</small></span><strong>{result.payout.toLocaleString()}<small>CREDITS WON</small></strong></div>}
   <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>BOOK OF RA · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{symbol==="book"?"Wild / Scatter feature":["pharaoh","anubis","scarab","statue"].includes(symbol)?"Premium symbol":"Classic symbol"}</b></div>;})}</div><p>Demo presentation only. Actual line rules and awards are determined by the game service.</p></details>
-  <button className="bra-lobby-button" type="button" onClick={onBackToLobby}><Crown size={15} strokeWidth={2.2}/> <span>TO LOBBY</span></button>
+  <button className="bra-lobby-button" type="button" disabled={busy||resettingDemo} onClick={()=>void leaveDemo()}><Crown size={15} strokeWidth={2.2}/> <span>{resettingDemo?"RESETTING DEMO…":"TO LOBBY"}</span></button>
   <div className="rf-demo-disclaimer">DEMO ONLY · CREDITS HAVE NO CASH VALUE · NO DEPOSITS OR WITHDRAWALS · PLAY RESPONSIBLY · 18+</div>
   {bonusReveal&&<div className="bra-awakening-backdrop" role="presentation">
    <section className="bra-awakening" role="dialog" aria-modal="true" aria-labelledby="bra-awakening-title">
