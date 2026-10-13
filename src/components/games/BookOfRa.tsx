@@ -71,11 +71,24 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    return;
   }
  };
+ // Triumphant Egyptian-style fanfare for the moment the Sacred Books land.
  const playBonus=()=>{
-  tone(196,0.28,"triangle",0.15,392);
-  tone(392,0.32,"sine",0.12,587.33,0.12);
-  tone(587.33,0.38,"triangle",0.13,783.99,0.24);
-  tone(1174.66,0.52,"sine",0.09,1567.98,0.34);
+  if(!soundOn)return;
+  // Deep ceremonial impact and a warm, layered major chord.
+  tone(82.41,0.72,"sine",0.24,41.2);
+  tone(110,0.58,"triangle",0.18,55,0.015);
+  tone(164.81,0.72,"triangle",0.12,196,0.02);
+  tone(261.63,0.92,"triangle",0.14,392,0.025);
+  tone(329.63,1.02,"sine",0.13,329.63,0.025);
+  tone(392,1.04,"triangle",0.15,392,0.025);
+  tone(523.25,0.92,"sine",0.12,659.25,0.045);
+  // Bright rising fanfare and sparkling final note.
+  tone(392,0.32,"triangle",0.12,523.25,0.16);
+  tone(523.25,0.34,"triangle",0.13,659.25,0.30);
+  tone(659.25,0.38,"triangle",0.13,783.99,0.44);
+  tone(783.99,0.48,"sine",0.13,1046.5,0.58);
+  tone(1046.5,0.82,"sine",0.12,1318.5,0.72);
+  tone(1567.98,0.68,"sine",0.065,1318.5,0.82);
  };
  const playDum=()=>{
   tone(105,0.17,"sine",0.18,52);
