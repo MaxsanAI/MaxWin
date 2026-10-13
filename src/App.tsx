@@ -30,6 +30,22 @@ function App() {
     document.documentElement.style.colorScheme = theme;
     document.body.dataset.theme = theme;
   }, [theme]);
+  const [licenseOpen, setLicenseOpen] = useState(() => window.location.pathname.replace(/\/$/, "") === "/license");
+  useEffect(() => {
+    const syncLicenseRoute = () => setLicenseOpen(window.location.pathname.replace(/\/$/, "") === "/license");
+    window.addEventListener("popstate", syncLicenseRoute);
+    return () => window.removeEventListener("popstate", syncLicenseRoute);
+  }, []);
+  const openLicensePage = () => {
+    window.history.pushState({}, "", "/license");
+    setLicenseOpen(true);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+  const closeLicensePage = () => {
+    window.history.pushState({}, "", "/");
+    setLicenseOpen(false);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
   const [active, setActive] = useState("All Games");
   const [search, setSearch] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -256,7 +272,29 @@ function App() {
       </nav>
       <div className="header-actions"><button className="theme-toggle" type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} title={theme === "dark" ? "Light theme" : "Dark theme"}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}<span>{theme === "dark" ? "Light" : "Dark"}</span></button><button className="btn btn-ghost" onClick={() => { if (authUser) { setSelectedGame(null); setProfileMessage(""); setModal("profile"); } else openAuth("signin"); }}>{authUser ? <><span className="header-avatar">{profileData?.avatarDataUrl ? <img src={profileData.avatarDataUrl} alt="" /> : authUser.username.slice(0,1).toUpperCase()}</span>{authUser.username}</> : "Log in"}</button>{!authUser && <button className="btn btn-gold" onClick={() => openAuth("register")}>Create account</button>}{authUser && <button className="btn btn-gold" onClick={logout}>Log out</button>}</div>
     </header>
-    <main>
+    {licenseOpen ? <main className="license-page">
+      <div className="license-page-top"><button type="button" className="btn btn-outline" onClick={closeLicensePage}>← Back to MAXWIN</button><span><ShieldCheck size={15}/> MAXWIN LEGAL</span></div>
+      <article className="license-document">
+        <div className="eyebrow">MAXWIN · ALL RIGHTS RESERVED</div>
+        <h1>Proprietary <em>License</em></h1>
+        <p className="license-lead">The original MAXWIN casino website, application, and project materials are protected by applicable intellectual-property laws. All rights are reserved except where a written permission or mandatory legal right applies.</p>
+        <p className="license-effective">Effective date: October 2026</p>
+        <h2>1. Ownership and scope</h2>
+        <p>This notice applies only to original materials in the MAXWIN project to the extent the relevant rights holder owns or is authorized to license them, including original source code, application logic, server functions, interface layouts, visual designs, original game implementations, artwork, animations, audio, text, branding, logos, and project-specific assets.</p>
+        <h2>2. Restrictions</h2>
+        <p>Without prior written permission from the relevant rights holder, you may not copy, reproduce, modify, adapt, redistribute, republish, sublicense, sell, commercially exploit, host, deploy, mirror, rebrand, or operate a website, casino, application, or service using MAXWIN-owned materials, except where applicable law expressly permits the activity.</p>
+        <h2>3. No open-source or commercial-use grant</h2>
+        <p>This is a proprietary rights notice. It does not grant a general license to reuse, modify, distribute, or commercially deploy MAXWIN-owned materials. Public visibility of project materials does not by itself grant those permissions.</p>
+        <h2>4. Third-party materials</h2>
+        <p>This notice does not claim ownership of third-party code, open-source dependencies, fonts, services, trademarks, game titles, artwork, sound recordings, or other third-party materials. Those remain subject to their respective owners’ rights and applicable license terms. Third-party components must be used in accordance with their own terms.</p>
+        <h2>5. Trademarks and branding</h2>
+        <p>You may not use MAXWIN names, logos, branding, or original assets in a way that falsely suggests affiliation, sponsorship, or approval by MAXWIN or the relevant rights holder.</p>
+        <h2>6. No warranty</h2>
+        <p>To the extent permitted by applicable law, project materials are provided “as is”, without warranties of any kind.</p>
+        <div className="license-notice"><ShieldCheck size={19}/><p>This page is a project-level rights notice, not legal advice. Ownership and enforceability depend on the rights held by the relevant parties and applicable law.</p></div>
+        <p className="license-copyright">© 2026 MaxsanAI / MAXWIN, to the extent of rights held by the relevant rights holder. All rights reserved.</p>
+      </article>
+    </main> : <main>
       <section className="hero" id="featured">
         <div className="hero-glow" />
         <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot"/> THE NEXT LEVEL STARTS HERE</div><h1>Make your<br/>next move <em>legendary.</em></h1><p>Step into a world of bold originals, royal jackpots, and a casino experience built around you.</p><div className="hero-actions"><button className="btn btn-gold btn-large" onClick={() => document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" })}>Explore games</button><button className="btn btn-outline btn-large" onClick={() => openAuth("register")}>Join MAXWIN</button></div><div className="hero-trust"><span><ShieldCheck size={16}/> Security-focused</span><span><Gem size={16}/> Crypto-ready design</span><span><Crown size={16}/> MAXWIN Originals</span></div></div>
@@ -271,8 +309,8 @@ function App() {
         <p className="catalog-note"><ShieldCheck size={15}/> Game cards are catalogue previews. Real-money gameplay is not enabled; certified game-provider integration and server-authoritative outcomes are pending.</p>
       </section>
       <section className="responsible" id="responsible"><div className="responsible-icon"><ShieldCheck size={24}/></div><div><div className="eyebrow">PLAY WITH A PLAN</div><h3>Entertainment should stay in your control.</h3><p>MAXWIN is being built with responsible-gambling controls in mind. Real-money play must remain unavailable until age checks, jurisdiction restrictions, licensing, and required safeguards are verified.</p></div><a href="#responsible" onClick={e => { e.preventDefault(); setModal("game"); setSelectedGame(null); }}>Platform status</a></section>
-    </main>
-    <footer><a className="brand footer-brand" href="#"><span className="brand-mark"><Crown size={19}/></span><span>MAX<span className="brand-gold">WIN</span><small>CRYPTO CASINO</small></span></a><span>© 2026 MAXWIN. All rights reserved. Play responsibly. 18+.</span><div><a href="#responsible">Responsible play</a><a href="#responsible">Privacy</a><a href="#responsible">Terms</a><a href="https://github.com/MaxsanAI/MaxWin/blob/main/LICENSE.md" target="_blank" rel="noreferrer">Proprietary license</a></div></footer>
+    </main>}
+    <footer><a className="brand footer-brand" href="#"><span className="brand-mark"><Crown size={19}/></span><span>MAX<span className="brand-gold">WIN</span><small>CRYPTO CASINO</small></span></a><span>© 2026 MAXWIN. All rights reserved. Play responsibly. 18+.</span><div><a href="#responsible">Responsible play</a><a href="#responsible">Privacy</a><a href="#responsible">Terms</a><a href="/license" onClick={e => { e.preventDefault(); openLicensePage(); }}>Proprietary license</a></div></footer>
     {modal && <div className="modal-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) closeModal(); }}><section className={`modal ${modal === "game" && (selectedGame?.title === "Royal Fortune" || selectedGame?.title === "Book of Sunfire" || selectedGame?.title === "AI NEON DYNASTY" || selectedGame?.title === "Golden Vault") && selectedPlayMode === "demo" ? "modal-slot" : ""}`} role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close" onClick={closeModal} aria-label="Close dialog"><X size={19}/></button><div className="modal-mark"><Crown size={25}/></div><div className="eyebrow">{modal === "signin" || modal === "register" ? "YOUR MAXWIN ACCOUNT" : "MAXWIN PLATFORM STATUS"}</div><h2 id="modal-title">{modal === "signin" ? "Log in" : modal === "register" ? "Create your account" : modal === "deposit" ? "Deposit crypto" : modal === "withdraw" ? "Withdraw crypto" : modal === "profile" ? "Your profile" : selectedGame ? selectedGame.title : authUser ? "Your account" : "Real-money features are not active"}</h2>{(modal === "signin" || modal === "register") ? <form className="auth-form" onSubmit={e => { e.preventDefault(); void submitAuth(); }}><p>{modal === "register" ? "Create your MAXWIN login. Use an email you can access and a unique password." : "Sign in to your MAXWIN account."}</p>{modal === "register" && <label>Username<input autoComplete="username" minLength={3} maxLength={24} pattern="[A-Za-z0-9_]+" required value={authUsername} onChange={e => setAuthUsername(e.target.value)} placeholder="Choose a username"/></label>}<label>Email address<input type="email" autoComplete="email" maxLength={254} required value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="you@example.com"/></label><label>Password<input type="password" autoComplete={modal === "register" ? "new-password" : "current-password"} minLength={modal === "register" ? 10 : 1} maxLength={128} required value={authPassword} onChange={e => setAuthPassword(e.target.value)} placeholder={modal === "register" ? "At least 10 characters" : "Your password"}/></label>{authError && <p className="auth-error" role="alert">{authError}</p>}<button className="btn btn-gold modal-done" type="submit" disabled={authBusy}>{authBusy ? "Please wait…" : modal === "register" ? "Create account" : "Log in"}</button><button className="auth-switch" type="button" onClick={() => openAuth(modal === "register" ? "signin" : "register")}>{modal === "register" ? "Already have an account? Log in" : "New to MAXWIN? Create an account"}</button><small className="auth-note">Account access only. Deposits, withdrawals, and real-money games are not enabled.</small></form> : (modal === "deposit" || modal === "withdraw") ? <div className="auth-form wallet-form">
       <p>{modal === "deposit" ? "Choose a network to view its configured deposit address. Deposits are only credited after an on-chain processor verifies the transfer." : "Request a withdrawal from your confirmed available balance. Sending funds is disabled until the secure signing service is configured."}</p>
       <div className="category-tabs wallet-network-tabs"><button type="button" className={walletAsset === "SOL" ? "category active" : "category"} onClick={() => { setWalletAsset("SOL"); setWithdrawMessage(""); }}>Solana · SOL</button><button type="button" className={walletAsset === "TON" ? "category active" : "category"} onClick={() => { setWalletAsset("TON"); setWithdrawMessage(""); }}>TON</button></div>
