@@ -513,8 +513,8 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
                 </div>
                 <div className="aid-holdwin-grid" aria-label="Hold and Win credit card frame">
                   {holdCards.map((value, index) => (
-                    <div key={index} className={"aid-holdwin-cell" + (value !== null ? " is-locked" : "") + (holdFallingCards.includes(index) ? " is-falling" : "")}>
-                      {value !== null ? <><img className="aid-holdwin-trump-symbol" src="/images/slots/ai-neon-dynasty/trump.jpg" alt="Trump credit symbol" draggable={false} /><strong>{value.toLocaleString()}</strong><small>CREDITS</small></> : <span className="aid-holdwin-empty">+</span>}
+                    <div key={index} className={"aid-holdwin-cell" + (value !== null ? " is-locked" : "") + (holdFallingCards.includes(index) ? " is-falling" : "")} style={{ animationDelay: holdFallingCards.includes(index) ? `${holdFallingCards.indexOf(index) * 70}ms` : "0ms" }}>
+                      {value !== null ? <><img className="aid-holdwin-trump-symbol" src="/images/slots/ai-neon-dynasty/trump.jpg" alt="Trump credit symbol" draggable={false} style={{ animationDelay: holdFallingCards.includes(index) ? `${holdFallingCards.indexOf(index) * 70}ms` : "0ms" }} /><strong>{value.toLocaleString()}</strong><small>CREDITS</small></> : <span className="aid-holdwin-empty">+</span>}
                     </div>
                   ))}
                 </div>
