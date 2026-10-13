@@ -166,12 +166,15 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    const symbolToExpand=(activeBonusSymbol||null) as SymbolName|null;
    if(isBonusSpin&&symbolToExpand){
     const reelsToExpand=[0,1,2,3,4].filter(reel=>finalSymbols.slice(reel*3,reel*3+3).includes(symbolToExpand));
-    for(const reel of reelsToExpand){
-     for(let row=0;row<3;row++){
-      await new Promise(resolve=>window.setTimeout(resolve,speed==="slow"?230:speed==="normal"?170:115));
-      const position=reel*3+row;
-      setExpandingPosition(position);playDum();
-      setDisplaySymbols(current=>current.map((symbol,index)=>index===position?symbolToExpand:symbol));
+    // Only play the expanding "tuck-tuck" sequence when the chosen symbol appears on 3+ reels.
+    if(reelsToExpand.length>=3){
+     for(const reel of reelsToExpand){
+      for(let row=0;row<3;row++){
+       await new Promise(resolve=>window.setTimeout(resolve,speed==="slow"?230:speed==="normal"?170:115));
+       const position=reel*3+row;
+       setExpandingPosition(position);playDum();
+       setDisplaySymbols(current=>current.map((symbol,index)=>index===position?symbolToExpand:symbol));
+      }
      }
     }
     setExpandingPosition(null);
