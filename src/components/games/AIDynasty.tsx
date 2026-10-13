@@ -71,6 +71,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   const [bonus, setBonus] = useState<BonusKind>(null);
   const [bonusStep, setBonusStep] = useState<"intro" | "fight" | "hold" | "result">("intro");
   const [holdCards, setHoldCards] = useState<(number | null)[]>(Array(20).fill(null));
+  const [holdFallingCards, setHoldFallingCards] = useState<number[]>([]);
   const [holdSpins, setHoldSpins] = useState(3);
   const [holdBusy, setHoldBusy] = useState(false);
   const [boxingWinner, setBoxingWinner] = useState<"elon" | "altman" | null>(null);
@@ -290,14 +291,19 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       await new Promise((resolve) => window.setTimeout(resolve, speed === "turbo" ? 380 : 650));
 
       const nextCards = [...holdCards];
-      const cardMultipliers = [1, 1, 2, 2, 3, 5, 8];
+      const falling: number[] = [];
       let locked = 0;
 
       for (let i = 0; i < nextCards.length; i++) {
         if (nextCards[i] === null && Math.random() < 0.05) {
-          nextCards[i] = bet * cardMultipliers[Math.floor(Math.random() * cardMultipliers.length)];
+          nextCards[i] = bet;
+          falling.push(i);
           locked++;
         }
+      }
+      setHoldFallingCards(falling);
+      if (falling.length > 0) {
+        window.setTimeout(() => setHoldFallingCards([]), 950 + falling.length * 55);
       }
 
       const total = nextCards.reduce<number>((sum, value) => sum + (value ?? 0), 0);
@@ -334,7 +340,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     }
   };
 
-  const closeBonus = () => { setBonus(null); setBonusStep("intro"); setBoxingWinner(null); setHoldCards(Array(20).fill(null)); setHoldSpins(3); setHoldBusy(false); };
+  const closeBonus = () => { setBonus(null); setBonusStep("intro"); setBoxingWinner(null); setHoldCards(Array(20).fill(null)); setHoldFallingCards([]); setHoldSpins(3); setHoldBusy(false); };
   const resetDemo = () => { if (busy) return; setBalance(1000); setBet(10); setFreeSpins(0); setFreeSpinBet(10); setLastWin(0); setWinningCells([]); setMessage("DEMO RESET · 1,000 CREDITS READY 🔄"); setBonus(null); setBoxingWinner(null); };
 
   return (
@@ -507,8 +513,8 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
                 </div>
                 <div className="aid-holdwin-grid" aria-label="Hold and Win credit card frame">
                   {holdCards.map((value, index) => (
-                    <div key={index} className={"aid-holdwin-cell" + (value !== null ? " is-locked" : "")}>
-                      {value !== null ? <><span>✦</span><strong>{value.toLocaleString()}</strong><small>CREDITS</small></> : <span className="aid-holdwin-empty">+</span>}
+                    <div key={index} className={"aid-holdwin-cell" + (value !== null ? " is-locked" : "") + (holdFallingCards.includes(index) ? " is-falling" : "")}>
+                      {value !== null ? <><img className="aid-holdwin-trump-symbol" src="/images/slots/ai-neon-dynasty/trump.jpg" alt="Trump credit symbol" draggable={false} /><strong>{value.toLocaleString()}</strong><small>CREDITS</small></> : <span className="aid-holdwin-empty">+</span>}
                     </div>
                   ))}
                 </div>
