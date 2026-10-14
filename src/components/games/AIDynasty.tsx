@@ -234,7 +234,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       setBalance((value) => value + payout);
       setLastWin(payout);
       setWinningCells(Array.from(winning));
-      setMessage(`WIN +${payout.toLocaleString()} CREDITS! 🎉`);
+      setMessage(`WIN +${formatUSD(payout)} DEMO! 🎉`);
       playTone("win");
     } else {
       setMessage("NO MATCH THIS SPIN · THE DYNASTY LIVES ON 💎");
@@ -344,7 +344,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   };
 
   const closeBonus = () => { setBonus(null); setBonusStep("intro"); setBoxingWinner(null); setHoldCards(Array(20).fill(null)); setHoldFallingCards([]); setHoldSpins(3); setHoldBusy(false); };
-  const resetDemo = () => { if (busy) return; setBalance(1000); setBet(20); setFreeSpins(0); setFreeSpinBet(20); setLastWin(0); setWinningCells([]); setMessage("DEMO RESET · 1,000 CREDITS READY 🔄"); setBonus(null); setBoxingWinner(null); };
+  const resetDemo = () => { if (busy) return; setBalance(1000); setBet(20); setFreeSpins(0); setFreeSpinBet(20); setLastWin(0); setWinningCells([]); setMessage("DEMO RESET · $10.00 READY 🔄"); setBonus(null); setBoxingWinner(null); };
 
   return (
     <div className="aid-game">
