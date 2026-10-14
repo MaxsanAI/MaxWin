@@ -1677,3 +1677,22 @@ body:has(.gv-game.mafia-vault),
   }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{z-index:1!important}
 }
+
+
+/* Golden Vault desktop: enlarge treasure art more and tuck both images closer to reels. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{
+    width:clamp(195px,21vw,345px)!important;
+    max-width:24vw!important;
+    max-height:68dvh!important;
+    left:clamp(22px,3.5vw,52px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{
+    width:clamp(190px,21vw,345px)!important;
+    max-width:24vw!important;
+    max-height:65dvh!important;
+    right:clamp(22px,3.5vw,52px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{z-index:1!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{position:relative!important;z-index:2!important}
+}
