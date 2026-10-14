@@ -1335,3 +1335,37 @@ body:has(.gv-game.mafia-vault),
     linear-gradient(155deg,#090c10 0%,#171015 48%,#080d0c 100%)!important;
 }
 .modal-slot:has(>.gv-game.mafia-vault)>.gv-game.mafia-vault .gv-footer{margin-top:auto!important}
+
+
+/* Golden Vault only: pin the existing game dialog to every viewport edge, independent of lobby layout. */
+.modal-backdrop-golden-vault{
+  position:fixed!important;inset:0!important;
+  width:100vw!important;height:100dvh!important;
+  min-width:100vw!important;min-height:100dvh!important;
+  max-width:none!important;max-height:none!important;
+  margin:0!important;padding:0!important;
+  display:block!important;overflow:hidden!important;
+  z-index:2147483000!important;
+  background:#090c10!important;
+}
+.modal-slot-golden-vault{
+  position:fixed!important;inset:0!important;
+  width:100vw!important;height:100dvh!important;
+  min-width:100vw!important;min-height:100dvh!important;
+  max-width:none!important;max-height:none!important;
+  margin:0!important;padding:0!important;
+  border:0!important;border-radius:0!important;
+  transform:none!important;
+  overflow:hidden!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault{
+  width:100%!important;height:100dvh!important;
+  min-height:100dvh!important;max-height:100dvh!important;
+  max-width:none!important;margin:0!important;
+  padding:3px 3px max(3px,env(safe-area-inset-bottom))!important;
+  overflow:hidden!important;
+}
+.modal-slot-golden-vault>.modal-close,
+.modal-slot-golden-vault>.modal-mark,
+.modal-slot-golden-vault>.eyebrow,
+.modal-slot-golden-vault>#modal-title{display:none!important}
