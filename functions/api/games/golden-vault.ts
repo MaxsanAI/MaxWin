@@ -15,7 +15,27 @@ function ri(max:number){const limit=Math.floor(0x100000000/max)*max,v=new Uint32
 function shuffle(){const p=Array.from({length:15},(_,i)=>i);for(let i=p.length-1;i>0;i--){const j=ri(i+1);[p[i],p[j]]=[p[j],p[i]]}return p}
 function reels(choice:string|null):S[]{const pool=choice==="heist"?REGULAR.filter(s=>!["spade","diamond","heart","club"].includes(s)):REGULAR;const s:S[]=Array.from({length:15},()=>pool[ri(pool.length)]);return s}
 function valueFor(bet:number){const r=ri(10000);return bet*(r<5000?1:r<7500?2:r<9000?3:r<9800?5:10)}
-function evaluateLines(symbols:S[],bet:number){const winningPositions:number[]=[];let payout=0;const premium=new Set<S>(["revolver","cash","henchman","gold","don"]);for(let row=0;row<3;row++){const line=Array.from({length:5},(_,col)=>symbols[row*5+col]);let target=line.find(s=>s!=="don")??"don";let count=0;for(const symbol of line){if(symbol===target||symbol==="don")count++;else break}if(count<3)continue;const positions=Array.from({length:count},(_,col)=>row*5+col);winningPositions.push(...positions);const multiplier=count===3?1:count===4?3:(premium.has(target)?10:5);payout+=bet*multiplier}return{payout:Math.min(bet*10,payout),winningPositions}}
+function evaluateLines(symbols:S[],bet:number){
+ const winningPositions:number[]=[];
+ let payout=0;
+ const premium=new Set<S>(["revolver","cash","henchman","gold","don"]);
+ for(let row=0;row<3;row++){
+  const line=Array.from({length:5},(_,col)=>symbols[row*5+col]);
+  // The combination must begin at the far left. Don Giovanni (don) substitutes
+  // for the first symbol, so [revolver, don, don] is a valid 3-symbol win.
+  const target=line[0]==="don"?(line.find(s=>s!=="don")??"don"):line[0];
+  let count=0;
+  for(const symbol of line){
+   if(symbol===target||symbol==="don")count++;
+   else break;
+  }
+  if(count<3)continue;
+  winningPositions.push(...Array.from({length:count},(_,col)=>row*5+col));
+  const multiplier=count===3?1:count===4?3:(premium.has(target)?10:5);
+  payout+=bet*multiplier;
+ }
+ return{payout:Math.min(bet*10,payout),winningPositions};
+}
 async function wallet(db:D1Database,userId:string){return await db.prepare("SELECT balance FROM golden_vault_demo_wallets WHERE user_id=?").bind(userId).first<{balance:number}>()}
 async function holdState(db:D1Database,userId:string){const h=await db.prepare("SELECT bet,values_json AS valuesJson,respins,active FROM golden_vault_demo_hold WHERE user_id=?").bind(userId).first<{bet:number;valuesJson:string;respins:number;active:number}>();if(!h||!h.active)return null;const values=JSON.parse(h.valuesJson) as (number|null)[];return{bet:h.bet,values,respins:h.respins,total:Math.min(h.bet*10,values.reduce<number>((sum,v)=>sum+(v||0),0)),occupied:values.filter(v=>v!==null).length}}
 export const onRequestGet:PagesFunction<Env>=async({request,env})=>{if(!env.DB)return json({error:"Golden Vault demo service is not configured."},503);const user=await getUser(request,env.DB);if(!user)return json({error:"Log in to play Golden Vault."},401);try{await schema(env.DB);await env.DB.prepare("INSERT OR IGNORE INTO golden_vault_demo_wallets(user_id,balance,updated_at) VALUES(?,1000,?)").bind(user.id,new Date().toISOString()).run();const w=await wallet(env.DB,user.id);const f=await env.DB.prepare("SELECT free_spins AS freeSpins,feature_choice AS featureChoice,key_count AS keyCount,key_bonus_active AS keyBonusActive FROM golden_vault_demo_features WHERE user_id=?").bind(user.id).first<{freeSpins:number;featureChoice:string|null;keyCount:number;keyBonusActive:number}>();return json({balance:Number(w?.balance??1000),freeSpins:Number(f?.freeSpins??0),featureChoice:f?.featureChoice??null,keyCount:Number(f?.keyCount??0),keyBonusActive:Boolean(f?.keyBonusActive),hold:await holdState(env.DB,user.id),mode:"demo",cashValue:false})}catch(e){console.error("[Golden Vault] load",e);return json({error:"Could not load Golden Vault demo balance."},500)}};
