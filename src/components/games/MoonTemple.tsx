@@ -25,7 +25,7 @@ const wait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, m
 export default function MoonTemple({ onBackToLobby }: { onBackToLobby: () => void }) {
   const [balance, setBalance] = useState<number | null>(null);
   const [bet, setBet] = useState(20);
-  const [symbols, setSymbols] = useState<SymbolId[]>([]);
+  const [symbols, setSymbols] = useState<SymbolId[]>(["mask","crystal","starGem","idol","crescent","scarab","wild","blueGem","relic","mask","idol","crescent","scatter","crystal","starGem","blueGem","relic","mask","scarab","idol"]);
   const [winningPositions, setWinningPositions] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
@@ -180,7 +180,7 @@ export default function MoonTemple({ onBackToLobby }: { onBackToLobby: () => voi
       <div className="mt-message" aria-live="polite">{message}{cascadeCount > 0 && <small> · {cascadeCount} CASCADE{cascadeCount === 1 ? "" : "S"}</small>}</div>
       <div className="mt-footer-actions">
         <span className="mt-free-spins">{freeSpins > 0 ? <><Sparkles size={14} /> {freeSpins} FREE SPINS</> : "DEMO PLAY ONLY"}</span>
-        <button type="button" className="mt-sound" onClick={() => setSoundOn(value => !value}>{soundOn ? <Volume2 size={15} /> : <VolumeX size={15} />} SOUND {soundOn ? "ON" : "OFF"}</button>
+        <button type="button" className="mt-sound" onClick={() => setSoundOn(value => !value)}>{soundOn ? <Volume2 size={15} /> : <VolumeX size={15} />} SOUND {soundOn ? "ON" : "OFF"}</button>
         <button type="button" className="mt-reset" onClick={() => void resetDemo()} disabled={resetting || busy}><RotateCcw size={13} /> RESET $10</button>
       </div>
     </footer>
