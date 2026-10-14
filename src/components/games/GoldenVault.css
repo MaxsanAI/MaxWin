@@ -1637,3 +1637,22 @@ body:has(.gv-game.mafia-vault),
     right:clamp(8px,2.2vw,34px)!important;
   }
 }
+
+
+/* Golden Vault desktop art: one more small size increase and closer to the reel area. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{
+    width:clamp(185px,20vw,330px)!important;
+    max-width:23vw!important;
+    max-height:66dvh!important;
+    left:clamp(12px,2.8vw,42px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{
+    width:clamp(160px,18vw,295px)!important;
+    max-width:21vw!important;
+    max-height:60dvh!important;
+    right:clamp(12px,2.8vw,42px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{z-index:1!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{position:relative!important;z-index:2!important}
+}
