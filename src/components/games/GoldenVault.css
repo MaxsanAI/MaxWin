@@ -1898,3 +1898,20 @@ body:has(.gv-game.mafia-vault),
     z-index:1!important;
   }
 }
+
+
+/* Golden Vault title: animated rich gold matching FREE SPINS / HOLD & WIN; preserve title sizing. */
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header h2{
+  color:#ffd34f!important;
+  background:linear-gradient(180deg,#fffbd0 0%,#ffe45c 24%,#ffc21c 48%,#e99a00 68%,#fff078 82%,#c77a00 100%)!important;
+  -webkit-background-clip:text!important;background-clip:text!important;
+  -webkit-text-fill-color:transparent!important;
+  filter:drop-shadow(0 0 7px #ffca28aa) drop-shadow(0 0 14px #e99a0055) drop-shadow(0 3px 5px #000)!important;
+  animation:gvFreeSpinsGlow 3.2s ease-in-out infinite!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header h2 em{
+  color:#ffd34f!important;-webkit-text-fill-color:transparent!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header h2{animation:none!important}
+}
