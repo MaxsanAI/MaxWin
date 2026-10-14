@@ -26,7 +26,8 @@ export default function MathTuner() {
   const [notes, setNotes] = useState("");
   const [copied, setCopied] = useState(false);
   const chanceTotal = outcomes.reduce((sum, o) => sum + o.chance, 0);
-  const multiplierCap = maxWin / bet;\n  const baseRtp = outcomes.reduce((sum, o) => sum + Math.min(o.multiplier, multiplierCap) * o.chance / 100, 0);
+  const multiplierCap = maxWin / bet;
+  const baseRtp = outcomes.reduce((sum, o) => sum + Math.min(o.multiplier, multiplierCap) * o.chance / 100, 0);
   const bonusRtp = bonusRate / 100 * bonusSpins * Math.min(bonusAvgMultiplier, multiplierCap);
   const rtp = baseRtp + bonusRtp;
   const stats = useMemo(() => {
