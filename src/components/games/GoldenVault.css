@@ -1410,7 +1410,7 @@ body:has(.gv-game.mafia-vault),
 .mafia-vault .gv-controls .gv-spin small{white-space:nowrap!important}
 
 
-/* Golden Vault desktop: fixed 800x650 cabinet centered on black, with all 15 square symbols fitted inside. Mobile unchanged. */
+/* Golden Vault desktop: fixed 900x700 cabinet centered on black; compact controls fit below reels. Mobile unchanged. */
 @media (min-width:651px){
   .modal-backdrop-golden-vault{
     position:fixed!important;
@@ -1429,12 +1429,12 @@ body:has(.gv-game.mafia-vault),
     inset:auto!important;
     display:block!important;
     box-sizing:border-box!important;
-    width:800px!important;
-    height:650px!important;
-    min-width:800px!important;
-    min-height:650px!important;
-    max-width:800px!important;
-    max-height:650px!important;
+    width:900px!important;
+    height:700px!important;
+    min-width:900px!important;
+    min-height:700px!important;
+    max-width:900px!important;
+    max-height:700px!important;
     margin:0!important;
     padding:0!important;
     transform:none!important;
@@ -1445,12 +1445,12 @@ body:has(.gv-game.mafia-vault),
     display:flex!important;
     flex-direction:column!important;
     box-sizing:border-box!important;
-    width:800px!important;
-    height:650px!important;
-    min-width:800px!important;
-    min-height:650px!important;
-    max-width:800px!important;
-    max-height:650px!important;
+    width:900px!important;
+    height:700px!important;
+    min-width:900px!important;
+    min-height:700px!important;
+    max-width:900px!important;
+    max-height:700px!important;
     margin:0!important;
     padding:8px 16px 8px!important;
     gap:0!important;
@@ -1530,18 +1530,52 @@ body:has(.gv-game.mafia-vault),
   }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-controls{
     flex:0 0 auto!important;
-    margin:5px auto 0!important;
-    padding:5px!important;
-    gap:6px!important;
+    width:min(100%,680px)!important;
+    margin:4px auto 0!important;
+    padding:3px!important;
+    gap:4px!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)!important;
   }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stat,
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-bet{
-    padding:4px!important;
+    min-width:0!important;
+    padding:3px 2px!important;
     gap:2px!important;
   }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stat small,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-bet>small{
+    font-size:7px!important;
+    line-height:1!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stat strong,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-bet strong{
+    font-size:13px!important;
+    line-height:1!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-bet button{
+    width:18px!important;
+    height:18px!important;
+    min-width:18px!important;
+    padding:0!important;
+    font-size:13px!important;
+    line-height:1!important;
+  }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-spin{
-    min-height:48px!important;
-    padding:4px!important;
+    min-width:0!important;
+    width:100%!important;
+    min-height:34px!important;
+    height:34px!important;
+    padding:3px!important;
+    gap:2px!important;
+    border-radius:7px!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-spin strong{
+    font-size:10px!important;
+    line-height:1!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-spin small{
+    font-size:6px!important;
+    line-height:1!important;
   }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-below-slot{
     display:none!important;
