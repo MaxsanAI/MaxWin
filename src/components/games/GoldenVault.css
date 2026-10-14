@@ -1280,3 +1280,58 @@ body:has(.mafia-vault),
  .mafia-vault .gv-controls{grid-template-columns:minmax(0,1fr) 72px minmax(0,1fr)!important}
  .mafia-vault .gv-controls .gv-spin{width:66px!important;height:60px!important}
 }
+
+
+/* GOLDEN VAULT FINAL FULL-VIEWPORT OVERRIDE: the game modal itself must cover the lobby. */
+html:has(.gv-game.mafia-vault),
+body:has(.gv-game.mafia-vault),
+#root:has(.gv-game.mafia-vault){
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+}
+.modal-slot:has(>.gv-game.mafia-vault){
+  position:fixed!important;
+  inset:0!important;
+  z-index:2147483000!important;
+  display:block!important;
+  box-sizing:border-box!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-width:100vw!important;
+  min-height:100dvh!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  transform:none!important;
+  overflow:hidden!important;
+  background:#090c10!important;
+}
+.modal-slot:has(>.gv-game.mafia-vault)>.gv-game.mafia-vault{
+  position:relative!important;
+  inset:auto!important;
+  display:flex!important;
+  flex-direction:column!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  height:100dvh!important;
+  min-width:0!important;
+  min-height:0!important;
+  max-width:none!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding: max(3px,env(safe-area-inset-top)) 3px max(3px,env(safe-area-inset-bottom))!important;
+  overflow:hidden!important;
+  overflow-y:hidden!important;
+  background:
+    radial-gradient(ellipse at 50% 7%,#54251f7a,transparent 38%),
+    radial-gradient(ellipse at 50% 40%,#132b2370,transparent 60%),
+    linear-gradient(155deg,#090c10 0%,#171015 48%,#080d0c 100%)!important;
+}
+.modal-slot:has(>.gv-game.mafia-vault)>.gv-game.mafia-vault .gv-footer{margin-top:auto!important}
