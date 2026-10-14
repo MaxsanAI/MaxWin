@@ -152,7 +152,7 @@ export default function MoonTemple({ onBackToLobby }: { onBackToLobby: () => voi
         {symbols.length === 20 ? symbols.map((symbol, index) => {
           const meta = symbolMeta[symbol];
           const Icon = meta.icon;
-          return <div key={index} className={"mt-symbol " + meta.className + (winningPositions.includes(index) ? " is-winning" : "") + (busy ? " is-spinning" : "")} style={{ animationDelay: ((index % 5) * 34 + Math.floor(index / 5) * 12) + "ms" }} aria-label={meta.name}>
+          return <div key={symbols.join("-") + ":" + index} className={"mt-symbol " + meta.className + (winningPositions.includes(index) ? " is-winning" : "") + (busy ? " is-spinning" : "")} style={{ animationDelay: ((index % 5) * 34 + Math.floor(index / 5) * 12) + "ms" }} aria-label={meta.name}>
             <div className="mt-symbol-art"><Icon strokeWidth={1.7} /></div>
             {meta.mark && <span className="mt-symbol-mark">{meta.mark}</span>}
           </div>;
