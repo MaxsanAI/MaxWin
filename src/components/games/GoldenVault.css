@@ -1718,3 +1718,17 @@ body:has(.gv-game.mafia-vault),
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{z-index:1!important}
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{position:relative!important;z-index:2!important}
 }
+
+
+/* Final desktop side-art alignment: slightly closer, vault raised and edges softer. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{
+    left:clamp(34px,4.5vw,68px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{
+    right:clamp(34px,4.5vw,68px)!important;
+    transform:translateY(-12px)!important;
+    -webkit-mask-image:radial-gradient(ellipse 68% 72% at 50% 48%,#000 34%,rgba(0,0,0,.94) 49%,rgba(0,0,0,.68) 63%,rgba(0,0,0,.3) 78%,transparent 100%)!important;
+    mask-image:radial-gradient(ellipse 68% 72% at 50% 48%,#000 34%,rgba(0,0,0,.94) 49%,rgba(0,0,0,.68) 63%,rgba(0,0,0,.3) 78%,transparent 100%)!important;
+  }
+}
