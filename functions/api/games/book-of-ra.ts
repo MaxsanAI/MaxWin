@@ -38,7 +38,7 @@ async function ensureSchema(db: D1Database) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS book_of_ra_demo_features (
     user_id TEXT PRIMARY KEY,
     free_spins INTEGER NOT NULL DEFAULT 0,
-    free_spin_bet INTEGER NOT NULL DEFAULT 10,
+    free_spin_bet INTEGER NOT NULL DEFAULT 20,
     expanding_symbol TEXT,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -165,13 +165,17 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
   try {
     await ensureSchema(env.DB);
-    const wallet = await getOrCreateWallet(env.DB, user.id);
+    let wallet = await getOrCreateWallet(env.DB, user.id);
+    if (Number(wallet?.balance ?? 0) <= 0) {
+      await env.DB.prepare("UPDATE book_of_ra_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?").bind(new Date().toISOString(), user.id).run();
+      wallet = await getOrCreateWallet(env.DB, user.id);
+    }
     const features = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol FROM book_of_ra_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName }>();
 
     return json({
       balance: Number(wallet?.balance ?? 0),
       freeSpins: Number(features?.freeSpins ?? 0),
-      freeSpinBet: Number(features?.freeSpinBet ?? 10),
+      freeSpinBet: Number(features?.freeSpinBet ?? 20),
       expandingSymbol: features?.expandingSymbol || null,
       mode: "demo"
     });
@@ -196,9 +200,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       const resetAt = new Date().toISOString();
       await env.DB.prepare("UPDATE book_of_ra_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?")
         .bind(resetAt, user.id).run();
-      await env.DB.prepare("UPDATE book_of_ra_demo_features SET free_spins = 0, free_spin_bet = 10, expanding_symbol = NULL, updated_at = ? WHERE user_id = ?")
+      await env.DB.prepare("UPDATE book_of_ra_demo_features SET free_spins = 0, free_spin_bet = 20, expanding_symbol = NULL, updated_at = ? WHERE user_id = ?")
         .bind(resetAt, user.id).run();
-      return json({ ok: true, balance: 1000, freeSpins: 0, freeSpinBet: 10, expandingSymbol: null, mode: "demo" });
+      return json({ ok: true, balance: 1000, freeSpins: 0, freeSpinBet: 20, expandingSymbol: null, mode: "demo" });
     } catch {
       return json({ error: "Could not reset demo balance." }, 500);
     }
@@ -209,7 +213,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
 
   if (!action) return json({ error: "Unknown action." }, 400);
-  if (!Number.isSafeInteger(bet) || bet < 5 || bet > 100 || bet % 5 !== 0) return json({ error: "Invalid bet." }, 400);
+  if (!Number.isSafeInteger(bet) || bet < 20 || bet > 100 || bet % 20 !== 0) return json({ error: "Invalid bet." }, 400);
 
   try {
     await ensureSchema(env.DB);
@@ -284,8 +288,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     await env.DB.prepare("UPDATE book_of_ra_demo_wallets SET balance = balance - ? + ?, updated_at = ? WHERE user_id = ? AND balance >= ?").bind(stake, payout, now, user.id, stake).run();
     await env.DB.prepare("INSERT INTO book_of_ra_demo_features (user_id, free_spins, free_spin_bet, expanding_symbol, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET free_spins = excluded.free_spins, free_spin_bet = excluded.free_spin_bet, expanding_symbol = excluded.expanding_symbol, updated_at = excluded.updated_at").bind(user.id, freeSpinsAfter, freeSpinBetAfter, activeExpanding, now).run();
 
-    const wallet = await getOrCreateWallet(env.DB, user.id);
-    return json({ result, balance: Number(wallet?.balance ?? 0), freeSpins: freeSpinsAfter, freeSpinBet: freeSpinBetAfter, expandingSymbol: activeExpanding });
+    let wallet = await getOrCreateWallet(env.DB, user.id);
+    if (Number(wallet?.balance ?? 0) <= 0) {
+      await env.DB.prepare("UPDATE book_of_ra_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?").bind(new Date().toISOString(), user.id).run();
+      wallet = await getOrCreateWallet(env.DB, user.id);
+    }
+    return json({ result, balance: Number(wallet?.balance ?? 1000), freeSpins: freeSpinsAfter, freeSpinBet: freeSpinBetAfter, expandingSymbol: activeExpanding });
   } catch (error) {
     return json({ error: "Spin failed." }, 500);
   }
