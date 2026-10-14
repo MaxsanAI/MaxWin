@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { ArrowLeft, Copy, Download, FlaskConical, RotateCcw, SlidersHorizontal } from "lucide-react";
 
 type Outcome = { label: string; multiplier: number; chance: number };
@@ -18,15 +19,15 @@ export default function MathTuner() {
   const [sample, setSample] = useState(100000);
   const [bet, setBet] = useState(5);
   const [outcomes, setOutcomes] = useState(initial);
-  const [bonusRate, setBonusRate] = useState(1.5);
+  const [bonusRate, setBonusRate] = useState(0.5);
   const [bonusSpins, setBonusSpins] = useState(8);
-  const [bonusAvgMultiplier, setBonusAvgMultiplier] = useState(3);
+  const [bonusAvgMultiplier, setBonusAvgMultiplier] = useState(1);
   const [maxWin, setMaxWin] = useState(500);
   const [notes, setNotes] = useState("");
   const [copied, setCopied] = useState(false);
   const chanceTotal = outcomes.reduce((sum, o) => sum + o.chance, 0);
-  const baseRtp = outcomes.reduce((sum, o) => sum + o.multiplier * o.chance / 100, 0);
-  const bonusRtp = bonusRate / 100 * bonusSpins * bonusAvgMultiplier;
+  const multiplierCap = maxWin / bet;\n  const baseRtp = outcomes.reduce((sum, o) => sum + Math.min(o.multiplier, multiplierCap) * o.chance / 100, 0);
+  const bonusRtp = bonusRate / 100 * bonusSpins * Math.min(bonusAvgMultiplier, multiplierCap);
   const rtp = baseRtp + bonusRtp;
   const stats = useMemo(() => {
     const expectedStake = sample * bet;
@@ -55,7 +56,7 @@ export default function MathTuner() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "maxwin-math-proposal.ts"; a.click(); URL.revokeObjectURL(url);
   };
-  const reset = () => { setOutcomes(initial); setBonusRate(1.5); setBonusSpins(8); setBonusAvgMultiplier(3); setMaxWin(500); setBet(5); setSample(100000); setNotes(""); };
+  const reset = () => { setOutcomes(initial); setBonusRate(0.5); setBonusSpins(8); setBonusAvgMultiplier(1); setMaxWin(500); setBet(5); setSample(100000); setNotes(""); };
   return <main style={{minHeight:"100vh",background:"radial-gradient(ellipse at top,#29204d 0%,#0a0e1d 58%)",color:"#f4f3ff",padding:"24px clamp(14px,3vw,42px) 50px",fontFamily:"inherit"}}>
     <div style={{maxWidth:1250,margin:"0 auto"}}>
       <a href="/" style={{display:"inline-flex",alignItems:"center",gap:8,color:"#f4c66a",textDecoration:"none",fontWeight:800,fontSize:13,marginBottom:22}}><ArrowLeft size={16}/> BACK TO MAXWIN</a>
@@ -72,7 +73,7 @@ export default function MathTuner() {
     </div>
   </main>;
 }
-const panel: React.CSSProperties = { background:"linear-gradient(145deg,#151a30,#101426)", border:"1px solid #b2a1ff20", borderRadius:15, padding:18, boxShadow:"0 12px 35px #0002" };
+const panel: CSSProperties = { background:"linear-gradient(145deg,#151a30,#101426)", border:"1px solid #b2a1ff20", borderRadius:15, padding:18, boxShadow:"0 12px 35px #0002" };
 const h2: React.CSSProperties = { fontSize:16, margin:"0 0 15px", color:"#fff4d2" };
 const label: React.CSSProperties = { display:"grid", gap:7, fontSize:12, color:"#a8acc6", marginBottom:15 };
 const field: React.CSSProperties = { width:"100%", padding:"10px 11px", background:"#0a0e1d", color:"#f4f3ff", border:"1px solid #ffffff20", borderRadius:8, outline:"none" };
