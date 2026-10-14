@@ -27,7 +27,7 @@ const MAX_WIN_MULTIPLIER = 500;       // Razuman limit za demo
 async function ensureSchema(db: D1Database) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_features (user_id TEXT PRIMARY KEY, free_spins INTEGER NOT NULL DEFAULT 0, free_spin_bet INTEGER NOT NULL DEFAULT 20, updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
   const featureColumns = await db.prepare("PRAGMA table_info(royal_fortune_demo_features)").all<{ name: string }>();
-  if (!featureColumns.results.some(column => column.name === "free_spin_bet")) await db.prepare("ALTER TABLE royal_fortune_demo_features ADD COLUMN free_spin_bet INTEGER NOT NULL DEFAULT 10").run();
+  if (!featureColumns.results.some(column => column.name === "free_spin_bet")) await db.prepare("ALTER TABLE royal_fortune_demo_features ADD COLUMN free_spin_bet INTEGER NOT NULL DEFAULT 20").run();
   
   await db.prepare("UPDATE royal_fortune_demo_features SET free_spins = 15 WHERE free_spins > 15").run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_wallets (user_id TEXT PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 1000 CHECK (balance >= 0), updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
@@ -169,7 +169,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (previous) {
       const balance = await getOrCreateWallet(env.DB, user.id);
       const currentFeatures = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number }>();
-      return json({ result: JSON.parse(previous.resultJson), balance: Number(balance?.balance ?? 0), freeSpins: Number(currentFeatures?.freeSpins ?? 0), freeSpinBet: Number(currentFeatures?.freeSpinBet ?? 10), replayed: true, cashValue: false });
+      return json({ result: JSON.parse(previous.resultJson), balance: Number(balance?.balance ?? 0), freeSpins: Number(currentFeatures?.freeSpins ?? 0), freeSpinBet: Number(currentFeatures?.freeSpinBet ?? 20), replayed: true, cashValue: false });
     }
 
     const now = new Date().toISOString();
