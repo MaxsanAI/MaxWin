@@ -656,3 +656,57 @@
 @media(prefers-reduced-motion:reduce){
   .mafia-vault .gv-primary-slot .gv-symbol-art .gv-art-label{animation:none!important}
 }
+
+
+/* Mafia symbols: artwork fills the entire square; lettering sits directly over the image, never inside a badge/frame. */
+.mafia-vault .gv-primary-slot .gv-symbol-art .gv-art-label{
+  left:50%!important;
+  bottom:3.5%!important;
+  z-index:4!important;
+  max-width:98%!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:#ffe7a0!important;
+  -webkit-text-fill-color:transparent!important;
+  background-image:linear-gradient(180deg,#fff8d8 0%,#ffe39a 24%,#d69a38 53%,#fff0b9 72%,#b77a28 100%)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-weight:900!important;
+  font-size:clamp(6px,.95vw,9px)!important;
+  font-style:italic!important;
+  letter-spacing:.08em!important;
+  line-height:1!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  text-shadow:0 1px 2px #000,0 0 4px #000,0 0 7px #f4c45c65!important;
+  filter:drop-shadow(0 1px 2px #000)!important;
+  animation:gv-premium-letter-glow 2.4s ease-in-out infinite!important;
+  pointer-events:none!important;
+}
+.mafia-vault .gv-primary-slot .gv-symbol-art .gv-art-label.wild-label{
+  bottom:3.5%!important;
+  padding:0!important;
+  border:0!important;
+  box-shadow:none!important;
+  font-size:clamp(7px,1.1vw,10px)!important;
+  font-style:italic!important;
+  letter-spacing:.13em!important;
+  text-shadow:0 1px 2px #000,0 0 5px #000,0 0 9px #ffcf58a0!important;
+}
+@media(max-width:650px){
+  .mafia-vault .gv-primary-slot .gv-symbol-art .gv-art-label{
+    bottom:3%!important;
+    font-size:clamp(5px,1.1vw,7px)!important;
+    letter-spacing:.04em!important;
+  }
+  .mafia-vault .gv-primary-slot .gv-symbol-art .gv-art-label.wild-label{
+    bottom:3%!important;
+    font-size:8px!important;
+    letter-spacing:.1em!important;
+  }
+}
