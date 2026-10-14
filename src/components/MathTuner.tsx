@@ -32,17 +32,27 @@ const cloneDefaults = (): MathConfig => JSON.parse(JSON.stringify(BOOK_OF_SUNRIS
 const freeAward = (books: number, config: MathConfig) => books < 3 ? 0 : books >= 5 ? config.freeSpinsByBookCount.fivePlusBooks : books === 4 ? config.freeSpinsByBookCount.fourBooks : config.freeSpinsByBookCount.threeBooks;
 const scatterMultiplier = (books: number, config: MathConfig) => books < 3 ? 0 : books >= 5 ? config.scatterPayoutByBookCount.fivePlusBooks : books === 4 ? config.scatterPayoutByBookCount.fourBooks : config.scatterPayoutByBookCount.threeBooks;
 
-function drawRegular(config: MathConfig): BookOfSunriseRegularSymbol {
+function makeRng(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function drawRegular(config: MathConfig, random: () => number): BookOfSunriseRegularSymbol {
   const total = regularSymbols.reduce((sum, symbol) => sum + Math.max(1, Math.floor(config.regularSymbolWeights[symbol])), 0);
-  let roll = Math.floor(Math.random() * total);
+  let roll = Math.floor(random() * total);
   for (const symbol of regularSymbols) {
     roll -= Math.max(1, Math.floor(config.regularSymbolWeights[symbol]));
     if (roll < 0) return symbol;
   }
   return regularSymbols[regularSymbols.length - 1];
 }
-function drawGrid(config: MathConfig): BookOfSunriseSymbol[] {
-  return Array.from({ length: 15 }, () => Math.random() * 1000 < config.bookProbabilityPer1000 ? "book" : drawRegular(config));
+function drawGrid(config: MathConfig, random: () => number): BookOfSunriseSymbol[] {
+  return Array.from({ length: 15 }, () => random() * 1000 < config.bookProbabilityPer1000 ? "book" : drawRegular(config, random));
 }
 function evaluateGrid(symbols: BookOfSunriseSymbol[], totalBet: number, config: MathConfig, expandingSymbol: BookOfSunriseRegularSymbol | null): number {
   const lineBet = totalBet / paylines.length;
@@ -76,7 +86,8 @@ function evaluateGrid(symbols: BookOfSunriseSymbol[], totalBet: number, config: 
   return payout;
 }
 
-function runSimulation(config: MathConfig, sampleSpins: number, bet: number, mode: "regular" | "buyBonus"): Simulation {
+function runSimulation(config: MathConfig, sampleSpins: number, bet: number, mode: "regular" | "buyBonus", seed = 0x5eed1234): Simulation {
+  const random = makeRng(seed);
   let totalStake = 0, totalPayout = 0, winRounds = 0, totalFreeSpins = 0, bonusRounds = 0, cappedSessions = 0;
   // Safety ceiling prevents extreme user-entered retrigger chances from locking the browser.
   const freeSpinBudget = Math.min(1500000, Math.max(1000, sampleSpins * (mode === "buyBonus" ? 18 : 10)));
@@ -84,11 +95,11 @@ function runSimulation(config: MathConfig, sampleSpins: number, bet: number, mod
   for (let index = 0; index < sampleSpins; index++) {
     const stake = mode === "buyBonus" ? bet * config.buyBonusMultiplier : bet;
     totalStake += stake;
-    let symbols = drawGrid(config);
+    let symbols = drawGrid(config, random);
     if (mode === "buyBonus") { symbols[0] = "book"; symbols[5] = "book"; symbols[10] = "book"; }
     let books = symbols.filter(symbol => symbol === "book").length;
     let freeRemaining = freeAward(books, config);
-    let expandingSymbol: BookOfSunriseRegularSymbol | null = freeRemaining > 0 ? regularSymbols[Math.floor(Math.random() * regularSymbols.length)] : null;
+    let expandingSymbol: BookOfSunriseRegularSymbol | null = freeRemaining > 0 ? regularSymbols[Math.floor(random() * regularSymbols.length)] : null;
     let roundPayout = Math.min(bet * config.maxWinMultiplier, evaluateGrid(symbols, bet, config, null));
     if (freeRemaining > 0) bonusRounds++;
     let thisSessionFreeSpins = 0;
@@ -97,7 +108,7 @@ function runSimulation(config: MathConfig, sampleSpins: number, bet: number, mod
       processedFreeSpins++;
       thisSessionFreeSpins++;
       totalFreeSpins++;
-      symbols = drawGrid(config);
+      symbols = drawGrid(config, random);
       books = symbols.filter(symbol => symbol === "book").length;
       const retrigger = freeAward(books, config);
       if (retrigger > 0) bonusRounds++;
@@ -165,33 +176,69 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
     setAutoTuneNotice("");
     window.setTimeout(() => {
       try {
-        // Use a bounded sample for one-click tuning so the page remains responsive.
-        const tuneSample = Math.min(10000, Math.max(3000, sample));
-        const baseline = runSimulation(model, tuneSample, bet, mode);
+        // Reuse identical random outcomes while searching so payout-scale comparisons are fair.
+        const tuneSample = Math.min(8000, Math.max(3000, sample));
+        const tuningSeed = 0x1234abcd;
+        const baseline = runSimulation(model, tuneSample, bet, mode, tuningSeed);
         if (!Number.isFinite(baseline.rtp) || baseline.rtp <= 0 || baseline.cappedSessions > tuneSample * 0.2) {
-          setAutoTuneNotice("Auto-tune paused: the current profile produced an unstable or capped simulation. Lower the bonus retrigger rate or run a larger check before tuning.");
+          setAutoTuneNotice("Automatsko podešavanje je zaustavljeno: simulacija početnih vrednosti je nestabilna ili je previše bonus-lanaca doseglo sigurnosnu granicu. Probaj manju verovatnoću knjige ili proveri bonus pravila.");
           setSimulation(baseline);
           return;
         }
-        let nextModel: MathConfig;
+        let nextModel: MathConfig = model;
+        let searchEstimate = baseline;
         if (mode === "buyBonus") {
-          // Return per paid bonus purchase is inversely proportional to the price multiplier.
+          // Bonus payouts do not depend on the price multiplier; only the paid stake does.
           const calibratedPrice = Math.max(1, Math.min(1000, Math.round(model.buyBonusMultiplier * baseline.rtp / targetRtp)));
           nextModel = { ...model, buyBonusMultiplier: calibratedPrice };
         } else {
-          const scale = Math.max(0.01, Math.min(10, targetRtp / baseline.rtp));
-          nextModel = buildScaledModel(model, scale);
+          let bestModel = buildScaledModel(model, 1);
+          let bestResult = baseline;
+          let bestDistance = Math.abs(baseline.rtp - targetRtp);
+          let low = 0;
+          let high = 1;
+          let highModel = buildScaledModel(model, high);
+          let highResult = baseline;
+          // Expand the upper bound if this configuration starts below the target RTP.
+          for (let expand = 0; expand < 6 && highResult.rtp < targetRtp; expand++) {
+            low = high;
+            high = Math.min(64, high * 2);
+            highModel = buildScaledModel(model, high);
+            highResult = runSimulation(highModel, tuneSample, bet, mode, tuningSeed);
+            const distance = Math.abs(highResult.rtp - targetRtp);
+            if (distance < bestDistance) { bestModel = highModel; bestResult = highResult; bestDistance = distance; }
+            if (high >= 64) break;
+          }
+          for (let iteration = 0; iteration < 9; iteration++) {
+            const scale = (low + high) / 2;
+            const candidate = buildScaledModel(model, scale);
+            const result = runSimulation(candidate, tuneSample, bet, mode, tuningSeed);
+            const distance = Math.abs(result.rtp - targetRtp);
+            if (distance < bestDistance) { bestModel = candidate; bestResult = result; bestDistance = distance; }
+            if (result.rtp < targetRtp) low = scale;
+            else high = scale;
+          }
+          nextModel = bestModel;
+          searchEstimate = bestResult;
         }
         setModel(nextModel);
-        const verified = runSimulation(nextModel, tuneSample, bet, mode);
+        // Verify on a different deterministic sample so we don't only report the tuning sample.
+        const verified = runSimulation(nextModel, tuneSample, bet, mode, 0x7f4a7c15);
         setSimulation(verified);
-        setAutoTuneNotice(
-          mode === "regular"
-            ? `Auto-configured from the existing game rules. Initial estimate ${baseline.rtp.toFixed(2)}% → verification estimate ${verified.rtp.toFixed(2)}%; target ${targetRtp.toFixed(1)}%. Run another larger simulation to confirm because random results fluctuate.`
-            : `Buy Bonus price auto-adjusted from ${model.buyBonusMultiplier}× to ${nextModel.buyBonusMultiplier}×. Verification estimate ${verified.rtp.toFixed(2)}%; target ${targetRtp.toFixed(1)}%. Confirm with another simulation.`
-        );
+        if (mode === "regular") {
+          const gap = Math.abs(verified.rtp - targetRtp);
+          setAutoTuneNotice(
+            gap <= 3
+              ? `Automatski sam podesio isplate. Provera: ${verified.rtp.toFixed(2)}% RTP; cilj ${targetRtp.toFixed(1)}%. Rezultat varira između simulacija, pa ovo nije sertifikovana vrednost.`
+              : `Vrednosti su automatski podešene, ali nezavisna provera je pokazala ${verified.rtp.toFixed(2)}% RTP umesto ciljanih ${targetRtp.toFixed(1)}%. Pokušaj još jednom sa većim brojem spinova. Podešavajući uzorak je dao ${searchEstimate.rtp.toFixed(2)}%.`
+          );
+        } else {
+          setAutoTuneNotice(
+            `Cena Buy Bonus-a je automatski promenjena sa ${model.buyBonusMultiplier}× na ${nextModel.buyBonusMultiplier}×. Provera: ${verified.rtp.toFixed(2)}% RTP; cilj ${targetRtp.toFixed(1)}%. Ponovi proveru pre nego što se konfiguracija ugradi u kod.`
+          );
+        }
       } catch {
-        setAutoTuneNotice("Auto-tune did not finish. Reduce the simulation size and try again.");
+        setAutoTuneNotice("Automatsko podešavanje nije završeno. Pokušaj ponovo sa manjim brojem simuliranih spinova.");
       } finally {
         setRunning(false);
       }
