@@ -710,3 +710,64 @@
     letter-spacing:.1em!important;
   }
 }
+
+
+/* Keep win feedback beside the reels and make the last payout visible on every screen. */
+.mafia-vault .gv-primary-slot + .gv-message,
+.mafia-vault .gv-primary-slot + .gv-message + .gv-error{
+  display:block!important;
+  width:min(100%,680px)!important;
+  margin:8px auto 0!important;
+  position:relative!important;
+  z-index:5!important;
+}
+.mafia-vault .gv-primary-slot + .gv-message{
+  min-height:30px!important;
+  padding:8px 10px!important;
+  border:1px solid #c49a4b55!important;
+  border-radius:7px!important;
+  background:linear-gradient(90deg,#17100f,#251a12,#17100f)!important;
+  color:#e8d2a0!important;
+  font-size:clamp(10px,1.7vw,13px)!important;
+  line-height:1.35!important;
+  letter-spacing:.3px!important;
+  text-align:center!important;
+  overflow-wrap:anywhere!important;
+}
+.mafia-vault .gv-primary-slot + .gv-message.is-win{
+  color:#ffe28a!important;
+  border-color:#e9bf5eaa!important;
+  background:linear-gradient(90deg,#1b120c,#3b2811,#1b120c)!important;
+  box-shadow:0 0 16px #e7b64a26,inset 0 0 10px #e7b64a12!important;
+  font-size:clamp(11px,1.9vw,14px)!important;
+  font-weight:900!important;
+}
+.mafia-vault .gv-primary-slot + .gv-message + .gv-error{font-size:11px!important}
+.mafia-vault .gv-controls{grid-template-rows:auto auto auto!important}
+.mafia-vault .gv-controls .gv-last{
+  display:flex!important;
+  grid-column:1/-1!important;
+  grid-row:3!important;
+  width:100%!important;
+  min-height:36px!important;
+  padding:6px 10px!important;
+  flex-direction:row!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:8px!important;
+  border:1px solid #c49a4b55!important;
+  border-radius:7px!important;
+  background:linear-gradient(90deg,#1a1110,#211a12)!important;
+}
+.mafia-vault .gv-controls .gv-last small{font-size:9px!important;color:#d3b77b!important;letter-spacing:1px!important}
+.mafia-vault .gv-controls .gv-last strong{font-size:16px!important;color:#ffe18a!important;margin-left:auto!important}
+.mafia-vault .gv-controls .gv-last span{font-size:8px!important;color:#aa987a!important}
+@media(max-width:650px){
+ .mafia-vault .gv-primary-slot + .gv-message,
+ .mafia-vault .gv-primary-slot + .gv-message + .gv-error{margin-top:5px!important}
+ .mafia-vault .gv-primary-slot + .gv-message{padding:7px 5px!important;font-size:10px!important;min-height:28px!important}
+ .mafia-vault .gv-controls{grid-template-rows:auto auto auto!important}
+ .mafia-vault .gv-controls .gv-last{grid-column:1/-1!important;grid-row:3!important;min-height:32px!important;padding:5px 8px!important}
+ .mafia-vault .gv-controls .gv-last small{font-size:8px!important}
+ .mafia-vault .gv-controls .gv-last strong{font-size:14px!important}
+}
