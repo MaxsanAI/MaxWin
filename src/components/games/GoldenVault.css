@@ -1843,14 +1843,12 @@ body:has(.gv-game.mafia-vault),
     content:""!important;
     position:absolute!important;inset:0!important;z-index:0!important;
     pointer-events:none!important;
-    background-image:
-      linear-gradient(rgba(8,10,19,.72),rgba(8,10,19,.72)),
-      url("/images/golden-vault/gold-pocket-watch.jpg")!important;
+    background-image:url("/images/golden-vault/gold-pocket-watch.jpg")!important;
     background-repeat:no-repeat!important;
     background-position:center!important;
     background-size:cover!important;
-    opacity:.34!important;
-    filter:saturate(.8) contrast(1.05)!important;
+    opacity:1!important;
+    filter:none!important;
   }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{
     z-index:10!important;
