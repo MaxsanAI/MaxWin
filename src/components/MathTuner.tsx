@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import { ArrowLeft, Copy, Download, FlaskConical, RotateCcw, SlidersHorizontal, Play, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Copy, Download, FlaskConical, RotateCcw, SlidersHorizontal, ShieldAlert } from "lucide-react";
 import { BOOK_OF_SUNRISE_MATH, type BookOfSunriseRegularSymbol, type BookOfSunriseSymbol } from "../lib/bookOfSunriseMath";
 
 type Count = 2 | 3 | 4 | 5;
@@ -204,15 +204,6 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
   const download = () => {
     const url = URL.createObjectURL(new Blob([generated], { type: "text/plain;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = "book-of-sunrise-math-proposal.ts"; a.click(); URL.revokeObjectURL(url);
-  };
-  const run = () => {
-    if (!validBet) return;
-    setRunning(true);
-    // A zero-delay task lets React show the running state before calculation begins.
-    window.setTimeout(() => {
-      try { setSimulation(runSimulation(model, sample, bet, mode)); }
-      finally { setRunning(false); }
-    }, 20);
   };
   const reset = () => { setModel(cloneDefaults()); setSample(10000); setBet(20); setTargetRtp(94); setMode("regular"); setSimulation(null); setAutoTuneNotice(""); setNotes(""); };
   return <main style={{ minHeight: "100vh", background: "radial-gradient(ellipse at top,#29204d 0%,#0a0e1d 58%)", color: "#f4f3ff", padding: "24px clamp(14px,3vw,42px) 50px", fontFamily: "inherit" }}>
