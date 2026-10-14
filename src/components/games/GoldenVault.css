@@ -1378,3 +1378,33 @@ body:has(.gv-game.mafia-vault),
 .modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header{
   margin-top:4px!important;
 }
+
+
+/* Golden Vault: small rounded To Lobby button centered immediately under the title. */
+.mafia-vault .gv-lobby-crown{
+  display:flex!important;
+  position:relative!important;
+  align-self:center!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:30px!important;
+  height:30px!important;
+  margin:0 auto 5px!important;
+  padding:3px 13px!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+  line-height:1!important;
+}
+.mafia-vault .gv-lobby-crown svg{
+  width:14px!important;
+  height:14px!important;
+  flex:0 0 14px!important;
+}
+.mafia-vault .gv-lobby-crown span{display:inline!important}
+
+/* Keep the win button limited to WIN and its numeric amount; no credits label. */
+.mafia-vault .gv-controls .gv-spin small{white-space:nowrap!important}
