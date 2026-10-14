@@ -1795,7 +1795,7 @@ body:has(.gv-game.mafia-vault),
 @media (min-width:651px){
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row{
     position:absolute!important;z-index:2!important;top:17%!important;
-    right:clamp(20px,3.5vw,52px)!important;width:clamp(150px,18vw,270px)!important;
+    right:clamp(35px,4.5vw,65px)!important;width:clamp(150px,18vw,270px)!important;
     display:flex!important;align-items:center!important;justify-content:center!important;
     gap:clamp(3px,.45vw,7px)!important;pointer-events:none!important;
   }
@@ -1829,6 +1829,34 @@ body:has(.gv-game.mafia-vault),
   }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art,
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row{
+    z-index:1!important;
+  }
+}
+
+
+/* Gold pocket-watch backdrop sits behind every existing Golden Vault element. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage{
+    isolation:isolate!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage::before{
+    content:""!important;
+    position:absolute!important;inset:0!important;z-index:0!important;
+    pointer-events:none!important;
+    background-image:
+      linear-gradient(rgba(8,10,19,.72),rgba(8,10,19,.72)),
+      url("/images/golden-vault/gold-pocket-watch.jpg")!important;
+    background-repeat:no-repeat!important;
+    background-position:center!important;
+    background-size:cover!important;
+    opacity:.34!important;
+    filter:saturate(.8) contrast(1.05)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{
+    z-index:10!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-side-art,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-revolver-row{
     z-index:1!important;
   }
 }
