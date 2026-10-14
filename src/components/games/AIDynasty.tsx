@@ -165,7 +165,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
     } catch { /* optional audio */ }
   };
 
-  useEffect(() => { if (!busy && balance <= 0) { setBalance(1000); setMessage("DEMO BALANCE RESET · $10.00 READY 🔄"); } }, [balance, busy]);
+  useEffect(() => { if (!busy && balance < 20) { setBalance(1000); setMessage("DEMO BALANCE RESET · $10.00 READY 🔄"); } }, [balance, busy]);
 
   const spin = async () => {
     if (busy || (freeSpins <= 0 && balance < bet)) return;
