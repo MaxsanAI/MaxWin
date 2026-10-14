@@ -7,7 +7,7 @@ const icons:Record<S,{name:string;Icon:typeof Vault;cls:string;mark?:string;over
  cigar:{name:"CIGAR",Icon:RotateCw,cls:"cigar",image:"cigar-lighter.jpg"},whiskey:{name:"WHISKEY",Icon:Coins,cls:"whiskey",image:"whiskey-glass.jpg"},watch:{name:"GOLD WATCH",Icon:RotateCw,cls:"watch",image:"gold-pocket-watch.jpg"},revolver:{name:"REVOLVER",Icon:ShieldCheck,cls:"revolver",image:"vintage-revolver.jpg"},cash:{name:"CASH CASE",Icon:Coins,cls:"cash",overlay:"CASH",image:"cash-briefcase.jpg"},henchman:{name:"RIGHT HAND",Icon:Crown,cls:"henchman",overlay:"RIGHT HAND",image:"mafia-enforcer.jpg"},gold:{name:"GOLD BARS",Icon:Gem,cls:"gold",overlay:"GOLD",image:"golden-vault-bars.jpg"},don:{name:"DON GIOVANNI",Icon:Crown,cls:"don",mark:"WILD",image:"mafia-boss.jpg"},vault:{name:"SAFE CRACKER",Icon:Vault,cls:"vault",overlay:"BONUS",image:"vault-bonus-coin.jpg"},key:{name:"MAGIC KEY",Icon:KeyRound,cls:"key",mark:"KEY",image:"magic-key.jpg"}
 };
 const pool:S[]=["spade","diamond","heart","club","cigar","whiskey","watch","revolver","cash","henchman","gold","don"];
-const formatUSD=(value:number)=>`${(value/100).toFixed(2)}`;
+const formatUSD=(value:number)=>"$"+(value/100).toFixed(2);
 const rid=()=>typeof crypto.randomUUID==="function"?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),x=>x.toString(16).padStart(2,"0")).join("");
 type HoldState={bet:number;values:(number|null)[];respins:number;total:number;occupied:number};
 type Round={symbols:S[];payout:number;winningPositions?:number[];freeSpinPositions?:number[];awardedFreeSpins:number;holdTriggered?:boolean;keyBonusTriggered?:boolean;feature?:"muscle"|"heist"};
