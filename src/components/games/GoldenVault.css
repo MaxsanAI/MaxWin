@@ -1834,6 +1834,46 @@ body:has(.gv-game.mafia-vault),
 }
 
 
+/* Animated gold HOLD & WIN title beneath the revolvers. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust{
+    position:absolute!important;z-index:2!important;top:25%!important;right:clamp(8px,1.8vw,30px)!important;
+    width:clamp(190px,23vw,360px)!important;text-align:center!important;pointer-events:none!important;
+    overflow:visible!important;isolation:isolate!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust span{
+    display:block!important;font-family:Georgia,'Times New Roman',serif!important;
+    font-size:clamp(17px,2.05vw,31px)!important;font-weight:900!important;letter-spacing:.12em!important;
+    line-height:1.2!important;color:#ffd34f!important;
+    background:linear-gradient(180deg,#fffbd0 0%,#ffe45c 24%,#ffc21c 48%,#e99a00 68%,#fff078 82%,#c77a00 100%)!important;
+    -webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;
+    filter:drop-shadow(0 0 7px #ffca28dd) drop-shadow(0 0 15px #e99a0066) drop-shadow(0 4px 8px #000)!important;
+    animation:gvFreeSpinsGlow 3.2s ease-in-out infinite!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust:before,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust:after{
+    content:"✦  ·  ✧  ·  ✦"!important;display:block!important;color:#ffd96a!important;
+    font-size:10px!important;letter-spacing:.5em!important;text-shadow:0 0 8px #ffc84a!important;
+    opacity:.75!important;animation:gvGoldDust 4s ease-in-out infinite!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust i{
+    position:absolute!important;display:block!important;width:3px!important;height:3px!important;border-radius:50%!important;
+    background:#fff0a1!important;box-shadow:0 0 7px 2px #ffc84a99!important;opacity:0!important;
+    animation:gvGoldDust 2.8s ease-in-out infinite!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust i:nth-of-type(1){left:12%;top:70%;animation-delay:-.4s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust i:nth-of-type(2){left:30%;top:82%;animation-delay:-1.6s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust i:nth-of-type(3){left:65%;top:72%;animation-delay:-.9s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust i:nth-of-type(4){left:82%;top:88%;animation-delay:-2.1s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust i:nth-of-type(5){left:50%;top:92%;animation-delay:-1.2s!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust span,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust:before,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust:after,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust i{animation:none!important}
+}
+
 /* Gold pocket-watch backdrop sits behind every existing Golden Vault element. */
 @media (min-width:651px){
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage{
