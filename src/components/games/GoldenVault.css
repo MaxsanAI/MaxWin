@@ -1790,3 +1790,34 @@ body:has(.gv-game.mafia-vault),
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust:after,
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust i{animation:none!important}
 }
+
+
+/* Four vintage revolvers as a gold-dusted decorative strip between FREE SPINS and the vault. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row{
+    position:absolute!important;z-index:2!important;top:17%!important;
+    right:clamp(18px,3.2vw,50px)!important;width:clamp(190px,23vw,360px)!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    gap:clamp(3px,.7vw,10px)!important;pointer-events:none!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row img{
+    display:block!important;width:21%!important;height:auto!important;aspect-ratio:1!important;
+    object-fit:contain!important;border-radius:50%!important;
+    mix-blend-mode:screen!important;
+    filter:sepia(1) saturate(1.45) hue-rotate(350deg) brightness(1.12)
+      drop-shadow(0 0 5px #dca83c88)!important;
+    -webkit-mask-image:radial-gradient(ellipse at center,#000 40%,rgba(0,0,0,.8) 60%,transparent 78%)!important;
+    mask-image:radial-gradient(ellipse at center,#000 40%,rgba(0,0,0,.8) 60%,transparent 78%)!important;
+    animation:gvRevolverShimmer 3.6s ease-in-out infinite!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row img:nth-child(2){animation-delay:-.8s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row img:nth-child(3){animation-delay:-1.6s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row img:nth-child(4){animation-delay:-2.4s!important}
+}
+@keyframes gvRevolverShimmer{
+  0%,100%{opacity:.78;transform:translateY(1px) rotate(-4deg)}
+  50%{opacity:1;transform:translateY(-3px) rotate(4deg)}
+}
+@media (prefers-reduced-motion:reduce){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row img{animation:none!important}
+}
