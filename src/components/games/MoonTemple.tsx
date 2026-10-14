@@ -95,7 +95,7 @@ export default function MoonTemple({ onBackToLobby }: { onBackToLobby: () => voi
         const step = result.steps[index];
         setSymbols(step.symbols);
         setWinningPositions(step.winningPositions);
-        runningWin += step.payout;
+        runningWin = Math.min(runningWin + step.payout, result.payout);
         setWin(runningWin);
         setCascadeCount(index + 1);
         setMessage(index === 0 ? "WINNING COMBINATION" : "CASCADE WIN");
