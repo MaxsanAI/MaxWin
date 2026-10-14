@@ -996,3 +996,14 @@
   .mafia-vault .gv-primary-slot .gv-reels{gap:4px!important;padding:6px!important}
   .mafia-vault .gv-primary-slot .gv-symbol{border-radius:4px!important}
 }
+
+/* Status and feature meters follow the control deck after the reels. */
+.mafia-vault .gv-message{
+  display:block!important;width:100%!important;max-width:680px!important;margin:7px auto 0!important;
+  min-height:30px!important;padding:8px 10px!important;border:1px solid #c49a4b55!important;
+  border-radius:7px!important;background:linear-gradient(90deg,#17100f,#251a12,#17100f)!important;
+  color:#e8d2a0!important;font-size:clamp(10px,1.7vw,13px)!important;line-height:1.35!important;
+  text-align:center!important;overflow-wrap:anywhere!important;
+}
+.mafia-vault .gv-message.is-win{color:#ffe28a!important;border-color:#e9bf5eaa!important;font-weight:900!important;box-shadow:0 0 16px #e7b64a26!important}
+.mafia-vault .gv-error{display:block!important;margin:5px auto!important;text-align:center!important;font-size:11px!important}
