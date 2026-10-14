@@ -125,7 +125,7 @@ function gridFromStep(step: Step): SymbolId[][] {
 }
 
 export const onRequestGet = async ({ request, env }: EnvContext) => {
-  const user = await getUser(request, env);
+  const user = await getUser(request, env.DB);
   if (!user) return json({ error: "Please log in to play." }, 401);
   await ensureSchema(env.DB);
   const current = await wallet(env.DB, user.id);
@@ -134,7 +134,7 @@ export const onRequestGet = async ({ request, env }: EnvContext) => {
 };
 
 export const onRequestPost = async ({ request, env }: EnvContext) => {
-  const user = await getUser(request, env);
+  const user = await getUser(request, env.DB);
   if (!user) return json({ error: "Please log in to play." }, 401);
   await ensureSchema(env.DB);
   const body = await readJson<{ action?: string; bet?: number; requestId?: string }>(request);
