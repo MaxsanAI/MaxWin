@@ -1819,3 +1819,16 @@ body:has(.gv-game.mafia-vault),
 @media (prefers-reduced-motion:reduce){
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row img{animation:none!important}
 }
+
+
+/* Keep the actual slot/reels clearly in front of every decorative layer. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{
+    position:relative!important;
+    z-index:10!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-revolver-row{
+    z-index:1!important;
+  }
+}
