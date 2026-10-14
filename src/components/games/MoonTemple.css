@@ -220,7 +220,7 @@
   .mt-moon svg { width: 24px; height: 24px; }
   .mt-scene-text strong { font-size: 7px; }
   .mt-scene-text span { font-size: 5px; }
-  .mt-board { grid-template-rows: repeat(4, clamp(48px, calc((100dvh - 245px) / 4), 90px)); }
+  .mt-board { grid-template-rows: repeat(4, clamp(54px, calc((100dvh - 220px) / 4), 98px)); }
   .mt-controls { margin-top: 4px; margin-bottom: 2px; }
   .mt-stat, .mt-bet-control, .mt-spin { min-height: 38px; }
 }
