@@ -819,3 +819,68 @@
  .mafia-vault .gv-primary-slot .gv-reels{width:100%!important;gap:2px!important}
  .mafia-vault .gv-primary-slot .gv-symbol{border-radius:3px!important}
 }
+
+
+/* GOLDEN VAULT: winning positions must be unmistakable; card symbols are edge-to-edge artwork. */
+.mafia-vault .gv-primary-slot .gv-symbol.winning{
+  z-index:5!important;
+  border:2px solid #fff18a!important;
+  background:#ffe56a!important;
+  box-shadow:
+    0 0 5px 3px #fff8a8!important,
+    0 0 20px 8px #ffcf32!important,
+    0 0 34px 12px #ff9d1b!important,
+    inset 0 0 22px #fff8bf!important;
+  animation:gv-vault-win-bright .32s ease-in-out infinite alternate!important;
+}
+.mafia-vault .gv-primary-slot .gv-symbol.winning .gv-symbol-art img{
+  filter:brightness(1.75) saturate(1.25) contrast(1.08)!important;
+}
+@keyframes gv-vault-win-bright{
+  from{filter:brightness(1.25);box-shadow:0 0 5px 3px #fff8a8,0 0 20px 8px #ffcf32,0 0 34px 12px #ff9d1b,inset 0 0 22px #fff8bf}
+  to{filter:brightness(2.05);box-shadow:0 0 8px 5px #fffde0,0 0 28px 12px #ffe35a,0 0 44px 16px #ffad25,inset 0 0 30px #fffde0}
+}
+/* Remove the pale card frame and let each card image fill the whole reel cell. */
+.mafia-vault .gv-primary-slot .gv-symbol.low{
+  padding:0!important;
+  border:0!important;
+  border-radius:2px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+.mafia-vault .gv-primary-slot .gv-symbol.low .gv-symbol-art{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  filter:none!important;
+  text-shadow:none!important;
+}
+.mafia-vault .gv-primary-slot .gv-symbol.low .gv-symbol-art>img{
+  position:absolute!important;
+  inset:0!important;
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border:0!important;
+  border-radius:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  filter:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .mafia-vault .gv-primary-slot .gv-symbol.winning{animation:none!important;filter:brightness(1.8)!important}
+}
