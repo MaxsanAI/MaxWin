@@ -1745,17 +1745,17 @@ body:has(.gv-game.mafia-vault),
 /* Golden Vault: floating golden-dust FREE SPINS title above the treasure art. */
 @media (min-width:651px){
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust{
-    position:absolute!important;z-index:1!important;top:5%!important;right:clamp(18px,3.2vw,50px)!important;
+    position:absolute!important;z-index:1!important;top:5%!important;right:clamp(8px,1.8vw,30px)!important;
     width:clamp(190px,23vw,360px)!important;text-align:center!important;pointer-events:none!important;
     overflow:visible!important;isolation:isolate!important;
   }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust span{
     display:block!important;font-family:Georgia,'Times New Roman',serif!important;
     font-size:clamp(18px,2.25vw,34px)!important;font-weight:900!important;letter-spacing:.16em!important;
-    line-height:1.2!important;color:#ffe7a0!important;
-    background:linear-gradient(180deg,#fff8ce 0%,#ffdf73 32%,#d99a27 60%,#fff0ac 78%,#a96512 100%)!important;
+    line-height:1.2!important;color:#ffd34f!important;
+    background:linear-gradient(180deg,#fffbd0 0%,#ffe45c 24%,#ffc21c 48%,#e99a00 68%,#fff078 82%,#c77a00 100%)!important;
     -webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;
-    filter:drop-shadow(0 0 5px #ffcb4c99) drop-shadow(0 4px 8px #000)!important;
+    filter:drop-shadow(0 0 7px #ffca28dd) drop-shadow(0 0 15px #e99a0066) drop-shadow(0 4px 8px #000)!important;
     animation:gvFreeSpinsGlow 3.2s ease-in-out infinite!important;
   }
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust:before,
