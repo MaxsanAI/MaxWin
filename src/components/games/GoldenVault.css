@@ -1921,7 +1921,7 @@ body:has(.gv-game.mafia-vault),
 .modal-slot-golden-vault>.gv-game.mafia-vault .gv-mafia-music-toggle{
   appearance:none!important;border:1px solid #cda75a70!important;border-radius:999px!important;
   padding:5px 9px!important;background:linear-gradient(145deg,#302016,#141310)!important;
-  color:#f5d27b!important;font:800 9px/1.2 inherit!important;letter-spacing:.35px!important;
+  color:#f5d27b!important;font-family:inherit!important;font-size:9px!important;font-weight:800!important;line-height:1.2!important;letter-spacing:.35px!important;
   white-space:nowrap!important;cursor:pointer!important;
 }
 .modal-slot-golden-vault>.gv-game.mafia-vault .gv-mafia-music-toggle[aria-pressed="false"]{
