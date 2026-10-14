@@ -9,14 +9,14 @@ const WEIGHTS: Record<SymbolId, number> = {
 // Multipliers are per winning way, applied to the total spin bet. These are initial
 // calibration values; run the included simulator before treating RTP as verified.
 const PAY: Record<Exclude<SymbolId, "wild" | "scatter">, Record<3 | 4 | 5, number>> = {
-  mask: { 3: 0.048, 4: 0.202, 5: 1.01 },
-  idol: { 3: 0.048, 4: 0.202, 5: 1.01 },
-  crystal: { 3: 0.048, 4: 0.202, 5: 1.01 },
-  relic: { 3: 0.048, 4: 0.202, 5: 1.01 },
-  scarab: { 3: 0.048, 4: 0.202, 5: 1.01 },
-  crescent: { 3: 0.048, 4: 0.202, 5: 1.01 },
-  blueGem: { 3: 0.048, 4: 0.202, 5: 1.01 },
-  starGem: { 3: 0.048, 4: 0.202, 5: 1.01 }
+  mask: { 3: 0.029, 4: 0.122, 5: 0.611 },
+  idol: { 3: 0.029, 4: 0.122, 5: 0.611 },
+  crystal: { 3: 0.029, 4: 0.122, 5: 0.611 },
+  relic: { 3: 0.029, 4: 0.122, 5: 0.611 },
+  scarab: { 3: 0.029, 4: 0.122, 5: 0.611 },
+  crescent: { 3: 0.029, 4: 0.122, 5: 0.611 },
+  blueGem: { 3: 0.029, 4: 0.122, 5: 0.611 },
+  starGem: { 3: 0.029, 4: 0.122, 5: 0.611 }
 };
 const MAX_CASCADES = 5;
 const MAX_WIN_MULTIPLIER = 250;
@@ -160,7 +160,7 @@ export const onRequestPost = async ({ request, env }: EnvContext) => {
 
   const freeSpinsBefore = Number(currentFeature?.free_spins ?? 0);
   const isFreeSpin = freeSpinsBefore > 0;
-  const bet = Math.max(20, Math.min(100, Math.round(Number(body.bet ?? currentFeature?.free_spin_bet ?? 20) / 10) * 10));
+  const requestedBet = isFreeSpin ? Number(currentFeature?.free_spin_bet ?? 20) : Number(body.bet ?? 20);\n  const bet = Math.max(20, Math.min(100, Math.round(requestedBet / 10) * 10));
   const stake = isFreeSpin ? 0 : bet;
   const balanceBefore = Number(current.balance);
   if (balanceBefore < stake) return json({ error: "Not enough demo credits. Reset your demo balance to $10.00." }, 400);
