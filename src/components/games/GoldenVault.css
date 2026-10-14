@@ -809,3 +809,13 @@
  .mafia-vault .gv-key-coins img{width:min(100%,64px)}
 }
 @media(prefers-reduced-motion:reduce){.mafia-vault .gv-key-meter-track span,.mafia-vault .gv-key-meter.close .gv-key-meter-track span{animation:none;transition:none}}
+
+
+/* Mobile: widen ONLY the reel window; keep the surrounding controls at their current size. */
+@media(max-width:650px){
+ .modal-slot:has(>.gv-game.mafia-vault){padding-left:2px!important;padding-right:2px!important}
+ .modal-slot:has(>.gv-game.mafia-vault)>.gv-game.mafia-vault{padding-left:1px!important;padding-right:1px!important}
+ .mafia-vault .gv-primary-slot{width:100%!important;max-width:none!important}
+ .mafia-vault .gv-primary-slot .gv-reels{width:100%!important;gap:2px!important}
+ .mafia-vault .gv-primary-slot .gv-symbol{border-radius:3px!important}
+}
