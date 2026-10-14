@@ -25,7 +25,7 @@ const DEMO_BUY_BONUS_MULTIPLIER = 30; // Jeftiniji Buy Bonus za demo (30x umesto
 const MAX_WIN_MULTIPLIER = 500;       // Razuman limit za demo
 
 async function ensureSchema(db: D1Database) {
-  await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_features (user_id TEXT PRIMARY KEY, free_spins INTEGER NOT NULL DEFAULT 0, free_spin_bet INTEGER NOT NULL DEFAULT 10, updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS royal_fortune_demo_features (user_id TEXT PRIMARY KEY, free_spins INTEGER NOT NULL DEFAULT 0, free_spin_bet INTEGER NOT NULL DEFAULT 20, updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)`).run();
   const featureColumns = await db.prepare("PRAGMA table_info(royal_fortune_demo_features)").all<{ name: string }>();
   if (!featureColumns.results.some(column => column.name === "free_spin_bet")) await db.prepare("ALTER TABLE royal_fortune_demo_features ADD COLUMN free_spin_bet INTEGER NOT NULL DEFAULT 10").run();
   
@@ -109,9 +109,13 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
 
   try {
     await ensureSchema(env.DB);
-    const wallet = await getOrCreateWallet(env.DB, user.id);
+    let wallet = await getOrCreateWallet(env.DB, user.id);
+    if (Number(wallet?.balance ?? 0) <= 0) {
+      await env.DB.prepare("UPDATE royal_fortune_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?").bind(new Date().toISOString(), user.id).run();
+      wallet = await getOrCreateWallet(env.DB, user.id);
+    }
     const features = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number }>();
-    return json({ balance: Number(wallet?.balance ?? 0), freeSpins: Number(features?.freeSpins ?? 0), freeSpinBet: Number(features?.freeSpinBet ?? 10), mode: "demo", cashValue: false, initialCredits: 1000 });
+    return json({ balance: Number(wallet?.balance ?? 1000), freeSpins: Number(features?.freeSpins ?? 0), freeSpinBet: Number(features?.freeSpinBet ?? 20), mode: "demo", cashValue: false, initialCredits: 1000 });
   } catch (error) {
     console.error("[Royal Fortune] Load failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not load Royal Fortune demo balance." }, 500);
@@ -144,7 +148,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
 
   if (!action) return json({ error: "Unknown game action." }, 400);
-  if (!Number.isSafeInteger(bet) || bet < 5 || bet > 100 || bet % 5 !== 0) return json({ error: "Bet must be 5 to 100 demo credits in steps of 5." }, 400);
+  if (!Number.isSafeInteger(bet) || bet < 20 || bet > 100 || bet % 20 !== 0) return json({ error: "Bet must be $0.20 to $1.00 in $0.20 steps." }, 400);
   if (!/^[a-f0-9-]{16,64}$/i.test(requestId)) return json({ error: "Refresh the game and try again." }, 400);
 
   try {
@@ -153,7 +157,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number }>();
     const freeSpinsBefore = Number(featureRow?.freeSpins ?? 0);
-    const freeSpinBetBefore = Number(featureRow?.freeSpinBet ?? 10);
+    const freeSpinBetBefore = Number(featureRow?.freeSpinBet ?? 20);
 
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
     const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
@@ -258,8 +262,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     await env.DB.prepare("INSERT INTO royal_fortune_demo_features (user_id, free_spins, free_spin_bet, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET free_spins = excluded.free_spins, free_spin_bet = excluded.free_spin_bet, updated_at = excluded.updated_at").bind(user.id, freeSpinsAfter, freeSpinBetAfter, now).run();
 
-    const latest = await getOrCreateWallet(env.DB, user.id);
-    return json({ result, balance: Number(latest?.balance ?? 0), freeSpins: freeSpinsAfter, freeSpinBet: freeSpinBetAfter, replayed: false, cashValue: false, message: "Demo result recorded." });
+    let latest = await getOrCreateWallet(env.DB, user.id);
+    if (Number(latest?.balance ?? 0) <= 0) {
+      await env.DB.prepare("UPDATE royal_fortune_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?").bind(new Date().toISOString(), user.id).run();
+      latest = await getOrCreateWallet(env.DB, user.id);
+    }
+    return json({ result, balance: Number(latest?.balance ?? 1000), freeSpins: freeSpinsAfter, freeSpinBet: freeSpinBetAfter, replayed: false, cashValue: false, message: "Demo result recorded." });
   } catch (error) {
     console.error("[Royal Fortune] Action failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not complete the demo action. Refresh and check your demo balance before retrying." }, 500);
