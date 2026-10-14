@@ -1732,3 +1732,11 @@ body:has(.gv-game.mafia-vault),
     mask-image:radial-gradient(ellipse 68% 72% at 50% 48%,#000 34%,rgba(0,0,0,.94) 49%,rgba(0,0,0,.68) 63%,rgba(0,0,0,.3) 78%,transparent 100%)!important;
   }
 }
+
+
+/* Correct vault vertical alignment: move treasure artwork upward on desktop. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{
+    transform:translateY(-38px)!important;
+  }
+}
