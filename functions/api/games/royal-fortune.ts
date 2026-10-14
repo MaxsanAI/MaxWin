@@ -110,7 +110,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureSchema(env.DB);
     let wallet = await getOrCreateWallet(env.DB, user.id);
-    if (Number(wallet?.balance ?? 0) <= 0) {
+    if (Number(wallet?.balance ?? 0) < 20) {
       await env.DB.prepare("UPDATE royal_fortune_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?").bind(new Date().toISOString(), user.id).run();
       wallet = await getOrCreateWallet(env.DB, user.id);
     }
@@ -263,7 +263,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     await env.DB.prepare("INSERT INTO royal_fortune_demo_features (user_id, free_spins, free_spin_bet, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET free_spins = excluded.free_spins, free_spin_bet = excluded.free_spin_bet, updated_at = excluded.updated_at").bind(user.id, freeSpinsAfter, freeSpinBetAfter, now).run();
 
     let latest = await getOrCreateWallet(env.DB, user.id);
-    if (Number(latest?.balance ?? 0) <= 0) {
+    if (Number(latest?.balance ?? 0) < 20) {
       await env.DB.prepare("UPDATE royal_fortune_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?").bind(new Date().toISOString(), user.id).run();
       latest = await getOrCreateWallet(env.DB, user.id);
     }
