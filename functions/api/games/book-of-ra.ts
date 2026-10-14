@@ -166,7 +166,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureSchema(env.DB);
     let wallet = await getOrCreateWallet(env.DB, user.id);
-    if (Number(wallet?.balance ?? 0) <= 0) {
+    if (Number(wallet?.balance ?? 0) < 20) {
       await env.DB.prepare("UPDATE book_of_ra_demo_wallets SET balance = 1000, updated_at = ? WHERE user_id = ?").bind(new Date().toISOString(), user.id).run();
       wallet = await getOrCreateWallet(env.DB, user.id);
     }
