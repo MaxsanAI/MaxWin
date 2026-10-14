@@ -157,7 +157,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet FROM royal_fortune_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number }>();
     const freeSpinsBefore = Number(featureRow?.freeSpins ?? 0);
-    const freeSpinBetBefore = Number(featureRow?.freeSpinBet ?? 20);
+    const freeSpinBetBefore = Math.max(20, Math.min(100, Number(featureRow?.freeSpinBet ?? 20)));
 
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
     const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
