@@ -1613,3 +1613,27 @@ body:has(.gv-game.mafia-vault),
     filter:drop-shadow(0 8px 22px #000b)!important;
   }
 }
+
+
+/* Golden Vault desktop side art: enlarge and move closer to reels, always behind slot. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{
+    z-index:1!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{
+    position:relative!important;
+    z-index:2!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{
+    width:clamp(165px,18vw,300px)!important;
+    max-width:21vw!important;
+    max-height:62dvh!important;
+    left:clamp(8px,2.2vw,34px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{
+    width:clamp(145px,16vw,265px)!important;
+    max-width:19vw!important;
+    max-height:56dvh!important;
+    right:clamp(8px,2.2vw,34px)!important;
+  }
+}
