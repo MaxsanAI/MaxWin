@@ -1408,3 +1408,39 @@ body:has(.gv-game.mafia-vault),
 
 /* Keep the win button limited to WIN and its numeric amount; no credits label. */
 .mafia-vault .gv-controls .gv-spin small{white-space:nowrap!important}
+
+
+/* Golden Vault: desktop-only fixed 800x650 game window. Mobile rules remain unchanged. */
+@media (min-width:651px){
+  .modal-backdrop-golden-vault{
+    display:grid!important;
+    place-items:center!important;
+    padding:0!important;
+  }
+  .modal-slot-golden-vault{
+    position:relative!important;
+    inset:auto!important;
+    width:800px!important;
+    height:650px!important;
+    min-width:800px!important;
+    min-height:650px!important;
+    max-width:800px!important;
+    max-height:650px!important;
+    margin:0!important;
+    overflow:hidden!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault{
+    box-sizing:border-box!important;
+    width:800px!important;
+    height:650px!important;
+    min-width:800px!important;
+    min-height:650px!important;
+    max-width:800px!important;
+    max-height:650px!important;
+    padding:18px 12px 8px!important;
+    overflow:hidden!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-primary-slot .gv-reels{
+    max-height:395px!important;
+  }
+}
