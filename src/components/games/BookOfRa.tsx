@@ -166,6 +166,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     playReelStop();
     setReelStops(reel+1);
    }
+   await new Promise(resolve=>window.setTimeout(resolve,500));
    const symbolToExpand=(activeBonusSymbol||null) as SymbolName|null;
    if(isBonusSpin&&symbolToExpand){
     const reelsToExpand=[0,1,2,3,4].filter(reel=>finalSymbols.slice(reel*3,reel*3+3).includes(symbolToExpand));
