@@ -19,7 +19,7 @@ const symbolMeta:Record<SymbolName,{label:string;Icon:typeof Crown;className:str
 
 const paytable=[["CROWN","3: 6× · 4: 30× · 5: 315×"],["GEM","3: 4× · 4: 22× · 5: 240×"],["SHIELD","3: 4× · 4: 18× · 5: 190×"],["TREASURE","3: 2× · 4: 12× · 5: 140×"],["STAR","3: 2× · 4: 10× · 5: 110×"],["FLAME","3: 2× · 4: 8× · 5: 85×"],["LIGHTNING","3: 1× · 4: 5× · 5: 60×"],["GOLD","3: 1× · 4: 2× · 5: 35×"],["WILD","Substitutes for regular symbols"],["SCATTER","3: 8 free spins · 4: 12 · 5+: 15"]];
 
-const formatUSD=(value:number)=>`${(value/100).toFixed(2)}`;
+const formatUSD=(value:number)=>"$"+(value/100).toFixed(2);
 function requestId(){return typeof crypto.randomUUID==="function"?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join("");}
 function playTone(kind:"spin"|"stop"|"win"|"bonus"){try{const AudioCtx=window.AudioContext||(window as any).webkitAudioContext;const ctx=new AudioCtx();const notes=kind==="win"?[523,659,784,1047]:kind==="bonus"?[392,523,659,784,988]:kind==="stop"?[220]:[150,190,240];notes.forEach((freq,i)=>{const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type=kind==="spin"?"sawtooth":"sine";osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,ctx.currentTime+i*.07);gain.gain.exponentialRampToValueAtTime(kind==="spin"?.018:.07,ctx.currentTime+i*.07+.015);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+i*.07+.15);osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+i*.07);osc.stop(ctx.currentTime+i*.07+.17);});window.setTimeout(()=>void ctx.close(),1000);}catch{/* Audio is optional. */}}
 
