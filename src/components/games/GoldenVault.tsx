@@ -24,7 +24,7 @@ export default function GoldenVault({onBackToLobby}:{onBackToLobby:()=>void}){
  for(let col=0;col<5;col++){await new Promise(res=>setTimeout(res,base+(col===0?0:stagger)));window.clearInterval(columnIntervals[col]);setSymbols(prev=>{const next=[...prev];for(let row=0;row<3;row++)next[row*5+col]=result.symbols[row*5+col];return next});setSpinningColumns(prev=>prev.map((v,i)=>i===col?false:v));rollTick()}
  setRound(result);setBalance(Number(d.balance));setFree(Number(d.freeSpins||0));setFeatureChoice(d.featureChoice==="muscle"||d.featureChoice==="heist"?d.featureChoice:null);setKeyCount(Number(d.keyCount||0));setKeyBonusActive(Boolean(d.keyBonusActive));setHoldState(d.hold||null);if(result.keyBonusTriggered){setKeyBonusActive(true);setMessage("MAGIC KEY BONUS · CHOOSE A GOLDEN VAULT COIN");}
  if(d.hold){setHoldOpen(true);setHoldNotice("THE VAULTS ARE LOCKED · 3 RESPINS");setMessage("THE SAFE CRACKER · HOLD & WIN ACTIVE")}
- else if(result.payout>0){setWinning(result.winningPositions||[]);await new Promise(res=>setTimeout(res,speed==="fast"?450:speed==="slow"?1100:750));setWinning([]);setMessage("THE FAMILY COLLECTS · "+result.payout.toLocaleString()+" DEMO CREDITS")}
+ else if(result.payout>0){setWinning(result.winningPositions||[]);setMessage("THE FAMILY COLLECTS · "+result.payout.toLocaleString()+" DEMO CREDITS")}
  else if(result.awardedFreeSpins){setFeaturePrompt(true);setMessage("DON’S CHOICE · PICK YOUR HEIST STRATEGY")}
  else setMessage("THE VAULT HOLDS. TRY AGAIN.");
  }catch(e){failed=true;setError(e instanceof Error?e.message:"Spin failed.")}finally{columnIntervals.forEach(id=>window.clearInterval(id));setSpinningColumns([false,false,false,false,false]);setBusy(false)}
