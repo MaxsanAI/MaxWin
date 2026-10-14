@@ -213,7 +213,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
 
   if (!action) return json({ error: "Unknown action." }, 400);
-  if (!Number.isSafeInteger(bet) || bet < 20 || bet > 100 || bet % 20 !== 0) return json({ error: "Invalid bet." }, 400);
+  if (!Number.isSafeInteger(bet) || bet < 20 || bet > 100 || bet % 10 !== 0) return json({ error: "Invalid bet." }, 400);
 
   try {
     await ensureSchema(env.DB);
