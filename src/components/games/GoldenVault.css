@@ -1837,7 +1837,7 @@ body:has(.gv-game.mafia-vault),
 /* Animated gold HOLD & WIN title beneath the revolvers. */
 @media (min-width:651px){
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-hold-win-dust{
-    position:absolute!important;z-index:2!important;top:25%!important;right:clamp(8px,1.8vw,30px)!important;
+    position:absolute!important;z-index:2!important;top:29%!important;right:clamp(8px,1.8vw,30px)!important;
     width:clamp(190px,23vw,360px)!important;text-align:center!important;pointer-events:none!important;
     overflow:visible!important;isolation:isolate!important;
   }
@@ -1914,4 +1914,19 @@ body:has(.gv-game.mafia-vault),
 }
 @media(prefers-reduced-motion:reduce){
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header h2{animation:none!important}
+}
+
+
+/* Compact player toggle for the original looping noir-jazz background. */
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-mafia-music-toggle{
+  appearance:none!important;border:1px solid #cda75a70!important;border-radius:999px!important;
+  padding:5px 9px!important;background:linear-gradient(145deg,#302016,#141310)!important;
+  color:#f5d27b!important;font:800 9px/1.2 inherit!important;letter-spacing:.35px!important;
+  white-space:nowrap!important;cursor:pointer!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-mafia-music-toggle[aria-pressed="false"]{
+  color:#9e947f!important;border-color:#82745a55!important;background:#151411!important;
+}
+@media(max-width:650px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-mafia-music-toggle{padding:5px 7px!important;font-size:8px!important}
 }
