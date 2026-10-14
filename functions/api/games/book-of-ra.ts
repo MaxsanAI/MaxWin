@@ -1,3 +1,4 @@
+import { BOOK_OF_SUNRISE_MATH } from "../../../src/lib/bookOfSunriseMath";
 import { Env, getUser, json, readJson, randomToken } from "../auth/_shared";
 
 type SymbolName = "book" | "pharaoh" | "anubis" | "scarab" | "statue" | "ace" | "king" | "queen" | "jack" | "ten";
@@ -5,17 +6,8 @@ const REGULAR_SYMBOLS: SymbolName[] = ["pharaoh", "anubis", "scarab", "statue", 
 const ALL_SYMBOLS: SymbolName[] = ["book", ...REGULAR_SYMBOLS];
 
 // Tabela isplata po liniji (množi se sa betPerLine)
-const PAYOUTS: Record<Exclude<SymbolName, "book">, { 2?: number; 3: number; 4: number; 5: number }> = {
-  pharaoh: { 2: 10, 3: 100, 4: 1000, 5: 5000 },
-  anubis:  { 2: 5,  3: 40,  4: 400,  5: 2000 },
-  scarab:  { 2: 5,  3: 30,  4: 100,  5: 750 },
-  statue:  { 2: 5,  3: 30,  4: 100,  5: 750 },
-  ace:     { 3: 10, 4: 40,  5: 150 },
-  king:    { 3: 10, 4: 40,  5: 150 },
-  queen:   { 3: 5,  4: 25,  5: 100 },
-  jack:    { 3: 5,  4: 25,  5: 100 },
-  ten:     { 3: 5,  4: 25,  5: 100 },
-};
+const PAYOUTS: Record<Exclude<SymbolName, "book">, { 2?: number; 3: number; 4: number; 5: number }> =
+  BOOK_OF_SUNRISE_MATH.payouts as Record<Exclude<SymbolName, "book">, { 2?: number; 3: number; 4: number; 5: number }>;
 
 // 10 Klasičnih dobitnih linija na 5x3 mreži (3 reda, 5 kolona)
 const PAYLINES: number[][] = [
@@ -31,8 +23,8 @@ const PAYLINES: number[][] = [
   [0,1,1,1,0]
 ];
 
-const BUY_BONUS_MULTIPLIER = 75;
-const MAX_WIN_MULTIPLIER = 1000;
+const BUY_BONUS_MULTIPLIER = BOOK_OF_SUNRISE_MATH.buyBonusMultiplier;
+const MAX_WIN_MULTIPLIER = BOOK_OF_SUNRISE_MATH.maxWinMultiplier;
 
 async function ensureSchema(db: D1Database) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS book_of_ra_demo_features (
@@ -78,11 +70,22 @@ function randomIndex(max: number): number {
   return value[0] % max;
 }
 
+function randomRegularSymbol(): Exclude<SymbolName, "book"> {
+  const weights = BOOK_OF_SUNRISE_MATH.regularSymbolWeights;
+  const total = REGULAR_SYMBOLS.reduce((sum, symbol) => sum + weights[symbol], 0);
+  let roll = randomIndex(total);
+  for (const symbol of REGULAR_SYMBOLS) {
+    roll -= weights[symbol];
+    if (roll < 0) return symbol;
+  }
+  return REGULAR_SYMBOLS[REGULAR_SYMBOLS.length - 1];
+}
+
 function spinReels(): SymbolName[] {
-  // Generisanje 15 simbola (5 kolona x 3 reda)
+  // 15 independent cells. Keep the same chance rule as the tuner config.
   return Array.from({ length: 15 }, () => {
-    if (randomIndex(1000) < 35) return "book"; // Scatter/Wild Knjiga
-    return REGULAR_SYMBOLS[randomIndex(REGULAR_SYMBOLS.length)];
+    if (randomIndex(1000) < BOOK_OF_SUNRISE_MATH.bookProbabilityPer1000) return "book";
+    return randomRegularSymbol();
   });
 }
 
@@ -150,7 +153,7 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
   // 3. Scatter Isplata za Knjige
   const bookCount = symbols.filter(s => s === "book").length;
   if (bookCount >= 3) {
-    const scatterMult = bookCount === 3 ? 2 : bookCount === 4 ? 20 : 200;
+    const scatterMult = bookCount === 3 ? BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.threeBooks : bookCount === 4 ? BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.fourBooks : BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.fivePlusBooks;
     const scatterPayout = Math.floor(totalBet * scatterMult);
     payout += scatterPayout;
   }
@@ -244,7 +247,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     const bookCount = symbols.filter(s => s === "book").length;
     if (bookCount >= 3) {
-      awardedFreeSpins = bookCount >= 5 ? 20 : bookCount === 4 ? 15 : 10;
+      awardedFreeSpins = bookCount >= 5 ? BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.fivePlusBooks : bookCount === 4 ? BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.fourBooks : BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.threeBooks;
       if (!isFreeSpin) {
         // Izbor nasumičnog širećeg simbola pri aktivaciji
         activeExpanding = REGULAR_SYMBOLS[randomIndex(REGULAR_SYMBOLS.length)];
