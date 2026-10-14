@@ -1532,3 +1532,33 @@ body:has(.gv-game.mafia-vault),
     margin:2px auto 0!important;padding:0!important;font-size:7px!important;line-height:1!important;
   }
 }
+
+/* Golden Vault desktop side art: transparent characters flank the reels without touching them. Mobile layout remains unchanged. */
+@media (min-width: 651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage{
+    flex:1 1 auto!important;min-height:0!important;width:100%!important;
+    display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0, min(58vw,900px)) minmax(0,1fr)!important;
+    align-items:center!important;column-gap:clamp(8px,1.2vw,22px)!important;
+    overflow:hidden!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{
+    display:block!important;justify-self:center!important;align-self:center!important;
+    width:100%!important;max-width:clamp(150px,19vw,340px)!important;
+    height:auto!important;max-height:66dvh!important;object-fit:contain!important;
+    pointer-events:none!important;user-select:none!important;filter:drop-shadow(0 8px 20px #0009)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{grid-column:1!important;grid-row:1!important;}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{grid-column:3!important;grid-row:1!important;}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{
+    grid-column:2!important;grid-row:1!important;min-width:0!important;width:100%!important;
+    max-width:none!important;min-height:0!important;height:100%!important;margin:0!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot .gv-reels{
+    width:100%!important;height:min(100%,calc(100dvh - 205px))!important;
+    max-width:100%!important;margin:0 auto!important;
+  }
+}
+@media (max-width:650px){
+  .mafia-vault .gv-stage{display:contents!important}
+  .mafia-vault .gv-side-art{display:none!important}
+}
