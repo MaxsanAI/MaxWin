@@ -66,3 +66,116 @@
 @media(max-width:720px){.moon-temple-game{padding:4px 8px 12px}.mt-header{grid-template-columns:1fr 2fr 1fr;min-height:62px;margin-bottom:5px}.mt-lobby{display:none}.mt-title h1{font-size:clamp(22px,6vw,30px)}.mt-title-kicker{font-size:7px;letter-spacing:1.7px}.mt-subtitle{font-size:6.5px;letter-spacing:.6px;gap:3px}.mt-subtitle svg{width:10px;height:10px}.mt-scene{height:65px;margin-bottom:7px}.mt-moon{width:100px;height:100px;top:-20px}.mt-moon svg{width:43px;height:43px}.mt-scene-text strong{font-size:10px;letter-spacing:2px}.mt-scene-text span{font-size:7px;letter-spacing:1.2px}.mt-column-heads{gap:3px;margin-bottom:3px;font-size:8px}.mt-board{grid-template-rows:repeat(4,clamp(62px,19vw,102px));gap:3px}.mt-symbol{border-width:1px}.mt-symbol-art{padding:5px}.mt-symbol-art svg{width:clamp(28px,8vw,48px);height:clamp(28px,8vw,48px)}.mt-symbol-mark{bottom:3px;font-size:7px;letter-spacing:1px}.mt-controls{grid-template-columns:1fr 1fr;gap:6px;margin:8px 0 7px}.mt-stat,.mt-bet-control{min-height:52px;padding:6px}.mt-stat span,.mt-bet-control>span{font-size:8px}.mt-stat strong{font-size:16px}.mt-bet-row{gap:7px}.mt-bet-row strong{font-size:14px}.mt-spin{grid-column:1/-1;grid-row:2;min-height:53px;order:3;font-size:17px}.mt-balance{grid-column:1;grid-row:1}.mt-bet-control{grid-column:2;grid-row:1}.mt-win{grid-column:1/-1;grid-row:3;min-height:43px;flex-direction:row;justify-content:space-between;padding:7px 12px}.mt-win strong{font-size:17px}.mt-footer{align-items:flex-start;flex-direction:column;gap:5px}.mt-footer-actions{width:100%;justify-content:space-between;gap:4px}.mt-message{font-size:9px}.mt-free-spins,.mt-sound,.mt-reset{font-size:8px}.mt-disclaimer{font-size:7px;letter-spacing:.5px}}
 @media(max-width:370px){.mt-board{grid-template-rows:repeat(4,61px);gap:2px}.mt-column-heads{gap:2px}.mt-symbol-art{padding:3px}.mt-symbol-art svg{width:26px;height:26px}.mt-symbol-mark{font-size:6px}.mt-title h1{font-size:21px}.mt-footer-actions{flex-wrap:wrap;justify-content:flex-start}}
 @media(prefers-reduced-motion:reduce){.moon-temple-game *{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+
+/* Desktop viewport fit: keep the complete game visible without vertical scrolling. */
+@media (min-width: 900px) {
+  .moon-temple-game {
+    padding: 0 14px 8px;
+    max-width: 1120px;
+  }
+  .mt-header {
+    min-height: 58px;
+    margin-bottom: 5px;
+  }
+  .mt-title h1 {
+    font-size: clamp(24px, 2.5vw, 32px);
+  }
+  .mt-scene {
+    height: 56px;
+    margin-bottom: 7px;
+  }
+  .mt-moon {
+    width: 90px;
+    height: 90px;
+    top: -17px;
+  }
+  .mt-moon svg {
+    width: 44px;
+    height: 44px;
+  }
+  .mt-column-heads {
+    margin-bottom: 4px;
+  }
+  .mt-board {
+    grid-template-rows: repeat(4, clamp(54px, calc((100dvh - 390px) / 4), 112px));
+    gap: 4px;
+  }
+  .mt-symbol-art {
+    padding: 5px;
+  }
+  .mt-symbol-art svg {
+    width: clamp(30px, 3.8vw, 48px);
+    height: clamp(30px, 3.8vw, 48px);
+  }
+  .mt-controls {
+    gap: 8px;
+    margin: 8px 0 5px;
+  }
+  .mt-stat,
+  .mt-bet-control,
+  .mt-spin {
+    min-height: 51px;
+  }
+  .mt-stat,
+  .mt-bet-control {
+    padding: 5px 8px;
+  }
+  .mt-footer {
+    min-height: 24px;
+  }
+  .mt-disclaimer {
+    margin-top: 4px;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 760px) {
+  .mt-header {
+    min-height: 48px;
+    margin-bottom: 3px;
+  }
+  .mt-title h1 {
+    font-size: 24px;
+  }
+  .mt-title-kicker,
+  .mt-subtitle {
+    font-size: 7px;
+  }
+  .mt-scene {
+    height: 42px;
+    margin-bottom: 5px;
+  }
+  .mt-moon {
+    width: 72px;
+    height: 72px;
+    top: -15px;
+  }
+  .mt-moon svg {
+    width: 36px;
+    height: 36px;
+  }
+  .mt-board {
+    grid-template-rows: repeat(4, clamp(48px, calc((100dvh - 310px) / 4), 82px));
+    gap: 3px;
+  }
+  .mt-column-heads {
+    margin-bottom: 3px;
+    font-size: 8px;
+  }
+  .mt-controls {
+    margin-top: 6px;
+    margin-bottom: 3px;
+  }
+  .mt-stat,
+  .mt-bet-control,
+  .mt-spin {
+    min-height: 44px;
+  }
+  .mt-footer-actions,
+  .mt-message {
+    font-size: 8px;
+  }
+  .mt-disclaimer {
+    margin-top: 2px;
+  }
+}
+
