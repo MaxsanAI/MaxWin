@@ -123,6 +123,24 @@ function runSimulation(config: MathConfig, sampleSpins: number, bet: number, mod
   return { spins: sampleSpins, stake: totalStake, payout: totalPayout, rtp, edge: 100 - rtp, winRounds, freeSpins: totalFreeSpins, bonusRounds, cappedSessions };
 }
 
+function runMultiSeedSimulation(config: MathConfig, sampleSpins: number, bet: number, mode: "regular" | "buyBonus", seeds: number[]): Simulation {
+  const reports = seeds.map(seed => runSimulation(config, sampleSpins, bet, mode, seed));
+  const spins = reports.reduce((sum, item) => sum + item.spins, 0);
+  const stake = reports.reduce((sum, item) => sum + item.stake, 0);
+  const payout = reports.reduce((sum, item) => sum + item.payout, 0);
+  return {
+    spins,
+    stake,
+    payout,
+    rtp: stake > 0 ? payout / stake * 100 : 0,
+    edge: stake > 0 ? 100 - payout / stake * 100 : 0,
+    winRounds: reports.reduce((sum, item) => sum + item.winRounds, 0),
+    freeSpins: reports.reduce((sum, item) => sum + item.freeSpins, 0),
+    bonusRounds: reports.reduce((sum, item) => sum + item.bonusRounds, 0),
+    cappedSessions: reports.reduce((sum, item) => sum + item.cappedSessions, 0)
+  };
+}
+
 export default function MathTuner() {
   const [model, setModel] = useState<MathConfig>(cloneDefaults);
   const [sample, setSample] = useState(10000);
@@ -177,10 +195,11 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
     window.setTimeout(() => {
       try {
         // Reuse identical random outcomes while searching so payout-scale comparisons are fair.
-        const tuneSample = Math.min(8000, Math.max(3000, sample));
-        const tuningSeed = 0x1234abcd;
-        const baseline = runSimulation(model, tuneSample, bet, mode, tuningSeed);
-        if (!Number.isFinite(baseline.rtp) || baseline.rtp <= 0 || baseline.cappedSessions > tuneSample * 0.2) {
+        const tuneSample = Math.min(6000, Math.max(3000, sample));
+        const tuningSeeds = [0x1234abcd, 0x02468ace, 0x9e3779b9];
+        const verificationSeeds = [0x7f4a7c15, 0x31415926, 0x27182818, 0xabcdef01];
+        const baseline = runMultiSeedSimulation(model, tuneSample, bet, mode, tuningSeeds);
+        if (!Number.isFinite(baseline.rtp) || baseline.rtp <= 0 || baseline.cappedSessions > baseline.spins * 0.2) {
           setAutoTuneNotice("Automatsko podešavanje je zaustavljeno: simulacija početnih vrednosti je nestabilna ili je previše bonus-lanaca doseglo sigurnosnu granicu. Probaj manju verovatnoću knjige ili proveri bonus pravila.");
           setSimulation(baseline);
           return;
@@ -204,7 +223,7 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
             low = high;
             high = Math.min(64, high * 2);
             highModel = buildScaledModel(model, high);
-            highResult = runSimulation(highModel, tuneSample, bet, mode, tuningSeed);
+            highResult = runMultiSeedSimulation(highModel, tuneSample, bet, mode, tuningSeeds);
             const distance = Math.abs(highResult.rtp - targetRtp);
             if (distance < bestDistance) { bestModel = highModel; bestResult = highResult; bestDistance = distance; }
             if (high >= 64) break;
@@ -212,7 +231,7 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
           for (let iteration = 0; iteration < 9; iteration++) {
             const scale = (low + high) / 2;
             const candidate = buildScaledModel(model, scale);
-            const result = runSimulation(candidate, tuneSample, bet, mode, tuningSeed);
+            const result = runMultiSeedSimulation(candidate, tuneSample, bet, mode, tuningSeeds);
             const distance = Math.abs(result.rtp - targetRtp);
             if (distance < bestDistance) { bestModel = candidate; bestResult = result; bestDistance = distance; }
             if (result.rtp < targetRtp) low = scale;
@@ -223,7 +242,7 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
         }
         setModel(nextModel);
         // Verify on a different deterministic sample so we don't only report the tuning sample.
-        const verified = runSimulation(nextModel, tuneSample, bet, mode, 0x7f4a7c15);
+        const verified = runMultiSeedSimulation(nextModel, tuneSample, bet, mode, verificationSeeds);
         setSimulation(verified);
         if (mode === "regular") {
           const gap = Math.abs(verified.rtp - targetRtp);
