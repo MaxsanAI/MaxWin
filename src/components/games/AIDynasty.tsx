@@ -398,9 +398,9 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
         <div className="aid-bet-control">
           <label>BET / SPIN</label>
           <div>
-            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.max(20, value - 20))}>−</button>
+            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.max(20, value - 10))}>−</button>
             <strong>{formatUSD(bet)}</strong>
-            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.min(100, value + 20))}>+</button>
+            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.min(100, value + 10))}>+</button>
           </div>
           <small>Demo credits</small>
         </div>
