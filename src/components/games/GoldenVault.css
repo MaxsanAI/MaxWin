@@ -1740,3 +1740,53 @@ body:has(.gv-game.mafia-vault),
     transform:translateY(-38px)!important;
   }
 }
+
+
+/* Golden Vault: floating golden-dust FREE SPINS title above the treasure art. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust{
+    position:absolute!important;z-index:1!important;top:5%!important;right:clamp(18px,3.2vw,50px)!important;
+    width:clamp(190px,23vw,360px)!important;text-align:center!important;pointer-events:none!important;
+    overflow:visible!important;isolation:isolate!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust span{
+    display:block!important;font-family:Georgia,'Times New Roman',serif!important;
+    font-size:clamp(18px,2.25vw,34px)!important;font-weight:900!important;letter-spacing:.16em!important;
+    line-height:1.2!important;color:#ffe7a0!important;
+    background:linear-gradient(180deg,#fff8ce 0%,#ffdf73 32%,#d99a27 60%,#fff0ac 78%,#a96512 100%)!important;
+    -webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;
+    filter:drop-shadow(0 0 5px #ffcb4c99) drop-shadow(0 4px 8px #000)!important;
+    animation:gvFreeSpinsGlow 3.2s ease-in-out infinite!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust:before,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust:after{
+    content:"✦  ·  ✧  ·  ✦"!important;display:block!important;color:#ffd96a!important;
+    font-size:11px!important;letter-spacing:.55em!important;text-shadow:0 0 8px #ffc84a!important;
+    opacity:.75!important;animation:gvGoldDust 4s ease-in-out infinite!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust i{
+    position:absolute!important;display:block!important;width:3px!important;height:3px!important;border-radius:50%!important;
+    background:#fff0a1!important;box-shadow:0 0 7px 2px #ffc84a99!important;opacity:0!important;
+    animation:gvGoldDust 2.8s ease-in-out infinite!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust i:nth-of-type(1){left:12%;top:70%;animation-delay:-.4s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust i:nth-of-type(2){left:30%;top:82%;animation-delay:-1.6s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust i:nth-of-type(3){left:65%;top:72%;animation-delay:-.9s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust i:nth-of-type(4){left:82%;top:88%;animation-delay:-2.1s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust i:nth-of-type(5){left:50%;top:92%;animation-delay:-1.2s!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{transform:translateY(-48px)!important}
+}
+@keyframes gvFreeSpinsGlow{
+  0%,100%{opacity:.84;filter:drop-shadow(0 0 4px #ffcb4c88) drop-shadow(0 4px 8px #000)}
+  50%{opacity:1;filter:drop-shadow(0 0 12px #ffdc72) drop-shadow(0 4px 9px #000)}
+}
+@keyframes gvGoldDust{
+  0%,100%{opacity:0;transform:translateY(4px) scale(.7)}
+  35%,65%{opacity:.95;transform:translateY(-5px) scale(1.2)}
+}
+@media (prefers-reduced-motion:reduce){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust span,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust:before,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust:after,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-free-spins-dust i{animation:none!important}
+}
