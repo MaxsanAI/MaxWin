@@ -189,6 +189,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       setStoppedReels((current) => current.map((stopped, index) => index === reel ? true : stopped));
       playTone("stop");
     }
+    await new Promise((resolve) => window.setTimeout(resolve, 500));
 
     const winning = new Set<string>();
     let payout = 0;
