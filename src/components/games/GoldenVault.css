@@ -1592,3 +1592,24 @@ body:has(.gv-game.mafia-vault),
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{left:clamp(3px,1.5vw,24px)!important;right:auto!important;}
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{right:clamp(3px,1.5vw,24px)!important;left:auto!important;}
 }
+
+
+/* Golden Vault desktop art polish: slightly larger Don Giovanni, softer treasure-art edges. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{
+    width:clamp(135px,15vw,250px)!important;
+    max-width:18vw!important;
+    max-height:54dvh!important;
+    filter:drop-shadow(0 8px 22px #000b)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{
+    width:clamp(115px,13vw,220px)!important;
+    max-width:16vw!important;
+    max-height:48dvh!important;
+    -webkit-mask-image:linear-gradient(to right,transparent 0%,#000 12%,#000 88%,transparent 100%),linear-gradient(to bottom,transparent 0%,#000 10%,#000 88%,transparent 100%)!important;
+    mask-image:linear-gradient(to right,transparent 0%,#000 12%,#000 88%,transparent 100%),linear-gradient(to bottom,transparent 0%,#000 10%,#000 88%,transparent 100%)!important;
+    -webkit-mask-composite:source-in!important;
+    mask-composite:intersect!important;
+    filter:drop-shadow(0 8px 22px #000b)!important;
+  }
+}
