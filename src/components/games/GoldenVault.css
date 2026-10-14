@@ -1114,3 +1114,20 @@
  .mafia-vault .gv-key-meter{margin-top:7px!important;padding:6px 8px!important}
  .mafia-vault .gv-key-meter-copy{gap:2px 5px!important}
 }
+
+/* HARD OVERRIDE: no outer cabinet/frame/border around Golden Vault reels or slot. */
+.mafia-vault .gv-primary-slot,
+.mafia-vault .gv-reel-panel,
+.mafia-vault .gv-reels{
+  border:0!important;outline:0!important;border-radius:0!important;
+  box-shadow:none!important;
+}
+.mafia-vault .gv-primary-slot{
+  background:transparent!important;padding:0!important;margin:0!important;
+}
+.mafia-vault .gv-reels{
+  background:transparent!important;overflow:visible!important;
+}
+.mafia-vault .gv-symbol{
+  border:0!important;outline:0!important;box-shadow:none!important;
+}
