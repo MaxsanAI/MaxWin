@@ -148,7 +148,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const requestId = typeof body.requestId === "string" ? body.requestId : "";
 
   if (!action) return json({ error: "Unknown game action." }, 400);
-  if (!Number.isSafeInteger(bet) || bet < 20 || bet > 100 || bet % 20 !== 0) return json({ error: "Bet must be $0.20 to $1.00 in $0.20 steps." }, 400);
+  if (!Number.isSafeInteger(bet) || bet < 20 || bet > 100 || bet % 10 !== 0) return json({ error: "Bet must be $0.20 to $1.00 in $0.10 steps." }, 400);
   if (!/^[a-f0-9-]{16,64}$/i.test(requestId)) return json({ error: "Refresh the game and try again." }, 400);
 
   try {
