@@ -15,7 +15,7 @@ const symbolMeta:Record<SymbolName,{label:string;Icon:typeof BookOpen;color:stri
  jack:{label:"JACK",Icon:Shield,color:"#c7a4ff",className:"bra-symbol-jack"},
  ten:{label:"TEN",Icon:Gem,color:"#cfc3dd",className:"bra-symbol-ten"}
 };
-const formatUSD=(value:number)=>`${(value/100).toFixed(2)}`;
+const formatUSD=(value:number)=>"$"+(value/100).toFixed(2);
 function requestId(){return typeof crypto.randomUUID==="function"?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join("");}
 
 export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => void }){
