@@ -160,7 +160,8 @@ export const onRequestPost = async ({ request, env }: EnvContext) => {
 
   const freeSpinsBefore = Number(currentFeature?.free_spins ?? 0);
   const isFreeSpin = freeSpinsBefore > 0;
-  const requestedBet = isFreeSpin ? Number(currentFeature?.free_spin_bet ?? 20) : Number(body.bet ?? 20);\n  const bet = Math.max(20, Math.min(100, Math.round(requestedBet / 10) * 10));
+  const requestedBet = isFreeSpin ? Number(currentFeature?.free_spin_bet ?? 20) : Number(body.bet ?? 20);
+  const bet = Math.max(20, Math.min(100, Math.round(requestedBet / 10) * 10));
   const stake = isFreeSpin ? 0 : bet;
   const balanceBefore = Number(current.balance);
   if (balanceBefore < stake) return json({ error: "Not enough demo credits. Reset your demo balance to $10.00." }, 400);
