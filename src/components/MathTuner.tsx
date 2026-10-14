@@ -50,7 +50,7 @@ function evaluateGrid(symbols: BookOfSunriseSymbol[], totalBet: number, config: 
   for (const line of paylines) {
     const lineSymbols = line.map((row, reel) => symbols[reel * 3 + row]);
     const target = lineSymbols.find(symbol => symbol !== "book");
-    if (!target || target === "book") continue;
+    if (!target) continue;
     const regularTarget = target as BookOfSunriseRegularSymbol;
     let count = 0;
     for (const symbol of lineSymbols) {
