@@ -1696,3 +1696,25 @@ body:has(.gv-game.mafia-vault),
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{z-index:1!important}
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{position:relative!important;z-index:2!important}
 }
+
+
+/* Golden Vault desktop art refinement: larger, closer, softer treasure edges. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{
+    width:clamp(210px,22vw,365px)!important;
+    max-width:25vw!important;
+    max-height:70dvh!important;
+    left:clamp(28px,4vw,60px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{
+    width:clamp(210px,22vw,365px)!important;
+    max-width:25vw!important;
+    max-height:68dvh!important;
+    right:clamp(28px,4vw,60px)!important;
+    -webkit-mask-image:radial-gradient(ellipse 72% 76% at 50% 50%,#000 48%,rgba(0,0,0,.94) 61%,rgba(0,0,0,.58) 76%,transparent 100%)!important;
+    mask-image:radial-gradient(ellipse 72% 76% at 50% 50%,#000 48%,rgba(0,0,0,.94) 61%,rgba(0,0,0,.58) 76%,transparent 100%)!important;
+    filter:drop-shadow(0 0 14px rgba(242,177,67,.22))!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{z-index:1!important}
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{position:relative!important;z-index:2!important}
+}
