@@ -1656,3 +1656,24 @@ body:has(.gv-game.mafia-vault),
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{z-index:1!important}
   .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{position:relative!important;z-index:2!important}
 }
+
+
+/* Golden Vault desktop: final small enlargement and tighter spacing toward the slot. */
+@media (min-width:651px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-don-side-art{
+    width:clamp(185px,20vw,330px)!important;
+    max-width:23vw!important;
+    max-height:66dvh!important;
+    left:clamp(5px,1.4vw,22px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-treasure-side-art{
+    width:clamp(160px,18vw,295px)!important;
+    max-width:21vw!important;
+    max-height:60dvh!important;
+    right:clamp(5px,1.4vw,22px)!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-stage>.gv-primary-slot{
+    position:relative!important;z-index:2!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-side-art{z-index:1!important}
+}
