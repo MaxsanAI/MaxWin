@@ -1369,3 +1369,12 @@ body:has(.gv-game.mafia-vault),
 .modal-slot-golden-vault>.modal-mark,
 .modal-slot-golden-vault>.eyebrow,
 .modal-slot-golden-vault>#modal-title{display:none!important}
+
+
+/* Golden Vault: keep the title safely below the Android browser chrome. */
+.modal-slot-golden-vault>.gv-game.mafia-vault{
+  padding-top:max(18px, calc(env(safe-area-inset-top) + 14px))!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header{
+  margin-top:4px!important;
+}
