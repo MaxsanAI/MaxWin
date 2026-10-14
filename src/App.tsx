@@ -262,7 +262,7 @@ function App() {
       body: JSON.stringify({ action: "resetDemo" })
     }).finally(() => setModal(null));
   };
-  if (window.location.pathname.replace(/\\/+$/, "") === "/admin/math-tuner") return <MathTuner />;
+  if (window.location.pathname.replace(/\/+$/, "") === "/admin/math-tuner") return <MathTuner />;
   return <div className={theme === "light" ? "app-shell theme-light" : "app-shell"}>
     <div className="topline"><span><Sparkles size={13}/> MAXWIN ORIGINALS · A NEW ERA OF PLAY</span><span className="topline-right"><ShieldCheck size={13}/> Security-first platform <i /> 18+ only</span></div>
     <header className="header">
