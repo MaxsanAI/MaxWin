@@ -13,7 +13,7 @@ async function schema(db:D1Database){
 }
 function ri(max:number){const limit=Math.floor(0x100000000/max)*max,v=new Uint32Array(1);do{crypto.getRandomValues(v)}while(v[0]>=limit);return v[0]%max}
 function shuffle(){const p=Array.from({length:15},(_,i)=>i);for(let i=p.length-1;i>0;i--){const j=ri(i+1);[p[i],p[j]]=[p[j],p[i]]}return p}
-function reels(choice:string|null):S[]{const pool=choice==="heist"?REGULAR.filter(s=>!["spade","diamond","heart","club"].includes(s)):REGULAR;const s:S[]=Array.from({length:15},()=>pool[ri(pool.length)]);return s}
+function reels(choice:string|null):S[]{const pool=choice==="heist"?REGULAR.filter(s=>!["spade","diamond","heart","club"].includes(s)):REGULAR;const symbols:S[]=Array(15).fill(pool[0]);for(let row=0;row<3;row++){const first=pool[ri(pool.length)];symbols[row*5]=first;for(let col=1;col<5;col++){const repeat=ri(100)<30;const alternatives=pool.filter(s=>s!==first);symbols[row*5+col]=repeat?first:alternatives[ri(alternatives.length)]}}return symbols}
 function valueFor(bet:number){const r=ri(10000);return bet*(r<5000?1:r<7500?2:r<9000?3:r<9800?5:10)}
 function evaluateLines(symbols:S[],bet:number){
  const winningPositions:number[]=[];
@@ -31,7 +31,7 @@ function evaluateLines(symbols:S[],bet:number){
   }
   if(count<3)continue;
   winningPositions.push(...Array.from({length:count},(_,col)=>row*5+col));
-  const multiplier=count===3?1:count===4?3:(premium.has(target)?10:5);
+  const multiplier=count===3?2:count===4?5:10;
   payout+=bet*multiplier;
  }
  return{payout:Math.min(bet*10,payout),winningPositions};
