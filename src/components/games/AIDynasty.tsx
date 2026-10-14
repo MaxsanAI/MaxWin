@@ -42,7 +42,7 @@ const randomSymbol = (): SymbolId => {
   return "boxing";                     // 2%   (SAMO 2% ŠANSE ZA BOXING SCATTER!)
 };
 
-const formatUSD=(value:number)=>`${(value/100).toFixed(2)}`;
+const formatUSD=(value:number)=>"$"+(value/100).toFixed(2);
 const makeBoard = (): SymbolId[][] => Array.from({ length: 5 }, () => Array.from({ length: 4 }, randomSymbol));
 
 const initialBoard: SymbolId[][] = [
