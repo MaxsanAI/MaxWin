@@ -1947,3 +1947,89 @@ body:has(.gv-game.mafia-vault),
     background-image:none!important;
   }
 }
+
+
+/* Golden Vault bonus celebrations: compact gold-star win screen and +3 free-spin toast. */
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header{position:relative!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header .gv-mafia-music-toggle{
+  position:absolute!important;right:2px!important;top:50%!important;transform:translateY(-50%)!important;
+  z-index:12!important;padding:5px 8px!important;font-size:8px!important;
+  box-shadow:0 2px 12px #0008!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-award-toast{
+  position:fixed!important;z-index:2147483005!important;left:50%!important;top:43%!important;
+  transform:translate(-50%,-50%) scale(.7)!important;display:flex!important;align-items:center!important;
+  justify-content:center!important;gap:12px!important;min-width:190px!important;padding:13px 20px!important;
+  border:1px solid #ffe7a0!important;border-radius:14px!important;
+  background:linear-gradient(145deg,#4d3014f5,#18130ff5)!important;color:#fff0a5!important;
+  box-shadow:0 0 18px #ffcc4c77,0 12px 35px #000b,inset 0 0 16px #ffd66a22!important;
+  animation:gvBonusToast .28s cubic-bezier(.18,.85,.3,1.25) forwards!important;
+  pointer-events:none!important;white-space:nowrap!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-award-toast strong{
+  font-size:clamp(17px,3vw,24px)!important;font-weight:1000!important;letter-spacing:1px!important;
+  text-shadow:0 0 12px #ffcb43a8!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-award-toast span{
+  color:#fff5b4!important;font-size:20px!important;text-shadow:0 0 12px #ffc83d!important;
+  animation:gvBonusStar .7s ease-in-out infinite alternate!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-overlay{z-index:2147483006!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-modal{
+  position:relative!important;overflow:hidden!important;width:min(100%,410px)!important;
+  padding:clamp(22px,5vw,32px)!important;border:1px solid #ffe39a!important;border-radius:18px!important;
+  background:radial-gradient(ellipse at 50% 10%,#99702c88,transparent 53%),linear-gradient(150deg,#251b16,#11130f 70%)!important;
+  box-shadow:0 0 0 1px #b9852940,0 0 35px #ffc94a3d,0 25px 90px #000d!important;
+  animation:gvWinModalIn .45s cubic-bezier(.2,.85,.25,1.15) both!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-modal h3{
+  margin:9px 0 2px!important;font-size:clamp(32px,7vw,46px)!important;font-weight:1000!important;
+  letter-spacing:2px!important;color:#ffeaa0!important;
+  text-shadow:0 0 9px #ffcf4b,0 0 24px #ffae26a8,0 3px 0 #70451a!important;
+  animation:gvWinTitle 1s ease-in-out infinite alternate!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-amount{
+  display:block!important;margin:9px 0 4px!important;font-size:clamp(28px,7vw,42px)!important;
+  font-weight:1000!important;line-height:1.1!important;color:#fff4bd!important;
+  text-shadow:0 0 12px #ffc64caa,0 2px 0 #73471a!important;
+  overflow-wrap:anywhere!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-amount small{
+  display:block!important;margin-top:5px!important;font-size:10px!important;letter-spacing:2px!important;
+  color:#e4c782!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-modal p{color:#d1c2a4!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars{position:absolute!important;inset:0!important;pointer-events:none!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars i{
+  position:absolute!important;font-style:normal!important;color:#fff0a0!important;
+  text-shadow:0 0 7px #ffc83d,0 0 17px #ffba28!important;
+  animation:gvWinStar 1.8s ease-in-out infinite!important;
+}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars i:nth-child(1){left:10%;top:15%;font-size:20px!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars i:nth-child(2){left:23%;top:35%;font-size:13px!important;animation-delay:-.6s!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars i:nth-child(3){right:10%;top:18%;font-size:22px!important;animation-delay:-1s!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars i:nth-child(4){right:23%;top:40%;font-size:14px!important;animation-delay:-.3s!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars i:nth-child(5){left:15%;bottom:20%;font-size:14px!important;animation-delay:-1.2s!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars i:nth-child(6){right:14%;bottom:17%;font-size:17px!important;animation-delay:-.8s!important}
+.modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-continue{
+  width:100%!important;min-height:46px!important;margin-top:12px!important;
+  flex-direction:row!important;gap:8px!important;border-radius:10px!important;
+}
+@keyframes gvBonusToast{0%{opacity:0;transform:translate(-50%,-50%) scale(.65)}75%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes gvBonusStar{from{transform:rotate(-12deg) scale(.85)}to{transform:rotate(12deg) scale(1.18)}}
+@keyframes gvWinModalIn{0%{opacity:0;transform:translateY(18px) scale(.88)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes gvWinTitle{from{filter:brightness(1)}to{filter:brightness(1.35)}}
+@keyframes gvWinStar{0%,100%{opacity:.35;transform:translateY(3px) scale(.75) rotate(-12deg)}50%{opacity:1;transform:translateY(-5px) scale(1.15) rotate(12deg)}}
+@media(max-width:650px){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-game-header .gv-mafia-music-toggle{
+    right:0!important;padding:4px 6px!important;font-size:7px!important;letter-spacing:0!important;
+  }
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-modal{padding:22px 17px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-award-toast,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-award-toast span,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-modal,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-modal h3,
+  .modal-slot-golden-vault>.gv-game.mafia-vault .gv-win-stars i{animation:none!important}
+}
