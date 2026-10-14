@@ -3,7 +3,8 @@ import { Bell, CircleHelp, Crown, Gamepad2, Gem, Menu, Moon, Search, ShieldCheck
 import RoyalFortune from "./components/RoyalFortune";
 import BookOfRaSlot from "./components/games/BookOfRa";
 import AIDynasty from "./components/games/AIDynasty";
-import GoldenVault from "./components/games/GoldenVault";\nimport MoonTemple from "./components/games/MoonTemple";
+import GoldenVault from "./components/games/GoldenVault";
+import MoonTemple from "./components/games/MoonTemple";
 
 type Game = { title: string; category: string; art: string; tag?: string; provider: string; };
 type AuthUser = { id: string; username: string; email: string; createdAt: string };
