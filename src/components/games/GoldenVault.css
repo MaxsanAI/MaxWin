@@ -884,3 +884,16 @@
 @media(prefers-reduced-motion:reduce){
   .mafia-vault .gv-primary-slot .gv-symbol.winning{animation:none!important;filter:brightness(1.8)!important}
 }
+
+
+/* Golden Vault free-spin trigger: illuminate all four revolvers before opening the choice modal. */
+.mafia-vault .gv-primary-slot .gv-symbol.gv-free-trigger{
+ z-index:6!important;border:2px solid #fff2a3!important;
+ box-shadow:0 0 7px 3px #fff3a0,0 0 20px 8px #ffc83d,0 0 34px 12px #ff941b,inset 0 0 22px #fff7bf!important;
+ animation:gv-free-trigger-glow .24s ease-in-out infinite alternate!important;
+}
+.mafia-vault .gv-primary-slot .gv-symbol.gv-free-trigger .gv-symbol-art img{
+ filter:brightness(1.9) saturate(1.4) contrast(1.1)!important;
+}
+@keyframes gv-free-trigger-glow{from{filter:brightness(1.15);transform:scale(1)}to{filter:brightness(2);transform:scale(1.045)}}
+@media(prefers-reduced-motion:reduce){.mafia-vault .gv-primary-slot .gv-symbol.gv-free-trigger{animation:none!important;filter:brightness(1.8)!important}}
