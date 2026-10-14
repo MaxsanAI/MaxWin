@@ -42,6 +42,7 @@ const randomSymbol = (): SymbolId => {
   return "boxing";                     // 2%   (SAMO 2% ŠANSE ZA BOXING SCATTER!)
 };
 
+const formatUSD=(value:number)=>`${(value/100).toFixed(2)}`;
 const makeBoard = (): SymbolId[][] => Array.from({ length: 5 }, () => Array.from({ length: 4 }, randomSymbol));
 
 const initialBoard: SymbolId[][] = [
@@ -59,7 +60,7 @@ function countSymbols(board: SymbolId[], id: SymbolId) {
 export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void }) {
   const [board, setBoard] = useState<SymbolId[][]>(initialBoard);
   const [balance, setBalance] = useState(1000);
-  const [bet, setBet] = useState(10);
+  const [bet, setBet] = useState(20);
   const [busy, setBusy] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const [speed, setSpeed] = useState<"normal" | "turbo">("normal");
@@ -163,6 +164,8 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
       window.setTimeout(() => void context.close(), 900);
     } catch { /* optional audio */ }
   };
+
+  useEffect(() => { if (!busy && balance <= 0) { setBalance(1000); setMessage("DEMO BALANCE RESET · $10.00 READY 🔄"); } }, [balance, busy]);
 
   const spin = async () => {
     if (busy || (freeSpins <= 0 && balance < bet)) return;
@@ -315,7 +318,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
         setHoldSpins(0);
         setBalance((value) => value + total);
         setLastWin(total);
-        setMessage("MOON WIN · " + total.toLocaleString() + " CREDITS! 🌕");
+        setMessage("MOON WIN · " + formatUSD(total) + " 🌕");
         playTone("bonus");
         setBonusStep("result");
       } else if (locked > 0) {
@@ -327,7 +330,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
         if (remaining === 0) {
           setBalance((value) => value + total);
           setLastWin(total);
-          setMessage("HOLD & WIN COMPLETE · " + total.toLocaleString() + " CREDITS 🏆");
+          setMessage("HOLD & WIN COMPLETE · " + formatUSD(total) + " 🏆");
           setBonusStep("result");
         } else {
           setMessage("NO NEW CARDS · " + remaining + " RESPIN" + (remaining === 1 ? "" : "S") + " LEFT ⏳");
@@ -341,7 +344,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
   };
 
   const closeBonus = () => { setBonus(null); setBonusStep("intro"); setBoxingWinner(null); setHoldCards(Array(20).fill(null)); setHoldFallingCards([]); setHoldSpins(3); setHoldBusy(false); };
-  const resetDemo = () => { if (busy) return; setBalance(1000); setBet(10); setFreeSpins(0); setFreeSpinBet(10); setLastWin(0); setWinningCells([]); setMessage("DEMO RESET · 1,000 CREDITS READY 🔄"); setBonus(null); setBoxingWinner(null); };
+  const resetDemo = () => { if (busy) return; setBalance(1000); setBet(20); setFreeSpins(0); setFreeSpinBet(20); setLastWin(0); setWinningCells([]); setMessage("DEMO RESET · 1,000 CREDITS READY 🔄"); setBonus(null); setBoxingWinner(null); };
 
   return (
     <div className="aid-game">
@@ -395,9 +398,9 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
         <div className="aid-bet-control">
           <label>BET / SPIN</label>
           <div>
-            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.max(5, value - 5))}>−</button>
-            <strong>{bet}</strong>
-            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.min(100, value + 5))}>+</button>
+            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.max(20, value - 20))}>−</button>
+            <strong>{formatUSD(bet)}</strong>
+            <button disabled={busy || freeSpins > 0} onClick={() => setBet((value) => Math.min(100, value + 20))}>+</button>
           </div>
           <small>Demo credits</small>
         </div>
@@ -411,12 +414,12 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
         </div>
 
         <button className="aid-spin" type="button" disabled={busy || (freeSpins <= 0 && balance < bet)} onClick={() => void spin()}>
-          {busy ? <><span className="aid-spinner"/> SPINNING</> : <><span>✦</span> {freeSpins > 0 ? "FREE SPIN" : "SPIN"}<small>{freeSpins > 0 ? freeSpins+" LEFT" : bet+" CREDITS"}</small></>}
+          {busy ? <><span className="aid-spinner"/> SPINNING</> : <><span>✦</span> {freeSpins > 0 ? "FREE SPIN" : "SPIN"}<small>{freeSpins > 0 ? freeSpins+" LEFT" : formatUSD(bet)}</small></>}
         </button>
 
         <div className="aid-balance">
           <span>BALANCE</span>
-          <strong>{balance.toLocaleString()}</strong>
+          <strong>{formatUSD(balance)}</strong>
           <small>Demo credits</small>
         </div>
 
@@ -514,13 +517,13 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
                 <div className="aid-holdwin-grid" aria-label="Hold and Win credit card frame">
                   {holdCards.map((value, index) => (
                     <div key={index} className={"aid-holdwin-cell" + (value !== null ? " is-locked" : "") + (holdFallingCards.includes(index) ? " is-falling" : "")} style={{ animationDelay: holdFallingCards.includes(index) ? `${holdFallingCards.indexOf(index) * 70}ms` : "0ms" }}>
-                      {value !== null ? <><img className="aid-holdwin-trump-symbol" src="/images/slots/ai-neon-dynasty/trump.jpg" alt="Trump credit symbol" draggable={false} style={{ animationDelay: holdFallingCards.includes(index) ? `${holdFallingCards.indexOf(index) * 70}ms` : "0ms" }} /><strong>{value.toLocaleString()}</strong><small>CREDITS</small></> : <span className="aid-holdwin-empty">+</span>}
+                      {value !== null ? <><img className="aid-holdwin-trump-symbol" src="/images/slots/ai-neon-dynasty/trump.jpg" alt="Trump credit symbol" draggable={false} style={{ animationDelay: holdFallingCards.includes(index) ? `${holdFallingCards.indexOf(index) * 70}ms` : "0ms" }} /><strong>{formatUSD(value)}</strong><small>DEMO</small></> : <span className="aid-holdwin-empty">+</span>}
                     </div>
                   ))}
                 </div>
                 <div className="aid-holdwin-total">
                   <span>LOCKED CREDIT TOTAL</span>
-                  <strong>{holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0).toLocaleString()}</strong>
+                  <strong>{formatUSD(holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0))}</strong>
                 </div>
                 {holdSpins > 0 && (
                   <button className="aid-bonus-action" type="button" disabled={holdBusy} onClick={() => void spinHoldWin()}>
@@ -554,7 +557,7 @@ export default function AIDynasty({ onBackToLobby }: { onBackToLobby: () => void
                     <>
                       <div className="aid-rocket-emoji">🚀</div>
                       <p>{holdCards.every((value) => value !== null) ? "MOON WIN · FRAME COMPLETE!" : "TRUMP HOLD & WIN COMPLETE!"}</p>
-                      <strong>{holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0).toLocaleString()} DEMO CREDITS</strong>
+                      <strong>{formatUSD(holdCards.reduce<number>((sum, value) => sum + (value ?? 0), 0))} DEMO</strong>
                     </>
                   )}
                 </div>
