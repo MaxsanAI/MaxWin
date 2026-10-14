@@ -79,7 +79,7 @@ function evaluateGrid(symbols: BookOfSunriseSymbol[], totalBet: number, config: 
 function runSimulation(config: MathConfig, sampleSpins: number, bet: number, mode: "regular" | "buyBonus"): Simulation {
   let totalStake = 0, totalPayout = 0, winRounds = 0, totalFreeSpins = 0, bonusRounds = 0, cappedSessions = 0;
   // Safety ceiling prevents extreme user-entered retrigger chances from locking the browser.
-  const freeSpinBudget = Math.min(200000, Math.max(1000, sampleSpins * 10));
+  const freeSpinBudget = Math.min(1500000, Math.max(1000, sampleSpins * (mode === "buyBonus" ? 18 : 10)));
   let processedFreeSpins = 0;
   for (let index = 0; index < sampleSpins; index++) {
     const stake = mode === "buyBonus" ? bet * config.buyBonusMultiplier : bet;
@@ -125,6 +125,9 @@ export default function MathTuner() {
   const validBet = Number.isInteger(bet) && bet >= 20 && bet <= 100 && bet % 10 === 0;
   const probabilityPercent = model.bookProbabilityPer1000 / 10;
   const generated = useMemo(() => `// Replace the complete file src/lib/bookOfSunriseMath.ts with this proposal.
+export type BookOfSunriseSymbol = "book" | "pharaoh" | "anubis" | "scarab" | "statue" | "ace" | "king" | "queen" | "jack" | "ten";
+export type BookOfSunriseRegularSymbol = Exclude<BookOfSunriseSymbol, "book">;
+
 export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
 
 // Tuner notes: ${notes.trim() ? notes.trim().replace(/\n/g, " ") : "none"}
