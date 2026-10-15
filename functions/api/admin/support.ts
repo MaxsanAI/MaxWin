@@ -10,6 +10,7 @@ async function ensureSupportSchema(db:D1Database):Promise<void>{
  await db.prepare("CREATE TABLE IF NOT EXISTS support_messages (id TEXT PRIMARY KEY,ticket_id TEXT NOT NULL,sender_type TEXT NOT NULL CHECK(sender_type IN ('user','admin')),sender_user_id TEXT,message TEXT NOT NULL,created_at TEXT NOT NULL,FOREIGN KEY(ticket_id) REFERENCES support_tickets(id) ON DELETE CASCADE,FOREIGN KEY(sender_user_id) REFERENCES users(id) ON DELETE SET NULL)").run();
  await db.prepare("CREATE INDEX IF NOT EXISTS idx_support_tickets_user_updated ON support_tickets(user_id,updated_at DESC)").run();
  await db.prepare("CREATE INDEX IF NOT EXISTS idx_support_messages_ticket_created ON support_messages(ticket_id,created_at)").run();
+ await db.prepare("CREATE TABLE IF NOT EXISTS admin_support_reads (ticket_id TEXT PRIMARY KEY,read_at TEXT NOT NULL,FOREIGN KEY(ticket_id) REFERENCES support_tickets(id) ON DELETE CASCADE)").run();
  await db.prepare("CREATE TABLE IF NOT EXISTS support_manual_credits (idempotency_key TEXT PRIMARY KEY,ticket_id TEXT NOT NULL,user_id TEXT NOT NULL,asset TEXT NOT NULL CHECK(asset='SOL'),amount_units TEXT NOT NULL,usd_amount INTEGER NOT NULL,sol_usd REAL NOT NULL,reason TEXT NOT NULL,status TEXT NOT NULL CHECK(status IN ('pending','applied')),created_at TEXT NOT NULL,applied_at TEXT,FOREIGN KEY(ticket_id) REFERENCES support_tickets(id),FOREIGN KEY(user_id) REFERENCES users(id))").run();
  await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_support_manual_credit_ticket ON support_manual_credits(ticket_id)").run();
 }
@@ -27,7 +28,7 @@ export const onRequestGet:PagesFunction<Env>=async({request,env})=>{
  if(!await authorize(request,env))return json({error:env.MAXWIN_ADMIN_KEY?"Unauthorized admin access.":"Set MAXWIN_ADMIN_KEY in Cloudflare before using Support administration."},401);
  try{await ensureWalletSchema(env.DB);await ensureSupportSchema(env.DB);
  const [tickets,messages,credits]=await Promise.all([
- env.DB.prepare("SELECT t.id,t.user_id AS userId,u.username,u.email,t.subject,t.status,t.created_at AS createdAt,t.updated_at AS updatedAt FROM support_tickets t JOIN users u ON u.id=t.user_id ORDER BY CASE t.status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END,t.updated_at DESC LIMIT 200").all(),
+ env.DB.prepare("SELECT t.id,t.user_id AS userId,u.username,u.email,t.subject,t.status,t.created_at AS createdAt,t.updated_at AS updatedAt,CASE WHEN (SELECT sender_type FROM support_messages WHERE ticket_id=t.id ORDER BY created_at DESC LIMIT 1)='user' AND COALESCE((SELECT created_at FROM support_messages WHERE ticket_id=t.id ORDER BY created_at DESC LIMIT 1),'')>COALESCE((SELECT read_at FROM admin_support_reads WHERE ticket_id=t.id),'') THEN 1 ELSE 0 END AS unread FROM support_tickets t JOIN users u ON u.id=t.user_id ORDER BY CASE t.status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END,t.updated_at DESC LIMIT 200").all(),
  env.DB.prepare("SELECT id,ticket_id AS ticketId,sender_type AS senderType,message,created_at AS createdAt FROM support_messages ORDER BY created_at ASC LIMIT 3000").all(),
  env.DB.prepare("SELECT idempotency_key AS idempotencyKey,ticket_id AS ticketId,usd_amount AS usdAmount,sol_usd AS solUsd,amount_units AS amountUnits,status,created_at AS createdAt,applied_at AS appliedAt FROM support_manual_credits ORDER BY created_at DESC LIMIT 200").all()
  ]);
@@ -45,6 +46,10 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
  const t=await env.DB.prepare("SELECT t.id,t.user_id AS userId,t.subject,t.status,u.username FROM support_tickets t JOIN users u ON u.id=t.user_id WHERE t.id=? LIMIT 1").bind(ticketId).first<{id:string;userId:string;subject:string;status:string;username:string}>();
  if(!t)return json({error:"Support ticket not found."},404);
  const now=new Date().toISOString();
+ if(action==="mark_read"){
+ await env.DB.prepare("INSERT INTO admin_support_reads(ticket_id,read_at) SELECT ?,COALESCE(MAX(created_at),'') FROM support_messages WHERE ticket_id=? ON CONFLICT(ticket_id) DO UPDATE SET read_at=excluded.read_at").bind(ticketId,ticketId).run();
+ return json({ok:true,message:"Ticket marked as read."});
+ }
  if(action==="reply"){
  const message=typeof body.message==="string"?body.message.trim():"";
  if(message.length<2||message.length>4000)return json({error:"Reply must be between 2 and 4,000 characters."},400);
