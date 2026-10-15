@@ -23,29 +23,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   try {
     await ensureWalletSchema(env.DB);
-    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS admin_hidden_wallet_transactions (
-      transaction_id TEXT PRIMARY KEY,
-      hidden_at TEXT NOT NULL,
-      reason TEXT NOT NULL DEFAULT 'hidden_from_admin_recent_list'
-    )`).run();
-
-    const now = new Date().toISOString();
-    const statements = [];
-    for (const id of ids) {
-      const exists = await env.DB.prepare("SELECT id FROM wallet_transactions WHERE id = ? LIMIT 1").bind(id).first<{ id: string }>();
-      if (!exists) continue;
-      statements.push(
-        env.DB.prepare("INSERT INTO admin_hidden_wallet_transactions (transaction_id, hidden_at, reason) VALUES (?, ?, 'hidden_from_admin_recent_list') ON CONFLICT(transaction_id) DO UPDATE SET hidden_at = excluded.hidden_at, reason = excluded.reason").bind(id, now)
-      );
-    }
-    if (statements.length) await env.DB.batch(statements);
+    const statements = ids.map(id =>
+      env.DB.prepare("DELETE FROM wallet_transactions WHERE id = ?").bind(id)
+    );
+    const results = await env.DB.batch(statements);
+    const deletedCount = results.reduce((total, result) => total + Number(result.meta?.changes || 0), 0);
     return json({
       ok: true,
-      hiddenCount: statements.length,
-      message: `${statements.length} transaction(s) removed from the Recent wallet transactions view. Financial ledger records were preserved.`
+      deletedCount,
+      message: `${deletedCount} transaction(s) permanently deleted from the wallet transaction records.`
     });
   } catch (error) {
-    console.error("[MAXWIN admin transaction visibility] Update failed:", error instanceof Error ? error.message : String(error));
-    return json({ error: "Could not update recent transaction visibility." }, 500);
+    console.error("[MAXWIN admin transaction deletion] Failed:", error instanceof Error ? error.message : String(error));
+    return json({ error: "Could not permanently delete selected wallet transactions." }, 500);
   }
 };
