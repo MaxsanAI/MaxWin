@@ -92,6 +92,48 @@ function spinReels(): SymbolName[] {
   });
 }
 
+type PaylineWin = { line: number; symbol: Exclude<SymbolName, "book">; count: number; payout: number; positions: number[] };
+type Paytable = Record<Exclude<SymbolName, "book">, { 3: number; 4: number; 5: number }>;
+const MIN_PAYLINE_MATCHES = 3;
+
+/**
+ * Evaluate one fixed payline only. A symbol elsewhere on the grid cannot add a win;
+ * it must occupy this exact line and match left-to-right on consecutive reels.
+ * Shared by regular spins and Free Spins so the minimum never differs by mode.
+ */
+function evaluatePayline(
+  symbols: SymbolName[],
+  totalBet: number,
+  line: number[],
+  lineIndex: number,
+  payoutTable: Paytable
+): PaylineWin | null {
+  if (line.length !== 5) return null;
+  const lineSymbols = line.map((row, reel) => symbols[reel * 3 + row]);
+  const firstRegular = lineSymbols.find(symbol => symbol !== "book");
+  if (!firstRegular) return null;
+
+  let count = 0;
+  for (const symbol of lineSymbols) {
+    if (symbol !== firstRegular && symbol !== "book") break;
+    count++;
+  }
+  if (count < MIN_PAYLINE_MATCHES) return null;
+
+  const regKey = firstRegular as Exclude<SymbolName, "book">;
+  const hasBookInRun = lineSymbols.slice(0, count).includes("book");
+  const regularMatches = lineSymbols.slice(0, count).filter(symbol => symbol === regKey).length;
+  // Preserve the existing Book-wild payout rule and all paytable multipliers.
+  const mult = count === 3 && hasBookInRun && regularMatches === 2
+    ? 2
+    : payoutTable[regKey][count as 3 | 4 | 5] || 0;
+  const linePayout = Math.floor(totalBet * mult);
+  if (linePayout <= 0) return null;
+
+  const positions = Array.from({ length: count }, (_, reel) => reel * 3 + line[reel]);
+  return { line: lineIndex + 1, symbol: regKey, count, payout: linePayout, positions };
+}
+
 function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: SymbolName | null, isFreeSpin = false) {
   const lineBet = totalBet / PAYLINES.length;
   const payoutTable = (isFreeSpin ? BOOK_OF_SUNRISE_MATH.freeSpinPayouts : BOOK_OF_SUNRISE_MATH.payouts) as Record<Exclude<SymbolName, "book">, { 3: number; 4: number; 5: number }>;
@@ -99,35 +141,14 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
   const wins: { line: number; symbol: SymbolName; count: number; payout: number; positions: number[] }[] = [];
   const winningPositions = new Set<number>();
 
-  // 1. Regularno ocenjivanje linija s leve na desno (Knjiga deluje kao WILD za obične simbole)
+  // 1. Every listed payline is evaluated independently, left to right.
+  // The shared helper enforces 3+ consecutive matches for both base game and Free Spins.
   PAYLINES.forEach((line, lineIndex) => {
-    const lineSymbols = line.map((row, reel) => symbols[reel * 3 + row]);
-    const firstRegular = lineSymbols.find(s => s !== "book");
-    if (!firstRegular) return;
-
-    let count = 0;
-    for (const symbol of lineSymbols) {
-      if (symbol !== firstRegular && symbol !== "book") break;
-      count++;
-    }
-
-    const regKey = firstRegular as Exclude<SymbolName, "book">;
-    const minCount = 3;
-    if (count < minCount) return;
-
-    const hasBookInRun = lineSymbols.slice(0, count).includes("book");
-    const regularMatches = lineSymbols.slice(0, count).filter(symbol => symbol === regKey).length;
-    // A Book wild plus two matching regular symbols pays 2x total bet.
-    const mult = count === 3 && hasBookInRun && regularMatches === 2
-      ? 2
-      : payoutTable[regKey][count as 3 | 4 | 5] || 0;
-    const linePayout = Math.floor(totalBet * mult);
-    if (linePayout <= 0) return;
-
-    const positions = Array.from({ length: count }, (_, reel) => reel * 3 + line[reel]);
-    positions.forEach(p => winningPositions.add(p));
-    wins.push({ line: lineIndex + 1, symbol: regKey, count, payout: linePayout, positions });
-    payout += linePayout;
+    const lineWin = evaluatePayline(symbols, totalBet, line, lineIndex, payoutTable);
+    if (!lineWin) return;
+    lineWin.positions.forEach(position => winningPositions.add(position));
+    wins.push(lineWin);
+    payout += lineWin.payout;
   });
 
   // 2. Širenje simbola u Free Spins (Expanding Symbol)
