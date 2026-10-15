@@ -179,9 +179,10 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
  },[mode]);
 
  const play=async(action:"spin"|"buyBonus")=>{
-  if(busy||balance===null||bonusFinish!==null)return;
-  if(action==="buyBonus"&&balance<bet*50){setError(mode==="real"?"Insufficient available SOL wallet balance for Buy Bonus.":"Not enough demo credits for Buy Bonus.");return;}
-  if(action==="spin"&&freeSpins<=0&&balance<bet){setError(mode==="real"?"Insufficient available SOL wallet balance.":"Not enough demo credits.");return;}
+  if(busy||bonusFinish!==null)return;
+  if(balance===null){setError(mode==="real"?"Real SOL wallet is still loading. Please wait and retry.":"Demo balance is still loading. Please wait and retry.");return;}
+  if(action==="buyBonus"&&balance<bet*50){if(mode==="real"){setBuyConfirm(false);onRequestDeposit?.();}else setError("Not enough demo credits for Buy Bonus.");return;}
+  if(action==="spin"&&freeSpins<=0&&balance<bet){if(mode==="real"){onRequestDeposit?.();}else setError("Not enough demo credits.");return;}
   if(mode==="real"&&pendingRealRound.current&&(pendingRealRound.current.action!==action||pendingRealRound.current.bet!==bet)){
    setError("A previous real-money round may still be processing. Retry that same action before starting another round.");
    return;
@@ -338,7 +339,7 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
   <div className="rf-main-controls bra-main-controls">
    <div className="rf-bet-control rf-bet-side"><label htmlFor="bra-bet">TOTAL BET</label><div><button type="button" aria-label="Decrease bet" disabled={busy||freeSpins>0||bet<=20} onClick={()=>setBet(v=>Math.max(20,v-10))}>−</button><strong id="bra-bet">{formatUSD(bet)}</strong><button type="button" aria-label="Increase bet" disabled={busy||freeSpins>0||bet>=100} onClick={()=>setBet(v=>Math.min(100,v+10))}>+</button></div><small>Per spin</small></div>
    <div className="rf-speed-panel bra-inline-speed"><span><Gauge size={14}/> SPEED</span><div>{(["slow","normal","turbo"] as const).map(s=><button type="button" key={s} className={speed===s?"active":""} onClick={()=>setSpeed(s)} disabled={busy}>{s.toUpperCase()}</button>)}</div></div>
-   <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null||(balance<bet&&freeSpins===0)} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {freeSpins>0?"FREE SPIN":"SPIN"}<small>{freeSpins>0?"BONUS ROUND":formatUSD(bet)}</small></>}</button>
+   <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {mode==="real"&&freeSpins===0&&balance!==null&&balance<bet?"DEPOSIT TO SPIN":freeSpins>0?"FREE SPIN":"SPIN"}<small>{freeSpins>0?"BONUS ROUND":formatUSD(bet)}</small></>}</button>
    <div className="rf-credit-panel rf-balance-side"><span>{mode==="real"?"WALLET BALANCE":"DEMO BALANCE"}</span><strong>{balance===null?"—":formatUSD(balance)}</strong><small>{mode==="real"?(walletSol===null?"USD equivalent":walletSol.toFixed(6)+" SOL available"):"Demo credits"}</small></div>
    <button className="rf-buy-button bra-buy-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null||balance<bet*50||freeSpins>0} onClick={()=>setBuyConfirm(true)}><Sparkles size={16}/><span>BUY BONUS<small>{"50× BET · "+formatUSD(bet*50)+(mode==="real"?" WALLET COST":" DEMO")}</small></span></button>
   </div>
