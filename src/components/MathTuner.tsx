@@ -196,9 +196,11 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
     window.setTimeout(() => {
       try {
         // Reuse identical random outcomes while searching so payout-scale comparisons are fair.
-        const tuneSample = Math.min(6000, Math.max(3000, sample));
-        const tuningSeeds = [0x1234abcd, 0x02468ace, 0x9e3779b9];
-        const verificationSeeds = [0x7f4a7c15, 0x31415926, 0x27182818, 0xabcdef01];
+        const tuneSample = Math.min(10000, Math.max(8000, sample));
+        // Pool the earlier training and validation samples that exposed the 100.03% result.
+        // More fixed seeds reduce the chance that a rare premium-symbol hit dominates calibration.
+        const tuningSeeds = [0x1234abcd, 0x02468ace, 0x9e3779b9, 0x7f4a7c15, 0x31415926, 0x27182818, 0xabcdef01, 0xdeadbeef];
+        const verificationSeeds = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a];
         const baseline = runMultiSeedSimulation(model, tuneSample, bet, mode, tuningSeeds);
         if (!Number.isFinite(baseline.rtp) || baseline.rtp <= 0 || baseline.cappedSessions > baseline.spins * 0.2) {
           setAutoTuneNotice("Automatsko podešavanje je zaustavljeno: simulacija početnih vrednosti je nestabilna ili je previše bonus-lanaca doseglo sigurnosnu granicu. Probaj manju verovatnoću knjige ili proveri bonus pravila.");
@@ -248,9 +250,9 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
         if (mode === "regular") {
           const gap = Math.abs(verified.rtp - targetRtp);
           setAutoTuneNotice(
-            gap <= 3
+            gap <= 2.5
               ? `Automatski sam podesio isplate. Provera: ${verified.rtp.toFixed(2)}% RTP; cilj ${targetRtp.toFixed(1)}%. Rezultat varira između simulacija, pa ovo nije sertifikovana vrednost.`
-              : `Vrednosti su automatski podešene, ali nezavisna provera je pokazala ${verified.rtp.toFixed(2)}% RTP umesto ciljanih ${targetRtp.toFixed(1)}%. Pokušaj još jednom sa većim brojem spinova. Podešavajući uzorak je dao ${searchEstimate.rtp.toFixed(2)}%.`
+              : `Vrednosti su automatski podešene, ali provera na drugom uzorku je pokazala ${verified.rtp.toFixed(2)}% RTP umesto ciljanih ${targetRtp.toFixed(1)}%. Pokušaj još jednom sa većim brojem spinova. Podešavajući uzorak je dao ${searchEstimate.rtp.toFixed(2)}%.`
           );
         } else {
           setAutoTuneNotice(
@@ -258,7 +260,7 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
           );
         }
       } catch {
-        setAutoTuneNotice("Automatsko podešavanje nije završeno. Pokušaj ponovo sa manjim brojem simuliranih spinova.");
+        setAutoTuneNotice("Automatsko podešavanje nije završeno. Pokušaj ponovo; veći uzorak može zahtevati nekoliko sekundi za izračunavanje.");
       } finally {
         setRunning(false);
       }
