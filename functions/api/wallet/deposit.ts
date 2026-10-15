@@ -13,6 +13,8 @@ async function ensureDepositSchema(db: D1Database): Promise<void> {
     user_id TEXT NOT NULL,
     asset TEXT NOT NULL DEFAULT 'SOL' CHECK (asset = 'SOL'),
     amount_units TEXT NOT NULL,
+    usd_target INTEGER,
+    sol_usd_at_request REAL,
     status TEXT NOT NULL CHECK (status IN ('pending','confirmed','expired')),
     tx_hash TEXT,
     expires_at TEXT NOT NULL,
@@ -20,6 +22,10 @@ async function ensureDepositSchema(db: D1Database): Promise<void> {
     updated_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   )`).run();
+  const columns = await db.prepare("PRAGMA table_info(wallet_deposit_requests)").all<{ name: string }>();
+  const columnNames = new Set((columns.results || []).map(column => column.name));
+  if (!columnNames.has("usd_target")) await db.prepare("ALTER TABLE wallet_deposit_requests ADD COLUMN usd_target INTEGER").run();
+  if (!columnNames.has("sol_usd_at_request")) await db.prepare("ALTER TABLE wallet_deposit_requests ADD COLUMN sol_usd_at_request REAL").run();
   await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_wallet_deposit_request_tx_hash ON wallet_deposit_requests(tx_hash) WHERE tx_hash IS NOT NULL").run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_wallet_deposit_request_user_status ON wallet_deposit_requests(user_id, status, created_at DESC)").run();
 }
@@ -96,8 +102,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       const expires = new Date(now.getTime() + 3 * 60 * 1000);
       const id = randomToken(16);
       await env.DB.prepare("UPDATE wallet_deposit_requests SET status='expired', updated_at=? WHERE user_id=? AND status='pending'").bind(now.toISOString(), user.id).run();
-      await env.DB.prepare("INSERT INTO wallet_deposit_requests (id,user_id,asset,amount_units,status,tx_hash,expires_at,created_at,updated_at) VALUES (?,?,'SOL',?,'pending',NULL,?,?,?)")
-        .bind(id, user.id, amountUnits, expires.toISOString(), now.toISOString(), now.toISOString()).run();
+      await env.DB.prepare("INSERT INTO wallet_deposit_requests (id,user_id,asset,amount_units,usd_target,sol_usd_at_request,status,tx_hash,expires_at,created_at,updated_at) VALUES (?,?,'SOL',?,?,?,'pending',NULL,?,?,?)")
+        .bind(id, user.id, amountUnits, usd, solUsd, expires.toISOString(), now.toISOString(), now.toISOString()).run();
       return json({
         ok: true,
         request: { id, asset: "SOL", amountUnits, amountSol: (Number(amountUnits) / 1e9).toFixed(9), usdTarget: usd, solUsd, expiresAt: expires.toISOString() },
@@ -108,16 +114,14 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const requestId = typeof body.requestId === "string" ? body.requestId.trim() : "";
     const signature = typeof body.signature === "string" ? body.signature.trim() : "";
     if (!requestId || !/^[a-f0-9]{32}$/.test(requestId)) return json({ error: "Create a deposit request first." }, 400);
-    if (!/^[1-9A-HJ-NP-Za-km-z]{80,100}$/.test(signature)) return json({ error: "Paste the transaction signature from Solflare." }, 400);
+    if (!/^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(signature)) return json({ error: "Paste the transaction signature from Solflare." }, 400);
 
     const now = new Date();
-    const depositRequest = await env.DB.prepare("SELECT id, amount_units, status, expires_at, created_at FROM wallet_deposit_requests WHERE id=? AND user_id=? LIMIT 1")
-      .bind(requestId, user.id).first<{ id: string; amount_units: string; status: string; expires_at: string; created_at: string }>();
+    const depositRequest = await env.DB.prepare("SELECT id, amount_units, usd_target, sol_usd_at_request, status, tx_hash, expires_at, created_at FROM wallet_deposit_requests WHERE id=? AND user_id=? LIMIT 1")
+      .bind(requestId, user.id).first<{ id: string; amount_units: string; usd_target: number | null; sol_usd_at_request: number | null; status: string; tx_hash: string | null; expires_at: string; created_at: string }>();
     if (!depositRequest) return json({ error: "Deposit request not found for this account. Create a new request." }, 404);
-    if (depositRequest.status !== "pending") return json({ error: "This deposit request is no longer pending. Create a new request if needed." }, 409);
-    if (Date.parse(depositRequest.expires_at) <= now.getTime()) {
-      await env.DB.prepare("UPDATE wallet_deposit_requests SET status='expired', updated_at=? WHERE id=? AND status='pending'").bind(now.toISOString(), requestId).run();
-      return json({ error: "This deposit request expired. Create a new one before sending SOL." }, 410);
+    if ((depositRequest.status !== "pending" && depositRequest.status !== "expired") || depositRequest.tx_hash) {
+      return json({ error: "This deposit request has already been used. Create a new request if needed." }, 409);
     }
 
     const rpcUrl = env.SOLANA_RPC_URL?.trim() || "https://solana-rpc.publicnode.com";
@@ -135,8 +139,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const tx = rpc.result;
     if (!tx) return json({ error: "Transaction not found yet. Wait for Solana final confirmation and try again." }, 404);
     if (!tx.meta || tx.meta.err !== null && tx.meta.err !== undefined) return json({ error: "This Solana transaction failed or has no execution metadata." }, 400);
-    if (typeof tx.blockTime !== "number" || tx.blockTime * 1000 < Date.parse(depositRequest.created_at) - 120000) {
-      return json({ error: "This transaction predates the deposit request. Create a new request and send the exact amount shown." }, 400);
+    if (typeof tx.blockTime !== "number" || !Number.isFinite(tx.blockTime)) {
+      return json({ error: "Solana did not provide a reliable transaction timestamp. No balance was changed." }, 400);
+    }
+    const transactionTime = tx.blockTime * 1000;
+    const requestCreatedAt = Date.parse(depositRequest.created_at);
+    const requestExpiresAt = Date.parse(depositRequest.expires_at);
+    if (transactionTime < requestCreatedAt - 15000) {
+      return json({ error: "This transaction predates the deposit request. No balance was changed." }, 400);
+    }
+    if (transactionTime > requestExpiresAt + 60000) {
+      return json({ error: "The transaction was sent after the deposit quote expired. No balance was changed." }, 400);
     }
 
     const keys = tx.transaction?.message?.accountKeys || [];
@@ -153,8 +166,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return json({ error: "The received SOL amount does not exactly match this deposit request. No balance was changed." }, 400);
     }
 
-    const solUsd = await getSolUsd();
-    if (!solUsd || (receivedLamports / 1e9) * solUsd < 5) return json({ error: "Could not validate the current $5 minimum deposit. No balance was changed." }, 503);
+    const quoteAtRequest = depositRequest.sol_usd_at_request;
+    const solUsd = quoteAtRequest && Number.isFinite(quoteAtRequest) && quoteAtRequest > 0 ? quoteAtRequest : await getSolUsd();
+    const minimumUsd = Number(depositRequest.usd_target || 5);
+    if (!solUsd || (receivedLamports / 1e9) * solUsd + 1e-9 < minimumUsd) {
+      return json({ error: "The received amount does not meet the USD value of this deposit request. No balance was changed." }, 400);
+    }
 
     const timestamp = now.toISOString();
     const txId = randomToken(16);
@@ -162,8 +179,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     try {
       await env.DB.batch([
         env.DB.prepare("INSERT OR IGNORE INTO wallet_balances (user_id, asset, available_units, reserved_units, updated_at) VALUES (?, 'SOL', '0', '0', ?)").bind(user.id, timestamp),
-        env.DB.prepare("UPDATE wallet_deposit_requests SET status='confirmed', tx_hash=?, updated_at=? WHERE id=? AND user_id=? AND status='pending' AND expires_at>?")
-          .bind(signature, timestamp, requestId, user.id, timestamp),
+        env.DB.prepare("UPDATE wallet_deposit_requests SET status='confirmed', tx_hash=?, updated_at=? WHERE id=? AND user_id=? AND status IN ('pending','expired') AND tx_hash IS NULL")
+          .bind(signature, timestamp, requestId, user.id),
         env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) SELECT ?,?,'SOL','deposit','confirmed',?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM wallet_deposit_requests WHERE id=? AND user_id=? AND status='confirmed' AND tx_hash=?)")
           .bind(txId, user.id, amountUnits, signature, destination, signature, timestamp, timestamp, JSON.stringify({ slot: tx.slot ?? null, blockTime: tx.blockTime, solUsdAtCredit: solUsd, verification: "finalized-solana-rpc", depositRequestId: requestId }), requestId, user.id, signature),
         env.DB.prepare("UPDATE wallet_balances SET available_units=CAST(available_units AS INTEGER)+?, updated_at=? WHERE user_id=? AND asset='SOL' AND EXISTS (SELECT 1 FROM wallet_transactions WHERE id=? AND tx_hash=?)")
