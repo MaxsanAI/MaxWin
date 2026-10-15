@@ -11,6 +11,7 @@ async function ensureSupportSchema(db:D1Database):Promise<void>{
  await db.prepare("CREATE INDEX IF NOT EXISTS idx_support_tickets_user_updated ON support_tickets(user_id,updated_at DESC)").run();
  await db.prepare("CREATE INDEX IF NOT EXISTS idx_support_messages_ticket_created ON support_messages(ticket_id,created_at)").run();
  await db.prepare("CREATE TABLE IF NOT EXISTS support_manual_credits (idempotency_key TEXT PRIMARY KEY,ticket_id TEXT NOT NULL,user_id TEXT NOT NULL,asset TEXT NOT NULL CHECK(asset='SOL'),amount_units TEXT NOT NULL,usd_amount INTEGER NOT NULL,sol_usd REAL NOT NULL,reason TEXT NOT NULL,status TEXT NOT NULL CHECK(status IN ('pending','applied')),created_at TEXT NOT NULL,applied_at TEXT,FOREIGN KEY(ticket_id) REFERENCES support_tickets(id),FOREIGN KEY(user_id) REFERENCES users(id))").run();
+ await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_support_manual_credit_ticket ON support_manual_credits(ticket_id)").run();
 }
 async function getSolUsd():Promise<number|null>{
  const ps:Array<{url:string;extract:(d:any)=>unknown}>=[
@@ -63,6 +64,8 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
  if(!Number.isInteger(usd)||usd<5||usd>500||usd%5!==0)return json({error:"Manual credits must be $5–$500 in $5 increments."},400);
  if(reason.length<5||reason.length>300)return json({error:"Add a clear verification note (5–300 characters)."},400);
  if(!/^[a-f0-9]{32}$/.test(key))return json({error:"Refresh the credit form and try again."},400);
+ const ticketCredit=await env.DB.prepare("SELECT status,usd_amount AS usdAmount FROM support_manual_credits WHERE ticket_id=? LIMIT 1").bind(ticketId).first<{status:string;usdAmount:number}>();
+ if(ticketCredit)return json({error:"This support ticket already has a recorded manual credit. Review the wallet ledger before making any further adjustment."},409);
  const existing=await env.DB.prepare("SELECT status,usd_amount AS usdAmount FROM support_manual_credits WHERE idempotency_key=? LIMIT 1").bind(key).first<{status:string;usdAmount:number}>();
  if(existing)return json({ok:true,replayed:true,status:existing.status,usdAmount:existing.usdAmount,message:"This credit request was already recorded; no second credit was applied."});
  const solUsd=await getSolUsd();if(!solUsd)return json({error:"Live SOL/USD quote is unavailable. No balance was changed."},503);
