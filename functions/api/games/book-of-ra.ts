@@ -202,17 +202,24 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const body = await readJson(request);
   if (!body) return json({ error: "Invalid payload." }, 400);
 
-  // Exiting the demo starts the next visit with a fresh demo wallet and no leftover bonus.
+  // Legacy clients may still call resetDemo when leaving the slot.
+  // Never reset persistent credits or bonus progress when a player leaves.
   if (body.action === "resetDemo") {
     try {
       await ensureSchema(env.DB);
       const wallet = await getOrCreateWallet(env.DB, user.id);
-      const resetAt = new Date().toISOString();
-      await env.DB.prepare("UPDATE book_of_ra_demo_features SET free_spins = 0, free_spin_bet = 20, expanding_symbol = NULL, updated_at = ? WHERE user_id = ?")
-        .bind(resetAt, user.id).run();
-      return json({ ok: true, balance: Number(wallet?.balance ?? 0), freeSpins: 0, freeSpinBet: 20, expandingSymbol: null, mode: "demo" });
+      const features = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol FROM book_of_ra_demo_features WHERE user_id = ? LIMIT 1")
+        .bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName | null }>();
+      return json({
+        ok: true,
+        balance: Number(wallet?.balance ?? 0),
+        freeSpins: Number(features?.freeSpins ?? 0),
+        freeSpinBet: Number(features?.freeSpinBet ?? 20),
+        expandingSymbol: features?.expandingSymbol || null,
+        mode: "demo"
+      });
     } catch {
-      return json({ error: "Could not reset demo balance." }, 500);
+      return json({ error: "Could not reload demo wallet." }, 500);
     }
   }
 
