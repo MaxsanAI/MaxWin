@@ -68,14 +68,40 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  };
  const playReelStop=()=>{tone(150,0.12,"triangle",0.13,82);tone(620,0.07,"sine",0.055,460,0.025);};
  const playBookSuspense=()=>{
-  // Rising mechanical whir and bright pulses while the final reels search for a Book.
-  tone(88,1.15,"sawtooth",0.09,176);
-  tone(145,0.95,"triangle",0.09,520,0.03);
-  tone(260,0.85,"sawtooth",0.07,760,0.08);
-  tone(420,0.7,"triangle",0.065,980,0.14);
-  for(let i=0;i<7;i++){
-   tone(185+i*34,0.075,"square",0.035,125+i*22,0.12+i*0.15);
-  }
+  // A sustained cinematic air-rush, rising in pitch and intensity for the whole Book hunt.
+  if(!soundOn||typeof window.AudioContext==="undefined")return;
+  try{
+   const ctx=audioContext.current||(audioContext.current=new window.AudioContext());
+   if(ctx.state==="suspended")void ctx.resume();
+   const start=ctx.currentTime+0.025;
+   const duration=3.15;
+   const length=Math.floor(ctx.sampleRate*duration);
+   const buffer=ctx.createBuffer(1,length,ctx.sampleRate);
+   const channel=buffer.getChannelData(0);
+   for(let i=0;i<length;i++){
+    const fadeIn=Math.min(1,i/(ctx.sampleRate*0.32));
+    const fadeOut=Math.min(1,(length-i)/(ctx.sampleRate*0.42));
+    channel[i]=(Math.random()*2-1)*fadeIn*fadeOut;
+   }
+   const source=ctx.createBufferSource();
+   source.buffer=buffer;
+   const filter=ctx.createBiquadFilter();
+   filter.type="bandpass";
+   filter.frequency.setValueAtTime(320,start);
+   filter.frequency.exponentialRampToValueAtTime(1850,start+2.55);
+   filter.Q.setValueAtTime(0.65,start);
+   const gain=ctx.createGain();
+   gain.gain.setValueAtTime(0.0001,start);
+   gain.gain.linearRampToValueAtTime(0.095,start+0.55);
+   gain.gain.linearRampToValueAtTime(0.15,start+2.45);
+   gain.gain.exponentialRampToValueAtTime(0.0001,start+duration);
+   source.connect(filter);filter.connect(gain);gain.connect(ctx.destination);
+   source.start(start);source.stop(start+duration+0.03);
+   // Layer a rising engine tone under the air-rush, then let it fade with the reels.
+   tone(92,2.9,"sawtooth",0.065,330,0.02);
+   tone(150,2.65,"triangle",0.055,720,0.12);
+   tone(245,2.35,"sawtooth",0.04,980,0.32);
+  }catch{}
  };
  const playWin=()=>{
   if(!soundOn)return;
@@ -177,9 +203,9 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     if(reel===4&&bookHunt){tone(330,0.9,"sawtooth",0.085,690);tone(620,0.65,"triangle",0.07,1040,0.08);}
     // If two Books land anywhere on reels 1–3, reels 4 and 5 spin rapidly, then pause and stop one at a time.
     const stopDelay=bookHunt&&reel===3
-      ? (speed==="slow"?950:speed==="normal"?820:700)
+      ? (speed==="slow"?1750:speed==="normal"?1600:1450)
       : bookHunt&&reel===4
-        ? (speed==="slow"?1250:speed==="normal"?1050:850)
+        ? (speed==="slow"?1500:speed==="normal"?1400:1250)
         : (speed==="slow"?210:speed==="normal"?155:105);
     if(bookHunt&&reel>=3)tone(reel===3?520:690,0.22,"triangle",0.07,reel===3?760:980); 
     await new Promise(resolve=>window.setTimeout(resolve,stopDelay));
