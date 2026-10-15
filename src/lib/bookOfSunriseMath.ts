@@ -43,5 +43,5 @@ export const BOOK_OF_SUNRISE_MATH = {
     fivePlusBooks: 10
   },
   buyBonusMultiplier: 50,
-  maxWinMultiplier: 100
+  maxWinMultiplier: 50
 } as const;
