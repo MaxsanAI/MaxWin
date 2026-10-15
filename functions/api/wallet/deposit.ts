@@ -159,6 +159,21 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return json({ok:true,...scan,message:scan.currentUserCredited?"Deposit automatically verified and credited to your SOL wallet.": "Checking finalized Solana transactions for your deposit."});
     }
 
+    if (body.action === "cancel") {
+      const requestId = typeof body.requestId === "string" ? body.requestId.trim() : "";
+      if (!requestId || !/^[a-f0-9]{32}$/.test(requestId)) return json({ error: "Deposit request not found. Refresh the deposit panel." }, 400);
+      const current = await env.DB.prepare(
+        "SELECT id, status, tx_hash, expires_at FROM wallet_deposit_requests WHERE id=? AND user_id=? LIMIT 1"
+      ).bind(requestId, user.id).first<{id:string;status:string;tx_hash:string|null;expires_at:string}>();
+      if (!current || current.tx_hash || (current.status !== "pending" && current.status !== "expired")) {
+        return json({ error: "This quote cannot be changed because it has already been used or confirmed." }, 409);
+      }
+      await env.DB.prepare(
+        "UPDATE wallet_deposit_requests SET status='expired', updated_at=? WHERE id=? AND user_id=? AND tx_hash IS NULL AND status='pending'"
+      ).bind(new Date().toISOString(), requestId, user.id).run();
+      return json({ok:true, message:"Deposit quote closed. A new amount can now be selected."});
+    }
+
     if (body.action === "create") {
       const usd = Number(body.usd);
       if (!Number.isInteger(usd) || usd < 5 || usd > 30 || usd % 5 !== 0) {
