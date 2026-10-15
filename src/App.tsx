@@ -7,6 +7,8 @@ import GoldenVault from "./components/games/GoldenVault";
 import MoonTemple from "./components/games/MoonTemple";
 import MathTuner from "./components/MathTuner";
 import AdminPanel from "./components/AdminPanel";
+import SupportPage from "./components/SupportPage";
+import SupportAdmin from "./components/SupportAdmin";
 
 type Game = { title: string; category: string; art: string; tag?: string; provider: string; };
 type AuthUser = { id: string; username: string; email: string; createdAt: string };
@@ -353,7 +355,9 @@ function App() {
     }).finally(() => setModal(null));
   };
   if (window.location.pathname.replace(/\/+$/, "") === "/admin") return <AdminPanel />;
+  if (window.location.pathname.replace(/\/+$/, "") === "/admin/support") return <SupportAdmin />;
   if (window.location.pathname.replace(/\/+$/, "") === "/admin/math-tuner") return <MathTuner />;
+  if (window.location.pathname.replace(/\/+$/, "") === "/support") return <SupportPage />;
   return <div className={theme === "light" ? "app-shell theme-light" : "app-shell"}>
     <div className="topline"><span><Sparkles size={13}/> MAXWIN ORIGINALS · A NEW ERA OF PLAY</span><span className="topline-right"><ShieldCheck size={13}/> Security-first platform <i /> 18+ only</span></div>
     <header className="header">
@@ -363,6 +367,7 @@ function App() {
         <a className="nav-active" href="#lobby" onClick={() => setMobileMenu(false)}><Gamepad2 size={16}/> Casino</a>
         <a href="#featured" onClick={() => setMobileMenu(false)}><Trophy size={16}/> Featured</a>
         <a href="#responsible" onClick={() => setMobileMenu(false)}><ShieldCheck size={16}/> Play responsibly</a>
+        <a href="/support"><CircleHelp size={16}/> Support</a>
       </nav>
       <div className="header-actions"><button className="theme-toggle" type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} title={theme === "dark" ? "Light theme" : "Dark theme"}>{theme === "dark" ? <Sun size={18}/> : <Moon size={18}/>}<span>{theme === "dark" ? "Light" : "Dark"}</span></button><button className="btn btn-ghost" onClick={() => { if (authUser) { setSelectedGame(null); setProfileMessage(""); setModal("profile"); } else openAuth("signin"); }}>{authUser ? <><span className="header-avatar">{profileData?.avatarDataUrl ? <img src={profileData.avatarDataUrl} alt="" /> : authUser.username.slice(0,1).toUpperCase()}</span>{authUser.username}</> : "Log in"}</button>{!authUser && <button className="btn btn-gold" onClick={() => openAuth("register")}>Create account</button>}{authUser && <button className="btn btn-gold" onClick={logout}>Log out</button>}</div>
     </header>
