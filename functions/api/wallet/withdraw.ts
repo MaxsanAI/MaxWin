@@ -1,4 +1,4 @@
-import { Env, ensureWalletSchema, getUser, json, readJson, randomToken } from "../auth/_shared";
+import { Env, ensureWalletSchema, getUser, isAdminTestAccount, json, readJson, randomToken } from "../auth/_shared";
 
 function parseUsdCents(value: unknown): number | null {
   if (typeof value !== "string" && typeof value !== "number") return null;
@@ -44,6 +44,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   try {
     await ensureWalletSchema(env.DB);
+    if (await isAdminTestAccount(env.DB, user.id)) {
+      return json({ error: "Withdrawals are disabled for simulated real-play test accounts. Test credits are not real funds." }, 403);
+    }
     const solUsd = await getSolUsd();
     if (!solUsd) return json({ error: "The live SOL/USD rate is unavailable. Please try again later." }, 503);
     const amount = usdCentsToLamports(amountUsdCents, solUsd);
