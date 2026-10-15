@@ -64,10 +64,10 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
  if(!Number.isInteger(usd)||usd<5||usd>500||usd%5!==0)return json({error:"Manual credits must be $5–$500 in $5 increments."},400);
  if(reason.length<5||reason.length>300)return json({error:"Add a clear verification note (5–300 characters)."},400);
  if(!/^[a-f0-9]{32}$/.test(key))return json({error:"Refresh the credit form and try again."},400);
- const ticketCredit=await env.DB.prepare("SELECT status,usd_amount AS usdAmount FROM support_manual_credits WHERE ticket_id=? LIMIT 1").bind(ticketId).first<{status:string;usdAmount:number}>();
- if(ticketCredit)return json({error:"This support ticket already has a recorded manual credit. Review the wallet ledger before making any further adjustment."},409);
  const existing=await env.DB.prepare("SELECT status,usd_amount AS usdAmount FROM support_manual_credits WHERE idempotency_key=? LIMIT 1").bind(key).first<{status:string;usdAmount:number}>();
  if(existing)return json({ok:true,replayed:true,status:existing.status,usdAmount:existing.usdAmount,message:"This credit request was already recorded; no second credit was applied."});
+ const ticketCredit=await env.DB.prepare("SELECT status,usd_amount AS usdAmount FROM support_manual_credits WHERE ticket_id=? LIMIT 1").bind(ticketId).first<{status:string;usdAmount:number}>();
+ if(ticketCredit)return json({error:"This support ticket already has a recorded manual credit. Review the wallet ledger before making any further adjustment."},409);
  const solUsd=await getSolUsd();if(!solUsd)return json({error:"Live SOL/USD quote is unavailable. No balance was changed."},503);
  const lamports=Math.ceil(usd/solUsd*1e9);if(!Number.isSafeInteger(lamports)||lamports<=0)return json({error:"Could not safely convert USD to SOL."},503);
  const amountUnits=String(lamports),creditId=randomToken(16),meta=JSON.stringify({source:"support-manual-credit",ticketId,usdAmount:usd,solUsdAtCredit:solUsd,verificationNote:reason,idempotencyKey:key});
