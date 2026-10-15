@@ -8,6 +8,8 @@ export type BookOfSunriseRegularSymbol = Exclude<BookOfSunriseSymbol, "book">;
 export const BOOK_OF_SUNRISE_MATH = {
   // 1.6% per cell; slightly more frequent Books for suspense moments.
   bookProbabilityPer1000: 16,
+  // Slightly higher Book chance on reels 1–3 to create more two-Book suspense moments.
+  bookHuntProbabilityPer1000: 20,
   // Weighted distribution: lower-value symbols are more common than premium symbols.
   regularSymbolWeights: {
     pharaoh: 2,
