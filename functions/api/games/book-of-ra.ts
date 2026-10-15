@@ -94,6 +94,7 @@ function spinReels(): SymbolName[] {
 
 function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: SymbolName | null, isFreeSpin = false) {
   const lineBet = totalBet / PAYLINES.length;
+  const payoutTable = (isFreeSpin ? BOOK_OF_SUNRISE_MATH.freeSpinPayouts : BOOK_OF_SUNRISE_MATH.payouts) as Record<Exclude<SymbolName, "book">, { 3: number; 4: number; 5: number }>;
   let payout = 0;
   const wins: { line: number; symbol: SymbolName; count: number; payout: number; positions: number[] }[] = [];
   const winningPositions = new Set<number>();
@@ -111,7 +112,7 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
     }
 
     const regKey = firstRegular as Exclude<SymbolName, "book">;
-    const minCount = PAYOUTS[regKey][2] !== undefined ? 2 : 3;
+    const minCount = 3;
     if (count < minCount) return;
 
     const hasBookInRun = lineSymbols.slice(0, count).includes("book");
@@ -119,9 +120,8 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
     // A Book wild plus two matching regular symbols pays 2x total bet.
     const mult = count === 3 && hasBookInRun && regularMatches === 2
       ? 2
-      : PAYOUTS[regKey][count as 2 | 3 | 4 | 5] || 0;
-    const baseLinePayout = Math.floor(totalBet * mult);
-    const linePayout = isFreeSpin ? Math.floor(baseLinePayout * BOOK_OF_SUNRISE_MATH.freeSpinPayoutMultiplier) : baseLinePayout;
+      : payoutTable[regKey][count as 3 | 4 | 5] || 0;
+    const linePayout = Math.floor(totalBet * mult);
     if (linePayout <= 0) return;
 
     const positions = Array.from({ length: count }, (_, reel) => reel * 3 + line[reel]);
@@ -145,10 +145,10 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
     const minCount = 3;
 
     if (expandCount >= minCount) {
-      const mult = PAYOUTS[regKey][expandCount as 2 | 3 | 4 | 5] || 0;
-      // Isplaćuje se na svih 10 linija kada se proširi
+      const mult = payoutTable[regKey][expandCount as 3 | 4 | 5] || 0;
+      // Isplaćuje se na svih 10 linija kada se proširi; Free Spins use their own table.
       const baseExpandPayout = Math.floor(lineBet * mult * PAYLINES.length);
-      const expandPayout = Math.floor(baseExpandPayout * BOOK_OF_SUNRISE_MATH.expandingSymbolPayoutMultiplier * (isFreeSpin ? BOOK_OF_SUNRISE_MATH.freeSpinPayoutMultiplier : 1));
+      const expandPayout = Math.floor(baseExpandPayout * BOOK_OF_SUNRISE_MATH.expandingSymbolPayoutMultiplier);
       payout += expandPayout;
 
       reelHasExpanding.forEach((has, reel) => {
@@ -165,7 +165,7 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
   if (bookCount >= 3) {
     const scatterMult = bookCount === 3 ? BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.threeBooks : bookCount === 4 ? BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.fourBooks : BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.fivePlusBooks;
     const baseScatterPayout = Math.floor(totalBet * scatterMult);
-    const scatterPayout = isFreeSpin ? Math.floor(baseScatterPayout * BOOK_OF_SUNRISE_MATH.freeSpinPayoutMultiplier) : baseScatterPayout;
+    const scatterPayout = baseScatterPayout;
     payout += scatterPayout;
   }
 
