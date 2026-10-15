@@ -326,6 +326,10 @@ function App() {
   const logout = async () => {
     try { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* clear local account view regardless */ }
     setAuthUser(null);
+    setDepositRequest(null);
+    setDepositSignature("");
+    setDepositMessage("");
+    setWalletData(null);
     setModal(null);
   };
   const filtered = useMemo(() => games.filter(g => (active === "All Games" || g.category === active) && g.title.toLowerCase().includes(search.toLowerCase())), [active, search]);
