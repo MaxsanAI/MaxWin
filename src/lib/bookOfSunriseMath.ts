@@ -22,15 +22,15 @@ export const BOOK_OF_SUNRISE_MATH = {
     ten: 22
   },
   payouts: {
-    pharaoh: { 3: 3,    4: 8, 5: 20 },
-    anubis:  { 3: 2.5,  4: 6, 5: 15 },
-    scarab:  { 3: 1.5,  4: 4, 5: 10 },
-    statue:  { 2: 2.5, 3: 1.5,  4: 4, 5: 10 },
-    ace:     { 3: 1,    4: 3, 5: 8 },
-    king:    { 3: 1,    4: 3, 5: 8 },
-    queen:   { 3: 0.75, 4: 2, 5: 5 },
-    jack:    { 3: 0.75, 4: 2, 5: 5 },
-    ten:     { 3: 0.75, 4: 2, 5: 5 }
+    pharaoh: { 3: 2, 4: 8, 5: 20 },
+    anubis:  { 3: 2, 4: 6, 5: 15 },
+    scarab:  { 3: 2, 4: 4, 5: 10 },
+    statue:  { 3: 2, 4: 4, 5: 10 },
+    ace:     { 3: 2, 4: 3, 5: 8 },
+    king:    { 3: 2, 4: 3, 5: 8 },
+    queen:   { 3: 2, 4: 2, 5: 5 },
+    jack:    { 3: 2, 4: 2, 5: 5 },
+    ten:     { 3: 2, 4: 2, 5: 5 },
   },
   scatterPayoutByBookCount: {
     threeBooks: 0.5,
