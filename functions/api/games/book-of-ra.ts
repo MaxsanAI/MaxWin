@@ -381,6 +381,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!user) return json({ error: "Log in required." }, 401);
 
   if (new URL(request.url).searchParams.get("mode") === "real") {
+    try {
       await ensureRealSchema(env.DB);
       const solUsd = await getRealSolUsd();
       if (!solUsd) return json({ error: "Live SOL/USD quote is unavailable." }, 503);
