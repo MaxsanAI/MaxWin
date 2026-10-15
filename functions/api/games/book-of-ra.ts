@@ -5,7 +5,7 @@ type SymbolName = "book" | "pharaoh" | "anubis" | "scarab" | "statue" | "ace" | 
 const REGULAR_SYMBOLS: SymbolName[] = ["pharaoh", "anubis", "scarab", "statue", "ace", "king", "queen", "jack", "ten"];
 const ALL_SYMBOLS: SymbolName[] = ["book", ...REGULAR_SYMBOLS];
 
-// Tabela isplata po liniji (množi se sa betPerLine)
+// Paytable multipliers use total bet for regular wins, matching the displayed paytable.
 const PAYOUTS: Record<Exclude<SymbolName, "book">, { 2?: number; 3: number; 4: number; 5: number }> =
   BOOK_OF_SUNRISE_MATH.payouts as Record<Exclude<SymbolName, "book">, { 2?: number; 3: number; 4: number; 5: number }>;
 
