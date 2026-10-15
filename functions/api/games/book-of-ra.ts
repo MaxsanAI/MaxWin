@@ -111,7 +111,12 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
     const minCount = PAYOUTS[regKey][2] !== undefined ? 2 : 3;
     if (count < minCount) return;
 
-    const mult = PAYOUTS[regKey][count as 2 | 3 | 4 | 5] || 0;
+    const hasBookInRun = lineSymbols.slice(0, count).includes("book");
+    const regularMatches = lineSymbols.slice(0, count).filter(symbol => symbol === regKey).length;
+    // A Book wild plus two matching regular symbols pays 2x total bet.
+    const mult = count === 3 && hasBookInRun && regularMatches === 2
+      ? 2
+      : PAYOUTS[regKey][count as 2 | 3 | 4 | 5] || 0;
     const linePayout = Math.floor(totalBet * mult);
     if (linePayout <= 0) return;
 
