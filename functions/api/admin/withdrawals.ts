@@ -59,9 +59,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       .bind(row.user_id).first<{ available_units: string; reserved_units: string }>();
     const amount = BigInt(row.amount_units);
     if (!balance || BigInt(balance.reserved_units || "0") < amount) return json({ error: "Reserved wallet balance is inconsistent; payout was not marked sent." }, 409);
-    const id = randomToken(16);
-    await env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) VALUES (?,?, 'SOL','withdrawal','confirmed',?,?,?,NULL,?,?,?)")
-      .bind(id, row.user_id, row.amount_units, txHash, row.destination_address, now, now, JSON.stringify({ requestId, manuallyProcessed: true })).run();
+    const txUpdate = await env.DB.prepare("UPDATE wallet_transactions SET status = 'confirmed', tx_hash = ?, address = ?, updated_at = ? WHERE user_id = ? AND kind = 'withdrawal' AND status IN ('pending','confirming') AND metadata_json LIKE ?")
+      .bind(txHash, row.destination_address, now, row.user_id, '%"requestId":"' + requestId + '"%').run();
+    if (!txUpdate.meta || txUpdate.meta.changes !== 1) return json({ error: "Could not find the matching pending ledger entry; payout status was not changed." }, 409);
     await env.DB.prepare("UPDATE wallet_balances SET reserved_units = ?, updated_at = ? WHERE user_id = ? AND asset = 'SOL'")
       .bind((BigInt(balance.reserved_units) - amount).toString(), now, row.user_id).run();
     await env.DB.prepare("UPDATE withdrawal_requests SET status = 'sent', tx_hash = ?, updated_at = ? WHERE id = ? AND status = 'approved'")
