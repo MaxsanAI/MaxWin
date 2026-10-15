@@ -1,4 +1,4 @@
-import { Env, ensureWalletSchema, json, readJson, randomToken } from "../auth/_shared";
+import { Env, ensureWalletSchema, json, readJson } from "../auth/_shared";
 
 async function authorize(request: Request, env: Env): Promise<boolean> {
   const expected = env.MAXWIN_ADMIN_KEY || "";
