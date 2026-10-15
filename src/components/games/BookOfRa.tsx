@@ -18,8 +18,10 @@ const symbolMeta:Record<SymbolName,{label:string;Icon:typeof BookOpen;color:stri
 const formatUSD=(value:number)=>"$"+(value/100).toFixed(2);
 function requestId(){return typeof crypto.randomUUID==="function"?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join("");}
 
-export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => void }){
+export default function BookOfRaSlot({ onBackToLobby, mode = "demo" }: { onBackToLobby: () => void; mode?: "demo" | "real" }){
  const [balance,setBalance]=useState<number|null>(null);
+ const [walletSol,setWalletSol]=useState<number|null>(null);
+ const [realModeLocked,setRealModeLocked]=useState(false);
  const [bet,setBet]=useState(20);
  const [result,setResult]=useState<SpinResult|null>(null);
  const [busy,setBusy]=useState(false);
@@ -167,18 +169,18 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
 
  useEffect(()=>{
   let live=true;
-  fetch("/api/games/book-of-ra",{cache:"no-store"}).then(async r=>{
+  fetch("/api/games/book-of-ra?mode="+mode,{cache:"no-store",credentials:"same-origin"}).then(async r=>{
    const d=await r.json();
    if(live&&r.ok){setBalance(Number(d.balance));setFreeSpins(Number(d.freeSpins||0));if(d.expandingSymbol)setExpandingSymbol(d.expandingSymbol);}
    else if(live)setError(d.error||"Could not load the demo balance.");
   }).catch(()=>{if(live)setError("Could not connect to the Temple of Ra game service.");});
   return ()=>{live=false;if(rollTimer.current)clearInterval(rollTimer.current);};
- },[]);
+ },[mode]);
 
  const play=async(action:"spin"|"buyBonus")=>{
   if(busy||balance===null||bonusFinish!==null)return;
-  if(action==="buyBonus"&&balance<bet*50){setError("Not enough demo credits for Buy Bonus.");return;}
-  if(action==="spin"&&freeSpins<=0&&balance<bet){setError("Not enough demo credits.");return;}
+  if(action==="buyBonus"&&balance<bet*50){setError(mode==="real"?"Insufficient available SOL wallet balance for Buy Bonus.":"Not enough demo credits for Buy Bonus.");return;}
+  if(action==="spin"&&freeSpins<=0&&balance<bet){setError(mode==="real"?"Insufficient available SOL wallet balance.":"Not enough demo credits.");return;}
   const isBonusSpin=action==="spin"&&freeSpins>0;
   const activeBonusSymbol=isBonusSpin?expandingSymbol:null;
   if(soundOn&&typeof window.AudioContext!=="undefined"){try{const ctx=audioContext.current||(audioContext.current=new window.AudioContext());if(ctx.state==="suspended")void ctx.resume();}catch{}}
@@ -189,7 +191,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   setMessage(action==="buyBonus"?"Opening the Sacred Book…":freeSpins>0?"Free spin in progress…":"Reels spinning…");
   const spinStartedAt=performance.now();
   try{
-   const res=await fetch("/api/games/book-of-ra",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,bet,requestId:requestId()})});
+   const res=await fetch("/api/games/book-of-ra",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,bet,requestId:requestId(),walletMode:mode})});
    const data=await res.json();
    if(!res.ok)throw new Error(data.error||"Spin failed.");
    const minimumSpin=speed==="slow"?1250:speed==="normal"?950:700;
@@ -247,7 +249,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     bonusTotalThisRound+=Number(data.result.payout||0);
     bonusWinTotal.current=bonusTotalThisRound;
    }
-   setResult(data.result);setBalance(Number(data.balance));setFreeSpins(Number(data.freeSpins||0));
+   setResult(data.result);setBalance(Number(data.balance));setWalletSol(typeof data.balanceSol==="number"?data.balanceSol:null);setFreeSpins(Number(data.freeSpins||0));
    setExpandingSymbol((data.expandingSymbol||null) as SymbolName|null);
    if(Number(data.result.awardedFreeSpins)>0 && data.expandingSymbol){
     if(!isBonusSpin){bonusWinTotal.current=0;setBonusFinish(null);}
@@ -303,7 +305,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   <style>{`.bra-book-search-spin .bra-reel-strip{animation-duration:.12s!important;animation-timing-function:linear!important}.bra-book-search-spin .bra-final-column{transition:opacity .18s ease-out}`}</style>
   <audio ref={musicAudio} src="/audio/book-of-ra-music.mp3" loop preload="auto" aria-hidden="true" />
   <audio ref={winAudio} src="/audio/egypt-win.mp3" preload="auto" aria-hidden="true" />
-  <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>TEMPLE OF <em>RA</em></h3><p>5 reels · 3 rows · Demo credits</p></div></div><div className="rf-top-actions"><span className="rf-status"><span/> DEMO MODE</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute game sound effects":"Enable game sound effects"} title={soundOn?"Game sound effects on":"Game sound effects off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button><button className="rf-icon-button" type="button" onClick={()=>setMusicOn(v=>{const next=!v;const audio=musicAudio.current;if(audio){if(next){audio.volume=0.02;void audio.play().catch(()=>{});}else audio.pause();}return next;})} aria-label={musicOn?"Turn background music off":"Turn background music on"} title={musicOn?"Background music on · low volume":"Background music off"}>{musicOn?<Music size={16}/>:<Music size={16} style={{opacity:0.45}}/>}</button></div></div>
+  <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>TEMPLE OF <em>RA</em></h3><p>5 reels · 3 rows · {mode==="real"?"SOL wallet settlement":"Demo credits"}</p></div></div><div className="rf-top-actions"><span className={"rf-status"+(realModeLocked?" is-locked":"")}><span/> {mode==="real"?(realModeLocked?"REAL MODE LOCKED":"REAL SOL WALLET"):"DEMO MODE"}</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute game sound effects":"Enable game sound effects"} title={soundOn?"Game sound effects on":"Game sound effects off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button><button className="rf-icon-button" type="button" onClick={()=>setMusicOn(v=>{const next=!v;const audio=musicAudio.current;if(audio){if(next){audio.volume=0.02;void audio.play().catch(()=>{});}else audio.pause();}return next;})} aria-label={musicOn?"Turn background music off":"Turn background music on"} title={musicOn?"Background music on · low volume":"Background music off"}>{musicOn?<Music size={16}/>:<Music size={16} style={{opacity:0.45}}/>}</button></div></div>
   <div className="rf-cabinet bra-cabinet"><div className="rf-cabinet-header"><span><Crown size={13}/> TEMPLE OF RA</span><span><i/> 5 REELS <i/> 3 ROWS <i/> SACRED BOOK</span></div>
    <div className={"rf-reel-window bra-reel-window bra-strip-reels"+(showBookCelebration?" bra-scatter-active":"")} aria-label="Temple of Ra slot reels">
     {Array.from({length:5},(_,reel)=>{
@@ -318,7 +320,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
      </div>;
     })}
    </div>
-   <div className="rf-machine-footer"><span>ANCIENT EGYPTIAN FORTUNE</span><span>•</span><span>PLAY FOR FUN · NO CASH VALUE</span></div>
+   <div className="rf-machine-footer"><span>ANCIENT EGYPTIAN FORTUNE</span><span>•</span><span>{mode==="real"?"SERVER-SETTLED SOL WALLET":"PLAY FOR FUN · NO CASH VALUE"}</span></div>
   </div>
   {scatterReveal&&scatterContinueReady&&<div className="bra-continue-wrap">
    <button className="bra-continue-button" type="button" onClick={()=>{const reveal=scatterReveal;const symbol=expandingSymbol;if(!reveal||!symbol)return;setScatterReveal(null);setScatterContinueReady(false);setShowBookCelebration(false);setBonusReveal({symbol,spins:reveal.spins,mode:reveal.mode});setMessage("CHOOSING YOUR EXPANDING SYMBOL…");}}>CONTINUE TO BONUS</button>
@@ -328,14 +330,14 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    <div className="rf-bet-control rf-bet-side"><label htmlFor="bra-bet">TOTAL BET</label><div><button type="button" aria-label="Decrease bet" disabled={busy||freeSpins>0||bet<=20} onClick={()=>setBet(v=>Math.max(20,v-10))}>−</button><strong id="bra-bet">{formatUSD(bet)}</strong><button type="button" aria-label="Increase bet" disabled={busy||freeSpins>0||bet>=100} onClick={()=>setBet(v=>Math.min(100,v+10))}>+</button></div><small>Per spin</small></div>
    <div className="rf-speed-panel bra-inline-speed"><span><Gauge size={14}/> SPEED</span><div>{(["slow","normal","turbo"] as const).map(s=><button type="button" key={s} className={speed===s?"active":""} onClick={()=>setSpeed(s)} disabled={busy}>{s.toUpperCase()}</button>)}</div></div>
    <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null||(balance<bet&&freeSpins===0)} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {freeSpins>0?"FREE SPIN":"SPIN"}<small>{freeSpins>0?"BONUS ROUND":formatUSD(bet)}</small></>}</button>
-   <div className="rf-credit-panel rf-balance-side"><span>DEMO BALANCE</span><strong>{balance===null?"—":formatUSD(balance)}</strong><small>Demo credits</small></div>
+   <div className="rf-credit-panel rf-balance-side"><span>{mode==="real"?"WALLET BALANCE":"DEMO BALANCE"}</span><strong>{balance===null?"—":formatUSD(balance)}</strong><small>{mode==="real"?(walletSol===null?"USD equivalent":walletSol.toFixed(6)+" SOL available"):"Demo credits"}</small></div>
    <button className="rf-buy-button bra-buy-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null||balance<bet*50||freeSpins>0} onClick={()=>setBuyConfirm(true)}><Sparkles size={16}/><span>BUY BONUS<small>{"50× BET · "+(bet*50).toLocaleString()+" CR"}</small></span></button>
   </div>
   {message&&<p className={"rf-message bra-message"+(result?.payout?" is-win":"")} role="status">{message}</p>}{error&&<p className="rf-error" role="alert">{error}</p>}
-  {result&&<div className="rf-last-result"><span>LAST RESULT<small>{result.wins?.length?result.wins.length+" winning line(s)":result.awardedFreeSpins?"Bonus triggered":"Round complete"}</small></span><strong>{formatUSD(result.payout)}<small>DEMO USD WON</small></strong></div>}
+  {result&&<div className="rf-last-result"><span>LAST RESULT<small>{result.wins?.length?result.wins.length+" winning line(s)":result.awardedFreeSpins?"Bonus triggered":"Round complete"}</small></span><strong>{formatUSD(result.payout)}<small>{mode==="real"?"USD-EQUIVALENT PAYOUT":"DEMO USD WON"}</small></strong></div>}
   <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>TEMPLE OF RA · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];const payouts:Record<SymbolName,string>={book:"3 books: 0.5× total bet + 6 free spins · 4: 2× + 8 spins · 5+: 5× + 10 spins",pharaoh:"3: 4× total bet · 4: 7× · 5: 15×",anubis:"3: 3× total bet · 4: 6× · 5: 12×",scarab:"3: 2× total bet · 4: 4× · 5: 10×",statue:"3: 3× total bet · 4: 5× · 5: 10×",ace:"3: 2× total bet · 4: 4× · 5: 8×",king:"3: 2× total bet · 4: 4× · 5: 8×",queen:"3: 2× total bet · 4: 3× · 5: 5×",jack:"3: 2× total bet · 4: 3× · 5: 5×",ten:"3: 2× total bet · 4: 3× · 5: 5×"};return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{payouts[symbol]}</b></div>;})}</div><p>Regular-symbol wins require consecutive matches from the left on a payline; Scarab pays from 2 matching symbols, while other regular symbols require 3+. The Book acts as a wild, and a Book plus 2 matching regular symbols pays 2× total bet. Book scatter pays on 3+ books anywhere and triggers free spins. Free Spins use a separate, slightly improved symbol-payout table; two matching regular symbols do not pay. The selected expanding symbol receives an additional 35% expansion payout boost. Book probability: 2.0% per cell on the first 3 reels; 1.6% per cell on the final 2 reels. Buy Bonus costs 50× bet; maximum win is capped at 50× bet. All values are demo-game rules.</p></details>
-  <button className="bra-lobby-button" type="button" disabled={busy||resettingDemo} onClick={()=>void leaveDemo()}><Crown size={15} strokeWidth={2.2}/> <span>{resettingDemo?"RESETTING DEMO…":"TO LOBBY"}</span></button>
-  <div className="rf-demo-disclaimer">DEMO ONLY · CREDITS HAVE NO CASH VALUE · NO DEPOSITS OR WITHDRAWALS · PLAY RESPONSIBLY · 18+</div>
+  <button className="bra-lobby-button" type="button" disabled={busy||resettingDemo} onClick={()=>void leaveDemo()}><Crown size={15} strokeWidth={2.2}/> <span>{resettingDemo?(mode==="real"?"LEAVING…":"RESETTING DEMO…"):"TO LOBBY"}</span></button>
+  <div className="rf-demo-disclaimer">{mode==="real"?"REAL-MONEY MODE · SOL SETTLEMENT · PLAY RESPONSIBLY · 18+":"DEMO ONLY · CREDITS HAVE NO CASH VALUE · NO DEPOSITS OR WITHDRAWALS · PLAY RESPONSIBLY · 18+"}</div>
   {bonusReveal&&<div className="bra-awakening-backdrop" role="presentation">
    <section className="bra-awakening" role="dialog" aria-modal="true" aria-labelledby="bra-awakening-title">
     <div className="bra-awakening-stars" aria-hidden="true">✦ · ✧ · ✦</div>
@@ -369,6 +371,6 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     <div className="bra-finish-footnote">DEMO CREDITS · NO CASH VALUE</div>
    </section>
   </div>}
-  {buyConfirm&&<div className="modal-backdrop rf-bonus-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setBuyConfirm(false);}}><section className="modal rf-bonus-modal" role="dialog" aria-modal="true" aria-labelledby="bra-bonus-title"><button className="modal-close" type="button" onClick={()=>setBuyConfirm(false)} aria-label="Close bonus confirmation">×</button><div className="modal-mark"><BookOpen size={25}/></div><div className="eyebrow">SACRED BOOK BONUS</div><h2 id="bra-bonus-title">Unlock Free Spins?</h2><p>Trigger the bonus round for demo credits only. No cash value.</p><div className="rf-bonus-price">{formatUSD(bet*50)} <small>DEMO USD</small></div><div className="rf-bonus-actions"><button className="btn btn-gold modal-done" type="button" onClick={()=>void play("buyBonus")}>Confirm bonus</button><button className="auth-switch" type="button" onClick={()=>setBuyConfirm(false)}>Cancel</button></div></section></div>}
+  {buyConfirm&&<div className="modal-backdrop rf-bonus-overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setBuyConfirm(false);}}><section className="modal rf-bonus-modal" role="dialog" aria-modal="true" aria-labelledby="bra-bonus-title"><button className="modal-close" type="button" onClick={()=>setBuyConfirm(false)} aria-label="Close bonus confirmation">×</button><div className="modal-mark"><BookOpen size={25}/></div><div className="eyebrow">SACRED BOOK BONUS</div><h2 id="bra-bonus-title">Unlock Free Spins?</h2><p>{mode==="real"?"Buy the bonus using your available SOL wallet balance. The wager and any payout are settled server-side.":"Trigger the bonus round for demo credits only. No cash value."}</p><div className="rf-bonus-price">{formatUSD(bet*50)} <small>DEMO USD</small></div><div className="rf-bonus-actions"><button className="btn btn-gold modal-done" type="button" onClick={()=>void play("buyBonus")}>Confirm bonus</button><button className="auth-switch" type="button" onClick={()=>setBuyConfirm(false)}>Cancel</button></div></section></div>}
  </div>;
 }
