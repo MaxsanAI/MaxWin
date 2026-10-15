@@ -1,4 +1,5 @@
 import { Env, ensureWalletSchema, getUser, isAdminTestAccount, json, readJson, randomToken } from "../auth/_shared";
+import { getSolUsd } from "../_shared/sol-price";
 
 function parseUsdCents(value: unknown): number | null {
   if (typeof value !== "string" && typeof value !== "number") return null;
@@ -19,16 +20,6 @@ function validSolAddress(address: string): boolean {
   return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
 }
 
-async function getSolUsd(): Promise<number | null> {
-  try {
-    const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd", { headers: { Accept: "application/json" } });
-    if (!response.ok) return null;
-    const data = await response.json() as { solana?: { usd?: number } };
-    const value = data.solana?.usd;
-    return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
-  } catch { return null; }
-}
-
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Wallet service is not configured." }, 503);
   const user = await getUser(request, env.DB);
@@ -47,8 +38,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (await isAdminTestAccount(env.DB, user.id)) {
       return json({ error: "Withdrawals are disabled for simulated real-play test accounts. Test credits are not real funds." }, 403);
     }
-    const solUsd = await getSolUsd();
-    if (!solUsd) return json({ error: "The live SOL/USD rate is unavailable. Please try again later." }, 503);
+    const solUsd = (await getSolUsd(env.DB, 90 * 1000))?.price ?? null;
+    if (!solUsd) return json({ error: "SOL/USD price sources are temporarily unavailable and no recent safe quote is cached. Please try again shortly." }, 503);
     const amount = usdCentsToLamports(amountUsdCents, solUsd);
     if (amount === null) return json({ error: "This dollar amount is too small to convert to SOL at the current rate." }, 400);
 
