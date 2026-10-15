@@ -112,7 +112,7 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
     if (count < minCount) return;
 
     const mult = PAYOUTS[regKey][count as 2 | 3 | 4 | 5] || 0;
-    const linePayout = Math.floor(lineBet * mult);
+    const linePayout = Math.floor(totalBet * mult);
     if (linePayout <= 0) return;
 
     const positions = Array.from({ length: count }, (_, reel) => reel * 3 + line[reel]);
