@@ -223,22 +223,41 @@ async function ensureRealSchema(db: D1Database): Promise<void> {
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_book_of_ra_real_rounds_user_created ON book_of_ra_real_rounds(user_id, created_at DESC)").run();
 }
 
+// Keep a short-lived isolate cache so every spin does not wait on a market-price API.
+let cachedRealSolUsd: number | null = null;
+let cachedRealSolUsdAt = 0;
+const REAL_SOL_USD_CACHE_MS = 5 * 60 * 1000;
+
 async function getRealSolUsd(): Promise<number | null> {
+  const now = Date.now();
+  if (cachedRealSolUsd !== null && now - cachedRealSolUsdAt < REAL_SOL_USD_CACHE_MS) {
+    return cachedRealSolUsd;
+  }
+  // Use the last known valid quote immediately if the provider is slow or unavailable.
+  const lastKnown = cachedRealSolUsd;
   const urls = [
     "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
     "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT"
   ];
   for (const url of urls) {
     try {
-      const response = await fetch(url, { headers: { Accept: "application/json" }, cf: { cacheTtl: 15, cacheEverything: true } });
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(1200),
+        cf: { cacheTtl: 300, cacheEverything: true }
+      });
       if (!response.ok) continue;
       const data: any = await response.json();
       const value = url.includes("coingecko") ? data?.solana?.usd : data?.price;
       const price = typeof value === "number" ? value : Number(value);
-      if (Number.isFinite(price) && price > 0) return price;
-    } catch { /* try the next quote source */ }
+      if (Number.isFinite(price) && price > 0) {
+        cachedRealSolUsd = price;
+        cachedRealSolUsdAt = Date.now();
+        return price;
+      }
+    } catch { /* use the next source, then the last known quote */ }
   }
-  return null;
+  return lastKnown;
 }
 
 function usdCentsToLamports(cents: number, solUsd: number, roundUp: boolean): bigint {
