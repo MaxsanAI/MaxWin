@@ -49,6 +49,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         realMoneyPlayEnabled: false,
         depositsEnabled: false,
         automaticWithdrawalsEnabled: false,
+        manualWithdrawalApprovalEnabled: true,
         minimumDepositUsd: 5,
         depositStepUsd: 5,
         welcomeFreeSpins: 25,
@@ -68,7 +69,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       },
       recentTransactions: recentTx.results || [],
       recentWithdrawals: recentWithdrawals.results || [],
-      notice: "Read-only preparation dashboard. No deposits are accepted, no withdrawals are sent, and no real-money play is enabled."
+      notice: "Manual SOL withdrawal approvals are enabled. The admin must approve each request, send SOL separately, and record the confirmed transaction signature. Automatic sending, deposits, and real-money play remain disabled."
     });
   } catch (error) {
     console.error("[MAXWIN admin overview] Failed:", error instanceof Error ? error.message : String(error));
