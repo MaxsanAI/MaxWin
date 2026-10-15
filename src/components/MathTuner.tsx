@@ -287,7 +287,7 @@ export const BOOK_OF_SUNRISE_MATH = ${JSON.stringify(model, null, 2)} as const;
         const baselineTheory = calculateRegularRtp(model, bet);
         if (!Number.isFinite(baselineTheory) || baselineTheory <= 0) {
           setAutoTuneNotice("Ne mogu da izračunam stabilan RTP iz trenutnih bonus pravila. Proveri verovatnoću knjige i broj Free Spins.");
-          setSimulation(baseline);
+          setSimulation(null);
           return;
         }
 
