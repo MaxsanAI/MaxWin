@@ -254,13 +254,6 @@ function lamportsToUsdCents(units: string, solUsd: number): number {
 }
 
 async function handleRealAction(request: Request, env: Env, user: { id: string }, body: Record<string, unknown>): Promise<Response> {
-  if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true") {
-  return json({
-    error: "Real Play for Book of Ra is disabled. Check REAL_MONEY_BOOK_OF_RA_ENABLED.",
-    realMoneyEnabled: false
-  }, 423);
-}
-
   const action = body.action === "buyBonus" ? "buyBonus" : body.action === "spin" ? "spin" : null;
   const bet = Number(body.bet);
   const requestId = typeof body.requestId === "string" ? body.requestId.trim() : "";
@@ -388,12 +381,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!user) return json({ error: "Log in required." }, 401);
 
   if (new URL(request.url).searchParams.get("mode") === "real") {
-    if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true") {
-  return json({
-    error: "Real Play for Book of Ra is disabled. Check REAL_MONEY_BOOK_OF_RA_ENABLED.",
-    realMoneyEnabled: false
-  }, 423);
-}
       await ensureRealSchema(env.DB);
       const solUsd = await getRealSolUsd();
       if (!solUsd) return json({ error: "Live SOL/USD quote is unavailable." }, 503);
