@@ -68,11 +68,14 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  };
  const playReelStop=()=>{tone(150,0.12,"triangle",0.13,82);tone(620,0.07,"sine",0.055,460,0.025);};
  const playBookSuspense=()=>{
-  // Rising Egyptian-style tension cue, only when a Book lands on reels 1–3.
-  tone(110,0.42,"sawtooth",0.075,165);
-  tone(220,0.48,"triangle",0.075,330,0.04);
-  tone(330,0.52,"triangle",0.065,494,0.08);
-  tone(440,0.58,"sine",0.055,660,0.12);
+  // Rising mechanical whir and bright pulses while the final reels search for a Book.
+  tone(88,1.15,"sawtooth",0.09,176);
+  tone(145,0.95,"triangle",0.09,520,0.03);
+  tone(260,0.85,"sawtooth",0.07,760,0.08);
+  tone(420,0.7,"triangle",0.065,980,0.14);
+  for(let i=0;i<7;i++){
+   tone(185+i*34,0.075,"square",0.035,125+i*22,0.12+i*0.15);
+  }
  };
  const playWin=()=>{
   if(!soundOn)return;
@@ -167,14 +170,18 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
    const remainingSpin=minimumSpin-(performance.now()-spinStartedAt);
    if(remainingSpin>0)await new Promise(resolve=>window.setTimeout(resolve,remainingSpin));
    const finalSymbols=data.result.symbols as SymbolName[];
+   const booksInFirstThreeReels=finalSymbols.slice(0,9).filter(symbol=>symbol==="book").length;
+   const bookHunt=booksInFirstThreeReels>=2;
    for(let reel=0;reel<5;reel++){
-    const bookInFirstThreeReels=finalSymbols.slice(0,9).some(symbol=>symbol==="book");
-    if(reel===3&&bookInFirstThreeReels)playBookSuspense();
-    // A Book on reels 1–3 speeds up reels 4 and 5; they then stop one by one.
-    const stopDelay=bookInFirstThreeReels&&reel>=3
-      ? (speed==="slow"?145:speed==="normal"?110:80)
-      : (speed==="slow"?210:speed==="normal"?155:105);
-    if(bookInFirstThreeReels&&reel>=3)tone(reel===3?520:690,0.22,"triangle",0.07,reel===3?760:980);
+    if(reel===3&&bookHunt)playBookSuspense();
+    if(reel===4&&bookHunt){tone(330,0.9,"sawtooth",0.085,690);tone(620,0.65,"triangle",0.07,1040,0.08);}
+    // If two Books land anywhere on reels 1–3, reels 4 and 5 spin rapidly, then pause and stop one at a time.
+    const stopDelay=bookHunt&&reel===3
+      ? (speed==="slow"?950:speed==="normal"?820:700)
+      : bookHunt&&reel===4
+        ? (speed==="slow"?1250:speed==="normal"?1050:850)
+        : (speed==="slow"?210:speed==="normal"?155:105);
+    if(bookHunt&&reel>=3)tone(reel===3?520:690,0.22,"triangle",0.07,reel===3?760:980); 
     await new Promise(resolve=>window.setTimeout(resolve,stopDelay));
     setDisplaySymbols(current=>current.map((symbol,index)=>Math.floor(index/3)===reel?finalSymbols[index]:symbol));
     playReelStop();
@@ -254,7 +261,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
  };
  const winning=new Set(result?.winningPositions||[]);
 
- return <div className={"rf-game book-of-ra-slot rf-speed-"+speed}>
+ return <div className={"rf-game book-of-ra-slot rf-speed-"+speed}>\n  <style>{`.bra-book-search-spin .bra-reel-strip{animation-duration:.12s!important;animation-timing-function:linear!important}.bra-book-search-spin .bra-final-column{transition:opacity .18s ease-out}`}</style>
   <audio ref={musicAudio} src="/audio/book-of-ra-music.mp3" loop preload="auto" aria-hidden="true" />
   <audio ref={winAudio} src="/audio/egypt-win.mp3" preload="auto" aria-hidden="true" />
   <div className="rf-game-top"><div className="rf-title-lockup"><div className="rf-emblem"><BookOpen size={26}/><span>✦</span></div><div><span className="rf-eyebrow">MAXWIN ORIGINAL · ANCIENT TREASURES</span><h3>TEMPLE OF <em>RA</em></h3><p>5 reels · 3 rows · Demo credits</p></div></div><div className="rf-top-actions"><span className="rf-status"><span/> DEMO MODE</span><button className="rf-icon-button" type="button" onClick={()=>setSoundOn(v=>!v)} aria-label={soundOn?"Mute game sound effects":"Enable game sound effects"} title={soundOn?"Game sound effects on":"Game sound effects off"}>{soundOn?<Volume2 size={16}/>:<VolumeX size={16}/>}</button><button className="rf-icon-button" type="button" onClick={()=>setMusicOn(v=>{const next=!v;const audio=musicAudio.current;if(audio){if(next){audio.volume=0.02;void audio.play().catch(()=>{});}else audio.pause();}return next;})} aria-label={musicOn?"Turn background music off":"Turn background music on"} title={musicOn?"Background music on · low volume":"Background music off"}>{musicOn?<Music size={16}/>:<Music size={16} style={{opacity:0.45}}/>}</button></div></div>
@@ -264,7 +271,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
      const spinning=busy&&reelStops<=reel;
      const finalColumn=displaySymbols.slice(reel*3,reel*3+3);
      const strip=[...(reelStrips[reel]||defaultGrid.slice(0,8)),...(reelStrips[reel]||defaultGrid.slice(0,8))];
-     return <div key={reel} className={"bra-reel-column"+(spinning?" is-spinning":"")+(busy&&!spinning?" is-stopping":"")}>
+     return <div key={reel} className={"bra-reel-column"+(spinning?" is-spinning":"")+(busy&&!spinning?" is-stopping":"")+(spinning&&reel>=3&&displaySymbols.slice(0,9).filter(symbol=>symbol==="book").length>=2?" bra-book-search-spin":"")}>
       <div className="bra-reel-viewport">
        <div className="bra-reel-strip" aria-hidden="true">{strip.map((name,index)=>{const item=symbolMeta[name]||symbolMeta.book;return <div key={index} className={"bra-strip-symbol "+item.className}><img src={"/images/book-of-ra/"+name+".jpg"} alt="" draggable={false} decoding="async"/></div>;})}</div>
        <div className={"bra-final-column"+(spinning?" is-hidden":"")}>{finalColumn.map((name,row)=>{const i=reel*3+row;const item=symbolMeta[name]||symbolMeta.book;return <div key={i} className={"rf-reel bra-reel "+item.className+(winning.has(i)?" rf-reel-win":"")+(expandingPosition===i?" bra-cell-expanding":"")+(showBookCelebration&&name==="book"?" bra-book-trigger":"")}><span className="rf-reel-glow"/><span className="rf-symbol-art"><img src={"/images/book-of-ra/"+name+".jpg"} alt={item.label} draggable={false} decoding="async"/></span></div>;})}</div>
@@ -287,7 +294,7 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
   </div>
   {message&&<p className={"rf-message bra-message"+(result?.payout?" is-win":"")} role="status">{message}</p>}{error&&<p className="rf-error" role="alert">{error}</p>}
   {result&&<div className="rf-last-result"><span>LAST RESULT<small>{result.wins?.length?result.wins.length+" winning line(s)":result.awardedFreeSpins?"Bonus triggered":"Round complete"}</small></span><strong>{formatUSD(result.payout)}<small>DEMO USD WON</small></strong></div>}
-  <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>TEMPLE OF RA · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];const payouts:Record<SymbolName,string>={book:"3 books: 0.5× total bet + 6 free spins · 4: 2× + 8 spins · 5+: 5× + 10 spins",pharaoh:"3: 1× total bet · 4: 8× · 5: 20×",anubis:"3: 1× total bet · 4: 6× · 5: 15×",scarab:"2: 1× total bet · 3: 1× · 4: 4× · 5: 10×",statue:"3: 1× total bet · 4: 4× · 5: 10×",ace:"3: 1× total bet · 4: 3× · 5: 8×",king:"3: 1× total bet · 4: 3× · 5: 8×",queen:"3: 1× total bet · 4: 2× · 5: 5×",jack:"3: 1× total bet · 4: 2× · 5: 5×",ten:"3: 1× total bet · 4: 2× · 5: 5×"};return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{payouts[symbol]}</b></div>;})}</div><p>Regular-symbol wins require consecutive matches from the left on a payline; Scarab pays from 2 matching symbols, while other regular symbols require 3+. The Book acts as a wild, and a Book plus 2 matching regular symbols pays 2× total bet. Book scatter pays on 3+ books anywhere and triggers free spins. Book probability: 1.2% per cell. Buy Bonus costs 50× bet; maximum win is capped at 50× bet. All values are demo-game rules.</p></details>
+  <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>TEMPLE OF RA · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];const payouts:Record<SymbolName,string>={book:"3 books: 0.5× total bet + 6 free spins · 4: 2× + 8 spins · 5+: 5× + 10 spins",pharaoh:"3: 1× total bet · 4: 8× · 5: 20×",anubis:"3: 1× total bet · 4: 6× · 5: 15×",scarab:"2: 1× total bet · 3: 1× · 4: 4× · 5: 10×",statue:"3: 1× total bet · 4: 4× · 5: 10×",ace:"3: 1× total bet · 4: 3× · 5: 8×",king:"3: 1× total bet · 4: 3× · 5: 8×",queen:"3: 1× total bet · 4: 2× · 5: 5×",jack:"3: 1× total bet · 4: 2× · 5: 5×",ten:"3: 1× total bet · 4: 2× · 5: 5×"};return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{payouts[symbol]}</b></div>;})}</div><p>Regular-symbol wins require consecutive matches from the left on a payline; Scarab pays from 2 matching symbols, while other regular symbols require 3+. The Book acts as a wild, and a Book plus 2 matching regular symbols pays 2× total bet. Book scatter pays on 3+ books anywhere and triggers free spins. Book probability: 1.6% per cell. Buy Bonus costs 50× bet; maximum win is capped at 50× bet. All values are demo-game rules.</p></details>
   <button className="bra-lobby-button" type="button" disabled={busy||resettingDemo} onClick={()=>void leaveDemo()}><Crown size={15} strokeWidth={2.2}/> <span>{resettingDemo?"RESETTING DEMO…":"TO LOBBY"}</span></button>
   <div className="rf-demo-disclaimer">DEMO ONLY · CREDITS HAVE NO CASH VALUE · NO DEPOSITS OR WITHDRAWALS · PLAY RESPONSIBLY · 18+</div>
   {bonusReveal&&<div className="bra-awakening-backdrop" role="presentation">
