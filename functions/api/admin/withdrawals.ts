@@ -24,8 +24,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   try {
     await ensureWalletSchema(env.DB);
-    const row = await env.DB.prepare("SELECT id, user_id, asset, amount_units, status FROM withdrawal_requests WHERE id = ? LIMIT 1")
-      .bind(requestId).first<{ id: string; user_id: string; asset: string; amount_units: string; status: string }>();
+    const row = await env.DB.prepare("SELECT id, user_id, asset, amount_units, destination_address, status FROM withdrawal_requests WHERE id = ? LIMIT 1")
+      .bind(requestId).first<{ id: string; user_id: string; asset: string; amount_units: string; destination_address: string; status: string }>();
     if (!row) return json({ error: "Withdrawal request not found." }, 404);
     if (row.asset !== "SOL") return json({ error: "Only SOL withdrawals are enabled for manual processing." }, 400);
     const now = new Date().toISOString();
@@ -61,7 +61,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (!balance || BigInt(balance.reserved_units || "0") < amount) return json({ error: "Reserved wallet balance is inconsistent; payout was not marked sent." }, 409);
     const id = randomToken(16);
     await env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) VALUES (?,?, 'SOL','withdrawal','confirmed',?,?,?,NULL,?,?,?)")
-      .bind(id, row.user_id, row.amount_units, txHash, null, now, now, JSON.stringify({ requestId, manuallyProcessed: true })).run();
+      .bind(id, row.user_id, row.amount_units, txHash, row.destination_address, now, now, JSON.stringify({ requestId, manuallyProcessed: true })).run();
     await env.DB.prepare("UPDATE wallet_balances SET reserved_units = ?, updated_at = ? WHERE user_id = ? AND asset = 'SOL'")
       .bind((BigInt(balance.reserved_units) - amount).toString(), now, row.user_id).run();
     await env.DB.prepare("UPDATE withdrawal_requests SET status = 'sent', tx_hash = ?, updated_at = ? WHERE id = ? AND status = 'approved'")
