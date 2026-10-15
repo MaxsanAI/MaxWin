@@ -83,8 +83,11 @@ function randomRegularSymbol(): Exclude<SymbolName, "book"> {
 
 function spinReels(): SymbolName[] {
   // 15 independent cells. Keep the same chance rule as the tuner config.
-  return Array.from({ length: 15 }, () => {
-    if (randomIndex(1000) < BOOK_OF_SUNRISE_MATH.bookProbabilityPer1000) return "book";
+  return Array.from({ length: 15 }, (_, index) => {
+    const bookChance = index < 9
+      ? BOOK_OF_SUNRISE_MATH.bookHuntProbabilityPer1000
+      : BOOK_OF_SUNRISE_MATH.bookProbabilityPer1000;
+    if (randomIndex(1000) < bookChance) return "book";
     return randomRegularSymbol();
   });
 }
