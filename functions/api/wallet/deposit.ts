@@ -73,6 +73,73 @@ async function getSolUsd(): Promise<number | null> {
   return null;
 }
 
+async function autoScanDeposits(db: D1Database, destination: string, rpcUrl: string, currentUserId: string): Promise<{ credited: number; currentUserCredited: boolean }> {
+  const response = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: "maxwin-auto-deposit-scan", method: "getSignaturesForAddress", params: [destination, { limit: 20, commitment: "finalized" }] })
+  });
+  if (!response.ok) throw new Error("Solana RPC is temporarily unavailable.");
+  const signatureData = await response.json() as { result?: Array<{ signature: string; err: unknown; blockTime?: number | null; confirmationStatus?: string }> };
+  const signatures = (signatureData.result || []).filter(item => !item.err && item.signature && item.confirmationStatus === "finalized");
+  let credited = 0;
+  let currentUserCredited = false;
+
+  for (const item of signatures) {
+    const alreadyProcessed = await db.prepare("SELECT id FROM wallet_transactions WHERE asset='SOL' AND tx_hash=? LIMIT 1").bind(item.signature).first();
+    if (alreadyProcessed) continue;
+    const txResponse = await fetch(rpcUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: "maxwin-auto-deposit-tx", method: "getTransaction", params: [item.signature, { commitment: "finalized", encoding: "jsonParsed", maxSupportedTransactionVersion: 1 }] })
+    });
+    if (!txResponse.ok) continue;
+    const txData = await txResponse.json() as { result?: RpcTransaction | null };
+    const tx = txData.result;
+    if (!tx?.meta || (tx.meta.err !== null && tx.meta.err !== undefined) || typeof tx.blockTime !== "number") continue;
+    const keys = tx.transaction?.message?.accountKeys || [];
+    const recipientIndex = keys.findIndex(key => (typeof key === "string" ? key : key.pubkey) === destination);
+    if (recipientIndex < 0) continue;
+    const pre = tx.meta.preBalances?.[recipientIndex];
+    const post = tx.meta.postBalances?.[recipientIndex];
+    if (typeof pre !== "number" || typeof post !== "number" || !Number.isSafeInteger(pre) || !Number.isSafeInteger(post)) continue;
+    const received = post - pre;
+    if (!Number.isSafeInteger(received) || received <= 0) continue;
+    const txTime = tx.blockTime * 1000;
+    const matches = await db.prepare("SELECT id,user_id,amount_units,usd_target,sol_usd_at_request,created_at,expires_at FROM wallet_deposit_requests WHERE amount_units=? AND status IN ('pending','expired') AND tx_hash IS NULL AND created_at<=? AND expires_at>=? ORDER BY created_at DESC LIMIT 2")
+      .bind(String(received), new Date(txTime + 2000).toISOString(), new Date(txTime - 1000).toISOString()).all<{id:string;user_id:string;amount_units:string;usd_target:number|null;sol_usd_at_request:number|null;created_at:string;expires_at:string}>();
+    const candidates = matches.results || [];
+    // Shared-address deposits must map to exactly one unique amount/time quote.
+    if (candidates.length !== 1) continue;
+    const quote = candidates[0];
+    const solUsd = quote.sol_usd_at_request && Number.isFinite(quote.sol_usd_at_request) && quote.sol_usd_at_request > 0 ? quote.sol_usd_at_request : await getSolUsd();
+    if (!solUsd || (received / 1e9) * solUsd + 1e-9 < Number(quote.usd_target || 5)) continue;
+
+    const timestamp = new Date().toISOString();
+    const txId = randomToken(16);
+    try {
+      await db.batch([
+        db.prepare("INSERT OR IGNORE INTO wallet_balances (user_id,asset,available_units,reserved_units,updated_at) VALUES (?,'SOL','0','0',?)").bind(quote.user_id, timestamp),
+        db.prepare("UPDATE wallet_deposit_requests SET status='confirmed',tx_hash=?,updated_at=? WHERE id=? AND user_id=? AND status IN ('pending','expired') AND tx_hash IS NULL")
+          .bind(item.signature, timestamp, quote.id, quote.user_id),
+        db.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) SELECT ?,?,'SOL','deposit','confirmed',?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM wallet_deposit_requests WHERE id=? AND user_id=? AND status='confirmed' AND tx_hash=?)")
+          .bind(txId, quote.user_id, String(received), item.signature, destination, item.signature, timestamp, timestamp, JSON.stringify({slot:tx.slot??null,blockTime:tx.blockTime,solUsdAtCredit:solUsd,verification:"automatic-finalized-solana-rpc",depositRequestId:quote.id}), quote.id, quote.user_id, item.signature),
+        db.prepare("UPDATE wallet_balances SET available_units=CAST(available_units AS INTEGER)+?,updated_at=? WHERE user_id=? AND asset='SOL' AND EXISTS (SELECT 1 FROM wallet_transactions WHERE id=? AND tx_hash=?)")
+          .bind(received, timestamp, quote.user_id, txId, item.signature)
+      ]);
+      const inserted = await db.prepare("SELECT id FROM wallet_transactions WHERE id=? AND user_id=? AND tx_hash=?").bind(txId, quote.user_id, item.signature).first();
+      if (inserted) {
+        credited++;
+        if (quote.user_id === currentUserId) currentUserCredited = true;
+      }
+    } catch (error) {
+      const duplicate = await db.prepare("SELECT id FROM wallet_transactions WHERE asset='SOL' AND tx_hash=? LIMIT 1").bind(item.signature).first();
+      if (!duplicate) console.error("[MAXWIN auto-deposit] Could not credit verified transaction:", error instanceof Error ? error.message : String(error));
+    }
+  }
+  return {credited,currentUserCredited};
+}
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Wallet service is not configured. Check the D1 binding named DB." }, 503);
   const user = await getUser(request, env.DB);
@@ -86,6 +153,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureWalletSchema(env.DB);
     await ensureDepositSchema(env.DB);
+
+    if (body.action === "autoScan") {
+      const scan = await autoScanDeposits(env.DB, destination, env.SOLANA_RPC_URL?.trim() || "https://solana-rpc.publicnode.com", user.id);
+      return json({ok:true,...scan,message:scan.currentUserCredited?"Deposit automatically verified and credited to your SOL wallet.": "Checking finalized Solana transactions for your deposit."});
+    }
 
     if (body.action === "create") {
       const usd = Number(body.usd);
