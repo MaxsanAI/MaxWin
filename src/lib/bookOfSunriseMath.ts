@@ -23,7 +23,7 @@ export const BOOK_OF_SUNRISE_MATH = {
   payouts: {
     pharaoh: { 3: 1, 4: 8, 5: 20 },
     anubis:  { 3: 1, 4: 6, 5: 15 },
-    scarab:  { 3: 1, 4: 4, 5: 10 },
+    scarab:  { 2: 1, 3: 1, 4: 4, 5: 10 },
     statue:  { 3: 1, 4: 4, 5: 10 },
     ace:     { 3: 1, 4: 3, 5: 8 },
     king:    { 3: 1, 4: 3, 5: 8 },
