@@ -66,6 +66,10 @@ async function authorize(request: Request, env: Env): Promise<boolean> {
   return mismatch === 0;
 }
 
+function isSundayInSerbia(date = new Date()): boolean {
+  return new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Belgrade", weekday: "short" }).format(date) === "Sun";
+}
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Withdrawal administration is not configured." }, 503);
   if (!await authorize(request, env)) return json({ error: "Unauthorized admin access." }, 401);
@@ -107,7 +111,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return json({ ok: true, status: "rejected", message: "Request rejected and reserved SOL returned to the user's available balance." });
     }
 
-    if (row.status !== "approved") return json({ error: "Approve the request first, send the SOL manually, then record the transaction signature." }, 409);
+    if (isSundayInSerbia()) return json({ error: "Withdrawals are not processed on Sundays (Serbia time). Record the payout on Monday instead." }, 409);\n    if (row.status !== "approved") return json({ error: "Approve the request first, send the SOL manually, then record the transaction signature." }, 409);
     const existing = await env.DB.prepare("SELECT id FROM wallet_transactions WHERE asset = 'SOL' AND tx_hash = ? LIMIT 1").bind(txHash).first<{ id: string }>();
     if (existing) return json({ error: "That Solana transaction signature is already recorded." }, 409);
     const verifiedPayout = await verifyFinalizedPayout(env, txHash, row.destination_address, row.amount_units, row.created_at);
