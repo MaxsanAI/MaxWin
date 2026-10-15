@@ -157,7 +157,7 @@ function App() {
     return () => { cancelled = true; };
   }, [modal, authUser?.id]);
   useEffect(() => {
-    if (modal !== "deposit") return;
+    if (modal !== "deposit" && modal !== "withdraw") return;
     let cancelled = false;
     setSolRateError("");
     fetch("/api/wallet/quote", { credentials: "same-origin", cache: "no-store" }).then(async response => {
