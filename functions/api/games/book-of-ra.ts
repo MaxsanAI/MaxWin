@@ -10,18 +10,13 @@ const ALL_SYMBOLS: SymbolName[] = ["book", ...REGULAR_SYMBOLS];
 const PAYOUTS: Record<Exclude<SymbolName, "book">, { 2?: number; 3: number; 4: number; 5: number }> =
   BOOK_OF_SUNRISE_MATH.payouts as Record<Exclude<SymbolName, "book">, { 2?: number; 3: number; 4: number; 5: number }>;
 
-// 10 Klasičnih dobitnih linija na 5x3 mreži (3 reda, 5 kolona)
+// 5 fixed paylines on the 5x3 grid: three horizontal and two diagonals.
 const PAYLINES: number[][] = [
-  [1,1,1,1,1], // Sredina
-  [0,0,0,0,0], // Vrh
-  [2,2,2,2,2], // Dno
-  [0,1,2,1,0], // V oblik
-  [2,1,0,1,2], // Obrnuti V
-  [0,0,1,2,2],
-  [2,2,1,0,0],
-  [1,2,2,2,1],
-  [1,0,0,0,1],
-  [0,1,1,1,0]
+  [1,1,1,1,1], // Middle horizontal
+  [0,0,0,0,0], // Top horizontal
+  [2,2,2,2,2], // Bottom horizontal
+  [0,1,2,1,0], // V shape
+  [2,1,0,1,2]  // Inverted V
 ];
 
 const BUY_BONUS_MULTIPLIER = BOOK_OF_SUNRISE_MATH.buyBonusMultiplier;
