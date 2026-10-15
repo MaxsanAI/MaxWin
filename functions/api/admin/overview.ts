@@ -32,6 +32,11 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     await ensureWalletSchema(env.DB);
     await ensureFreeSpinSchema(env.DB);
     await ensureAdminBonusSchema(env.DB);
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS admin_hidden_wallet_transactions (
+      transaction_id TEXT PRIMARY KEY,
+      hidden_at TEXT NOT NULL,
+      reason TEXT NOT NULL DEFAULT 'hidden_from_admin_recent_list'
+    )`).run();
     const [users, walletTx, withdrawals, balances, spins, bonuses, recentTx, recentWithdrawals] = await Promise.all([
       env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>(),
       env.DB.prepare("SELECT COUNT(*) AS count FROM wallet_transactions").first<{ count: number }>(),
@@ -39,7 +44,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       env.DB.prepare("SELECT COUNT(*) AS count FROM wallet_balances").first<{ count: number }>(),
       env.DB.prepare("SELECT COALESCE(SUM(available_spins),0) AS available, COALESCE(SUM(total_awarded),0) AS awarded FROM free_spin_wallets").first<{ available: number; awarded: number }>(),
       env.DB.prepare("SELECT COUNT(*) AS count FROM user_bonuses").first<{ count: number }>(),
-      env.DB.prepare("SELECT t.id, t.user_id AS userId, u.username, t.asset, t.kind, t.status, t.amount_units AS amountUnits, t.tx_hash AS txHash, t.address, t.created_at AS createdAt FROM wallet_transactions t JOIN users u ON u.id=t.user_id ORDER BY t.created_at DESC LIMIT 30").all(),
+      env.DB.prepare("SELECT t.id, t.user_id AS userId, u.username, t.asset, t.kind, t.status, t.amount_units AS amountUnits, t.tx_hash AS txHash, t.address, t.created_at AS createdAt FROM wallet_transactions t JOIN users u ON u.id=t.user_id WHERE NOT EXISTS (SELECT 1 FROM admin_hidden_wallet_transactions h WHERE h.transaction_id=t.id) ORDER BY t.created_at DESC LIMIT 30").all(),
       env.DB.prepare("SELECT w.id, w.user_id AS userId, u.username, w.asset, w.amount_units AS amountUnits, w.destination_address AS address, w.status, w.tx_hash AS txHash, w.created_at AS createdAt FROM withdrawal_requests w JOIN users u ON u.id=w.user_id ORDER BY w.created_at DESC LIMIT 30").all()
     ]);
     const pendingDeposits = await env.DB.prepare("SELECT COUNT(*) AS count FROM wallet_transactions WHERE kind='deposit' AND status IN ('pending','confirming')").first<{ count: number }>();
