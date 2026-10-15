@@ -6,8 +6,8 @@ export type BookOfSunriseRegularSymbol = Exclude<BookOfSunriseSymbol, "book">;
  * Regular payouts are per payline bet; scatter payouts use total bet.
  */
 export const BOOK_OF_SUNRISE_MATH = {
-  // 1.2% per cell; 15 independent cells.
-  bookProbabilityPer1000: 12,
+  // 1.6% per cell; slightly more frequent Books for suspense moments.
+  bookProbabilityPer1000: 16,
   // Weighted distribution: lower-value symbols are more common than premium symbols.
   regularSymbolWeights: {
     pharaoh: 2,
