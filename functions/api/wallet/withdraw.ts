@@ -1,19 +1,26 @@
-import { Env, getUser, json, readJson } from "../auth/_shared";
-
-type Asset = "SOL" | "TON";
+import { Env, ensureWalletSchema, getUser, json, readJson, randomToken } from "../auth/_shared";
 
 function parseUnits(value: unknown): bigint | null {
   if (typeof value !== "string" && typeof value !== "number") return null;
   const input = String(value).trim();
-  if (!/^(?:0|[1-9]\d{0,11})(?:\.\d{1,9})?$/.test(input)) return null;
+  if (!/^(?:0|[1-9]\d{0,8})(?:\.\d{1,9})?$/.test(input)) return null;
   const [whole, fraction = ""] = input.split(".");
   try { return BigInt(whole) * 1_000_000_000n + BigInt((fraction + "000000000").slice(0, 9)); }
   catch { return null; }
 }
 
-function validAddress(asset: Asset, address: string): boolean {
-  if (asset === "SOL") return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
-  return /^(?:EQ|UQ)[A-Za-z0-9_-]{46}$/.test(address);
+function validSolAddress(address: string): boolean {
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+}
+
+async function getSolUsd(): Promise<number | null> {
+  try {
+    const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd", { headers: { Accept: "application/json" } });
+    if (!response.ok) return null;
+    const data = await response.json() as { solana?: { usd?: number } };
+    const value = data.solana?.usd;
+    return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+  } catch { return null; }
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
@@ -23,16 +30,48 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const body = await readJson(request);
   if (!body) return json({ error: "Submit a valid withdrawal request." }, 400);
 
-  const asset = body.asset;
   const amount = parseUnits(body.amount);
   const address = typeof body.address === "string" ? body.address.trim() : "";
-  if (asset !== "SOL" && asset !== "TON") return json({ error: "Choose SOL or TON." }, 400);
-  if (amount === null || amount <= 0n) return json({ error: "Enter a valid amount greater than zero (up to 9 decimal places)." }, 400);
-  if (!validAddress(asset, address)) return json({ error: "The destination address format is not valid for the selected network." }, 400);
+  if (body.asset !== undefined && body.asset !== "SOL") return json({ error: "Only SOL withdrawals are available right now." }, 400);
+  if (amount === null || amount <= 0n) return json({ error: "Enter a valid SOL amount greater than zero (up to 9 decimal places)." }, 400);
+  if (!validSolAddress(address)) return json({ error: "The destination Solana address format is not valid." }, 400);
 
-  // Fail closed until secure key management, signing, broadcasting, and
-  // reconciliation are implemented and tested. Never reserve user funds here.
-  return json({
-    error: "Withdrawals are not enabled yet. No funds have been reserved or sent; secure signing and transaction broadcasting are still being implemented."
-  }, 503);
+  try {
+    await ensureWalletSchema(env.DB);
+    const solUsd = await getSolUsd();
+    if (!solUsd) return json({ error: "The live SOL/USD rate is unavailable. Please try again later." }, 503);
+    if (Number(amount) / 1e9 * solUsd < 10) return json({ error: "The minimum withdrawal is $10 USD equivalent in SOL at the current rate." }, 400);
+
+    const balance = await env.DB.prepare("SELECT available_units, reserved_units FROM wallet_balances WHERE user_id = ? AND asset = 'SOL' LIMIT 1")
+      .bind(user.id).first<{ available_units: string; reserved_units: string }>();
+    if (!balance || BigInt(balance.available_units || "0") < amount) return json({ error: "Insufficient available SOL balance for this withdrawal." }, 400);
+
+    const now = new Date().toISOString();
+    const requestId = randomToken(16);
+    const transactionId = randomToken(16);
+    const nextAvailable = BigInt(balance.available_units) - amount;
+    const nextReserved = BigInt(balance.reserved_units || "0") + amount;
+    const reserve = await env.DB.prepare("UPDATE wallet_balances SET available_units = ?, reserved_units = ?, updated_at = ? WHERE user_id = ? AND asset = 'SOL' AND available_units = ?")
+      .bind(nextAvailable.toString(), nextReserved.toString(), now, user.id, balance.available_units).run();
+    if (!reserve.meta || reserve.meta.changes !== 1) return json({ error: "Wallet balance changed while submitting. Refresh and try again." }, 409);
+
+    try {
+      await env.DB.prepare("INSERT INTO withdrawal_requests (id,user_id,asset,amount_units,destination_address,status,tx_hash,created_at,updated_at) VALUES (?,?,'SOL',?,?,'pending',NULL,?,?)")
+        .bind(requestId, user.id, amount.toString(), address, now, now).run();
+      await env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) VALUES (?,?,'SOL','withdrawal','pending',?,NULL,?,NULL,?,?,?)")
+        .bind(transactionId, user.id, amount.toString(), address, now, now, JSON.stringify({ requestId, manualApproval: true, solUsdAtRequest: solUsd })).run();
+    } catch (error) {
+      await env.DB.prepare("UPDATE wallet_balances SET available_units = ?, reserved_units = ?, updated_at = ? WHERE user_id = ? AND asset = 'SOL'")
+        .bind(balance.available_units, balance.reserved_units || "0", now, user.id).run();
+      throw error;
+    }
+    return json({
+      ok: true,
+      request: { id: requestId, asset: "SOL", amountUnits: amount.toString(), status: "pending", createdAt: now },
+      message: "Withdrawal request submitted for admin approval. SOL is reserved and will not be sent automatically."
+    }, 201);
+  } catch (error) {
+    console.error("[MAXWIN wallet] Withdrawal request failed:", error instanceof Error ? error.message : String(error));
+    return json({ error: "Could not submit the withdrawal request." }, 500);
+  }
 };
