@@ -1,12 +1,22 @@
 import { Env, ensureWalletSchema, getUser, json, readJson, randomToken } from "../auth/_shared";
 
-function parseUnits(value: unknown): bigint | null {
+function parseUsdCents(value: unknown): number | null {
   if (typeof value !== "string" && typeof value !== "number") return null;
   const input = String(value).trim();
-  if (!/^(?:0|[1-9]\d{0,8})(?:\.\d{1,9})?$/.test(input)) return null;
+  if (!/^(?:0|[1-9]\d{0,7})(?:\.\d{1,2})?$/.test(input)) return null;
   const [whole, fraction = ""] = input.split(".");
-  try { return BigInt(whole) * 1_000_000_000n + BigInt((fraction + "000000000").slice(0, 9)); }
-  catch { return null; }
+  const cents = Number(whole) * 100 + Number((fraction + "00").slice(0, 2));
+  return Number.isSafeInteger(cents) ? cents : null;
+}
+
+function usdCentsToLamports(usdCents: number, solUsd: number): bigint | null {
+  const units = Math.floor((usdCents / 100 / solUsd) * 1_000_000_000);
+  if (!Number.isSafeInteger(units) || units <= 0) return null;
+  return BigInt(units);
+}
+
+function isSundayInSerbia(date = new Date()): boolean {
+  return new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Belgrade", weekday: "short" }).format(date) === "Sun";
 }
 
 function validSolAddress(address: string): boolean {
@@ -30,17 +40,17 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const body = await readJson(request);
   if (!body) return json({ error: "Submit a valid withdrawal request." }, 400);
 
-  const amount = parseUnits(body.amount);
+  const amountUsdCents = parseUsdCents(body.amountUsd);
   const address = typeof body.address === "string" ? body.address.trim() : "";
   if (body.asset !== undefined && body.asset !== "SOL") return json({ error: "Only SOL withdrawals are available right now." }, 400);
-  if (amount === null || amount <= 0n) return json({ error: "Enter a valid SOL amount greater than zero (up to 9 decimal places)." }, 400);
+  if (amountUsdCents === null || amountUsdCents < 1000) return json({ error: "The minimum withdrawal is $10.00 USD. Enter the amount in dollars." }, 400);
   if (!validSolAddress(address)) return json({ error: "The destination Solana address format is not valid." }, 400);
 
   try {
     await ensureWalletSchema(env.DB);
     const solUsd = await getSolUsd();
     if (!solUsd) return json({ error: "The live SOL/USD rate is unavailable. Please try again later." }, 503);
-    if (Number(amount) / 1e9 * solUsd < 10) return json({ error: "The minimum withdrawal is $10 USD equivalent in SOL at the current rate." }, 400);
+    const amount = usdCentsToLamports(amountUsdCents, solUsd);\n    if (amount === null) return json({ error: "This dollar amount is too small to convert to SOL at the current rate." }, 400);\n    if (isSundayInSerbia()) { /* Requests may be queued on Sunday; admin processing is blocked until Monday. */ }
 
     const balance = await env.DB.prepare("SELECT available_units, reserved_units FROM wallet_balances WHERE user_id = ? AND asset = 'SOL' LIMIT 1")
       .bind(user.id).first<{ available_units: string; reserved_units: string }>();
