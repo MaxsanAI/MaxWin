@@ -338,7 +338,21 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
     });
   } catch (error) {
     const previous = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1").bind(requestId, user.id).first<{ result_json: string }>().catch(() => null);
-    if (previous) return json({ result: JSON.parse(previous.result_json), mode: "real", replayed: true });
+    if (previous) {
+      const solUsd = await getRealSolUsd();
+      if (!solUsd) return json({ error: "The round is recorded, but the live SOL/USD quote is unavailable. Retry with the same request ID to recover its balance." }, 503);
+      const wallet = await env.DB.prepare("SELECT available_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1").bind(user.id).first<{ available_units: string }>().catch(() => null);
+      const result = JSON.parse(previous.result_json);
+      return json({
+        result,
+        balance: lamportsToUsdCents(wallet?.available_units || "0", solUsd),
+        balanceSol: Number(wallet?.available_units || "0") / 1e9,
+        freeSpins: Number(result.freeSpinsRemaining || 0),
+        expandingSymbol: result.expandingSymbol || null,
+        mode: "real",
+        replayed: true
+      });
+    }
     console.error("[MAXWIN Book of Ra real settlement]", error instanceof Error ? error.message : String(error));
     return json({ error: "The real-money round could not be settled. Check wallet history before retrying." }, 500);
   }
