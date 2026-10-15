@@ -1,43 +1,47 @@
 export type BookOfSunriseSymbol = "book" | "pharaoh" | "anubis" | "scarab" | "statue" | "ace" | "king" | "queen" | "jack" | "ten";
 export type BookOfSunriseRegularSymbol = Exclude<BookOfSunriseSymbol, "book">;
 
+/**
+ * Temple of Ra demo math v2.
+ * Multipliers are per payline bet; scatter awards are per total spin bet.
+ * This is a conservative starting model, not a certified RTP claim.
+ */
 export const BOOK_OF_SUNRISE_MATH = {
-  // 35 per 1000 means a 3.5% chance for each of the 15 cells to be a Book.
-  bookProbabilityPer1000: 35,
-  // Relative weights for regular symbols. All 1 means uniform distribution, as in the existing engine.
+  // 1.8% per cell; 15 independent cells.
+  bookProbabilityPer1000: 18,
+  // Weighted distribution: lower-value symbols are more common than premium symbols.
   regularSymbolWeights: {
-    pharaoh: 1,
-    anubis: 1,
-    scarab: 1,
-    statue: 1,
-    ace: 1,
-    king: 1,
-    queen: 1,
-    jack: 1,
-    ten: 1
+    pharaoh: 5,
+    anubis: 8,
+    scarab: 10,
+    statue: 10,
+    ace: 12,
+    king: 12,
+    queen: 14,
+    jack: 14,
+    ten: 15
   },
-  // Paytable multipliers are per payline bet, not per total spin bet.
   payouts: {
-    pharaoh: { 2: 10, 3: 100, 4: 1000, 5: 5000 },
-    anubis:  { 2: 5,  3: 40,  4: 400,  5: 2000 },
-    scarab:  { 2: 5,  3: 30,  4: 100,  5: 750 },
-    statue:  { 2: 5,  3: 30,  4: 100,  5: 750 },
-    ace:     { 3: 10, 4: 40,  5: 150 },
-    king:    { 3: 10, 4: 40,  5: 150 },
-    queen:   { 3: 5,  4: 25,  5: 100 },
-    jack:    { 3: 5,  4: 25,  5: 100 },
-    ten:     { 3: 5,  4: 25,  5: 100 }
+    pharaoh: { 2: 1,   3: 5,   4: 20, 5: 80 },
+    anubis:  { 2: 0.8, 3: 3,   4: 12, 5: 45 },
+    scarab:  { 2: 0.6, 3: 2,   4: 8,  5: 30 },
+    statue:  { 2: 0.6, 3: 2,   4: 8,  5: 30 },
+    ace:     { 3: 1.5, 4: 5,   5: 18 },
+    king:    { 3: 1.5, 4: 5,   5: 18 },
+    queen:   { 3: 1,   4: 3,   5: 10 },
+    jack:    { 3: 1,   4: 3,   5: 10 },
+    ten:     { 3: 1,   4: 3,   5: 10 }
   },
   scatterPayoutByBookCount: {
-    threeBooks: 2,
-    fourBooks: 20,
-    fivePlusBooks: 200
+    threeBooks: 1,
+    fourBooks: 5,
+    fivePlusBooks: 15
   },
   freeSpinsByBookCount: {
-    threeBooks: 10,
-    fourBooks: 15,
-    fivePlusBooks: 20
+    threeBooks: 8,
+    fourBooks: 12,
+    fivePlusBooks: 16
   },
-  buyBonusMultiplier: 75,
-  maxWinMultiplier: 1000
+  buyBonusMultiplier: 50,
+  maxWinMultiplier: 250
 } as const;
