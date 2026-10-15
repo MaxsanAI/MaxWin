@@ -93,7 +93,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       const uniqueOffset = (random[0] % 900) + 100;
       const amountUnits = String(Math.ceil((usd / solUsd) * 1e9) + uniqueOffset);
       const now = new Date();
-      const expires = new Date(now.getTime() + 30 * 60 * 1000);
+      const expires = new Date(now.getTime() + 3 * 60 * 1000);
       const id = randomToken(16);
       await env.DB.prepare("UPDATE wallet_deposit_requests SET status='expired', updated_at=? WHERE user_id=? AND status='pending'").bind(now.toISOString(), user.id).run();
       await env.DB.prepare("INSERT INTO wallet_deposit_requests (id,user_id,asset,amount_units,status,tx_hash,expires_at,created_at,updated_at) VALUES (?,?,'SOL',?,'pending',NULL,?,?,?)")
