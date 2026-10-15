@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from "react";
-import { ArrowLeft, RefreshCw, ShieldCheck, Wallet, Users, Gift, ArrowDownToLine, ArrowUpFromLine, LockKeyhole, Activity } from "lucide-react";
+import { ArrowLeft, RefreshCw, ShieldCheck, Wallet, Users, Gift, ArrowDownToLine, ArrowUpFromLine, LockKeyhole, Activity, Trash2 } from "lucide-react";
 
 type Overview = {
   status: { realMoneyPlayEnabled: boolean; depositsEnabled: boolean; automaticWithdrawalsEnabled: boolean; manualWithdrawalApprovalEnabled: boolean; minimumDepositUsd: number; depositStepUsd: number; welcomeFreeSpins: number; welcomeSpinValueUsd: number; minimumWithdrawalUsd: number };
@@ -26,6 +26,9 @@ export default function AdminPanel() {
   const [testAmount, setTestAmount] = useState("100");
   const [testCreditBusy, setTestCreditBusy] = useState(false);
   const [testCreditMessage, setTestCreditMessage] = useState("");
+  const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
+  const [hideTransactionsBusy, setHideTransactionsBusy] = useState(false);
+  const [transactionVisibilityMessage, setTransactionVisibilityMessage] = useState("");
 
 
   const load = async (candidate = key) => {
@@ -48,6 +51,27 @@ export default function AdminPanel() {
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : "Could not update withdrawal request."); }
     finally { setWithdrawalBusy(null); }
+  };
+
+  const hideSelectedTransactions = async () => {
+    if (!selectedTransactionIds.length) return;
+    setHideTransactionsBusy(true); setError(""); setTransactionVisibilityMessage("");
+    try {
+      const response = await fetch("/api/admin/wallet-transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-MAXWIN-ADMIN-KEY": key },
+        body: JSON.stringify({ transactionIds: selectedTransactionIds })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not remove selected transactions from this list.");
+      setSelectedTransactionIds([]);
+      setTransactionVisibilityMessage(data.message || "Selected transactions removed from this list. Ledger records are preserved.");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not remove selected transactions from this list.");
+    } finally {
+      setHideTransactionsBusy(false);
+    }
   };
 
   const addTestBalance = async (event: FormEvent<HTMLFormElement>) => {
@@ -125,7 +149,7 @@ export default function AdminPanel() {
             {testCreditMessage && <p role="status" style={{color:"#a7efc1",fontSize:13,marginTop:14}}>{testCreditMessage}</p>}
           </div>
         </section>
-        <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Recent wallet transactions</h2><span className="mw-admin-muted">Latest 30</span></div><div className="mw-admin-table-wrap"><table className="mw-admin-table"><thead><tr><th>User</th><th>Type</th><th>Asset</th><th>Amount</th><th>Status</th><th>Transaction hash</th><th>Date</th></tr></thead><tbody>{overview.recentTransactions.length ? overview.recentTransactions.map(tx => <tr key={tx.id}><td>{tx.username}</td><td>{tx.kind}</td><td>{tx.asset}</td><td>{moneyUnits(tx.amountUnits,tx.asset)}</td><td className="mw-admin-status-text">{tx.status}</td><td>{tx.txHash ? tx.txHash.slice(0,16)+"…" : "—"}</td><td>{new Date(tx.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={7} className="mw-admin-empty">No wallet transactions recorded yet.</td></tr>}</tbody></table></div></section>
+        <section className="mw-admin-section"><div className="mw-admin-section-head"><div><h2>Recent wallet transactions</h2><span className="mw-admin-muted">Latest 30 · select entries to remove them from this view</span></div><button className="mw-admin-btn" type="button" onClick={() => void hideSelectedTransactions()} disabled={!selectedTransactionIds.length || hideTransactionsBusy}><Trash2 size={15}/>{hideTransactionsBusy ? "Removing…" : `Remove selected (${selectedTransactionIds.length})`}</button></div>{transactionVisibilityMessage && <p role="status" className="mw-admin-muted" style={{padding:"8px 18px",color:"#a7efc1"}}>{transactionVisibilityMessage}</p>}<div className="mw-admin-table-wrap"><table className="mw-admin-table"><thead><tr><th><input aria-label="Select all visible wallet transactions" type="checkbox" checked={overview.recentTransactions.length > 0 && overview.recentTransactions.every(tx => selectedTransactionIds.includes(tx.id))} onChange={e => setSelectedTransactionIds(e.target.checked ? overview.recentTransactions.map(tx => tx.id) : [])}/></th><th>User</th><th>Type</th><th>Asset</th><th>Amount</th><th>Status</th><th>Transaction hash</th><th>Date</th></tr></thead><tbody>{overview.recentTransactions.length ? overview.recentTransactions.map(tx => <tr key={tx.id}><td><input aria-label={`Select transaction ${tx.id}`} type="checkbox" checked={selectedTransactionIds.includes(tx.id)} onChange={e => setSelectedTransactionIds(prev => e.target.checked ? [...new Set([...prev,tx.id])] : prev.filter(id => id !== tx.id))}/></td><td>{tx.username}</td><td>{tx.kind}</td><td>{tx.asset}</td><td>{moneyUnits(tx.amountUnits,tx.asset)}</td><td className="mw-admin-status-text">{tx.status}</td><td>{tx.txHash ? tx.txHash.slice(0,16)+"…" : "—"}</td><td>{new Date(tx.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={8} className="mw-admin-empty">No visible wallet transactions.</td></tr>}</tbody></table></div><p className="mw-admin-muted" style={{padding:"0 18px 16px"}}>This removes entries only from the Recent wallet transactions view. Financial ledger records and the total transaction count are preserved for auditability.</p></section>
         <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Withdrawal requests</h2><span className="mw-admin-muted">Latest 30 · manual approval</span></div><div className="mw-admin-table-wrap"><table className="mw-admin-table"><thead><tr><th>User</th><th>Asset</th><th>Amount</th><th>Destination</th><th>Status</th><th>Transaction / action</th><th>Date</th></tr></thead><tbody>{overview.recentWithdrawals.length ? overview.recentWithdrawals.map(w => <tr key={w.id}><td>{w.username}</td><td>{w.asset}</td><td>{moneyUnits(w.amountUnits,w.asset)}</td><td title={w.address}>{w.address.slice(0,13)}…</td><td className="mw-admin-status-text">{w.status}</td><td>{w.txHash ? <a href={"https://solscan.io/tx/" + encodeURIComponent(w.txHash)} target="_blank" rel="noreferrer" style={{color:"#d8bc70"}}>{w.txHash.slice(0,16)}…</a> : w.status === "pending" ? <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"approve")}>Approve</button><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"reject")}>Reject</button></div> : w.status === "approved" ? <div style={{display:"grid",gap:7,minWidth:220}}><input className="mw-admin-input" style={{margin:0}} aria-label={"Solana transaction signature for "+w.username} placeholder="Paste confirmed Solana signature" value={withdrawalTxHashes[w.id] || ""} onChange={e => setWithdrawalTxHashes(prev => ({...prev,[w.id]:e.target.value}))}/><div style={{display:"flex",gap:6,flexWrap:"wrap"}}><button className="mw-admin-btn" disabled={withdrawalBusy===w.id || !(withdrawalTxHashes[w.id] || "").trim()} onClick={() => void updateWithdrawal(w.id,"mark_sent")}>Record sent</button><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"reject")}>Reject</button></div></div> : "—"}</td><td>{new Date(w.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={7} className="mw-admin-empty">No withdrawal requests recorded yet.</td></tr>}</tbody></table></div><p className="mw-admin-muted" style={{padding:"0 18px 16px"}}>Approve a request, send SOL manually from your own wallet, then paste the confirmed Solana transaction signature and choose “Record sent”. Approval never sends funds automatically.</p></section>
         <p className="mw-admin-muted">{overview.notice}</p>
       </>}
