@@ -86,6 +86,9 @@ function App() {
   const [withdrawAddress, setWithdrawAddress] = useState("");
   const [withdrawMessage, setWithdrawMessage] = useState("");
   const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [depositSignature, setDepositSignature] = useState("");
+  const [depositMessage, setDepositMessage] = useState("");
+  const [depositBusy, setDepositBusy] = useState(false);
   const loadWallet = async () => {
     setWalletLoading(true); setWalletError("");
     try {
@@ -189,6 +192,29 @@ function App() {
       const response = await fetch("/api/profile", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ avatarDataUrl: imageUrl }) });
       const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || "Could not save profile photo."); setProfileData(data.profile); setProfileMessage("Profile photo saved.");
     } catch (error) { setProfileMessage(error instanceof Error ? error.message : "Could not save profile photo."); } finally { setProfileBusy(false); }
+  };
+  const submitDeposit = async () => {
+    const signature = depositSignature.trim();
+    if (!signature) { setDepositMessage("Paste the Solana transaction signature first."); return; }
+    setDepositBusy(true); setDepositMessage("");
+    try {
+      const response = await fetch("/api/wallet/deposit", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signature })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not verify this deposit.");
+      setDepositMessage(data.message || "Deposit verified.");
+      setDepositSignature("");
+      await loadWallet();
+    } catch (error) {
+      setDepositMessage(error instanceof Error ? error.message : "Could not verify this deposit.");
+    } finally {
+      setDepositBusy(false);
+    }
   };
   const submitWithdrawal = async () => {
     setWithdrawBusy(true); setWithdrawMessage("");
@@ -345,7 +371,10 @@ function App() {
         {solRateError && <p className="auth-error" role="alert">{solRateError}</p>}
         <label>SOL deposit address<input readOnly value={walletData?.deposits?.SOL?.address || ""} placeholder={walletLoading ? "Loading…" : "Deposit address not configured"} /></label>
         {walletData?.deposits?.SOL?.address ? <button type="button" className="btn btn-gold modal-done" onClick={() => { void navigator.clipboard?.writeText(walletData.deposits.SOL.address); }}>Copy SOL deposit address</button> : <p className="auth-note">Set SOL_DEPOSIT_ADDRESS in Cloudflare Pages → Settings → Variables and secrets. Use only an address controlled by you.</p>}
-        <p className="auth-note">This is a live estimate only. Do not send funds yet: on-chain deposit detection, confirmation, and account crediting are not active. The displayed address alone will not credit your balance.</p>
+        <label>Solana transaction signature<input value={depositSignature} onChange={e => setDepositSignature(e.target.value)} placeholder="Paste signature after sending SOL" autoComplete="off" spellCheck={false} /></label>
+        <button type="button" className="btn btn-gold modal-done" onClick={() => void submitDeposit()} disabled={depositBusy || !depositSignature.trim() || !walletData?.deposits?.SOL?.address}>{depositBusy ? "Verifying on Solana…" : "Verify deposit and credit wallet"}</button>
+        {depositMessage && <p className={depositMessage.toLowerCase().includes("credited") || depositMessage.toLowerCase().includes("verified") ? "auth-note" : "auth-error"} role="status">{depositMessage}</p>}
+        <p className="auth-note">TEST MODE: send only after checking the address carefully. Paste the transaction signature from Solflare; MAXWIN checks the finalized transaction through Solana RPC and credits the actual SOL received only once. Minimum deposit is $5 equivalent. This shared address is for controlled testing, not public customer deposits.</p>
       </div> : <form className="auth-form" onSubmit={e => { e.preventDefault(); void submitWithdrawal(); }}>
         <label>Amount (SOL)<input required inputMode="decimal" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="0.1" /></label>
         <label>Destination Solana address<input required value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value.trim())} placeholder="Solana address" /></label>
