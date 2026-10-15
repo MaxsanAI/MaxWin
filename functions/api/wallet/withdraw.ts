@@ -46,7 +46,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     await ensureWalletSchema(env.DB);
     const solUsd = await getSolUsd();
     if (!solUsd) return json({ error: "The live SOL/USD rate is unavailable. Please try again later." }, 503);
-    const amount = usdCentsToLamports(amountUsdCents, solUsd);\n    if (amount === null) return json({ error: "This dollar amount is too small to convert to SOL at the current rate." }, 400);\n    if (isSundayInSerbia()) { /* Requests may be queued on Sunday; admin processing is blocked until Monday. */ }
+    const amount = usdCentsToLamports(amountUsdCents, solUsd);
+    if (amount === null) return json({ error: "This dollar amount is too small to convert to SOL at the current rate." }, 400);
 
     const balance = await env.DB.prepare("SELECT available_units, reserved_units FROM wallet_balances WHERE user_id = ? AND asset = 'SOL' LIMIT 1")
       .bind(user.id).first<{ available_units: string; reserved_units: string }>();
