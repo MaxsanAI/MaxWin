@@ -47,7 +47,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     return json({
       status: {
         realMoneyPlayEnabled: false,
-        depositsEnabled: false,
+        depositsEnabled: true,
         automaticWithdrawalsEnabled: false,
         manualWithdrawalApprovalEnabled: true,
         minimumDepositUsd: 5,
@@ -69,7 +69,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       },
       recentTransactions: recentTx.results || [],
       recentWithdrawals: recentWithdrawals.results || [],
-      notice: "Manual SOL withdrawal approvals are enabled. The admin must approve each request, send SOL separately, and record the confirmed transaction signature. Automatic sending, deposits, and real-money play remain disabled."
+      notice: "Test SOL deposits can be credited only after a user creates a unique expiring deposit request and the server verifies the exact amount in a finalized Solana transaction. This shared address is test-only and is not ready for public customer deposits. Manual SOL withdrawal approvals are enabled; automatic sending and real-money play remain disabled."
     });
   } catch (error) {
     console.error("[MAXWIN admin overview] Failed:", error instanceof Error ? error.message : String(error));
