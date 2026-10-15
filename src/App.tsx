@@ -111,6 +111,20 @@ function App() {
     return () => window.clearInterval(interval);
   }, [modal, depositRequest?.expiresAt]);
   useEffect(() => {
+    if (modal !== "deposit" || !authUser) return;
+    let cancelled = false;
+    fetch("/api/wallet/deposit", { credentials: "same-origin", cache: "no-store" })
+      .then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Could not recover deposit request.");
+        if (!cancelled && data.request) setDepositRequest(data.request);
+      })
+      .catch(error => {
+        if (!cancelled) setDepositMessage(error instanceof Error ? error.message : "Could not recover deposit request.");
+      });
+    return () => { cancelled = true; };
+  }, [modal, authUser?.id]);
+  useEffect(() => {
     if (modal !== "deposit") return;
     let cancelled = false;
     setSolRateError("");
