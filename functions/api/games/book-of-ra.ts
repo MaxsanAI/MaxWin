@@ -1,5 +1,5 @@
 import { BOOK_OF_SUNRISE_MATH } from "../../../src/lib/bookOfSunriseMath";
-import { Env, getUser, json, readJson, randomToken } from "../auth/_shared";
+import { Env, ensureWalletSchema, getUser, json, readJson, randomToken } from "../auth/_shared";
 
 type SymbolName = "book" | "pharaoh" | "anubis" | "scarab" | "statue" | "ace" | "king" | "queen" | "jack" | "ten";
 const REGULAR_SYMBOLS: SymbolName[] = ["pharaoh", "anubis", "scarab", "statue", "ace", "king", "queen", "jack", "ten"];
@@ -172,10 +172,207 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
   return { payout, wins, winningPositions: [...winningPositions], outcome: wins.length ? "win" : "no-match" };
 }
 
+
+
+async function ensureRealSchema(db: D1Database): Promise<void> {
+  await ensureWalletSchema(db);
+  await db.prepare(\`CREATE TABLE IF NOT EXISTS book_of_ra_real_features (
+    user_id TEXT PRIMARY KEY,
+    free_spins INTEGER NOT NULL DEFAULT 0,
+    free_spin_bet INTEGER NOT NULL DEFAULT 20,
+    expanding_symbol TEXT,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )\`).run();
+  await db.prepare(\`CREATE TABLE IF NOT EXISTS book_of_ra_real_rounds (
+    id TEXT PRIMARY KEY,
+    request_id TEXT NOT NULL UNIQUE,
+    user_id TEXT NOT NULL,
+    action TEXT NOT NULL CHECK (action IN ('spin','buyBonus')),
+    bet INTEGER NOT NULL,
+    stake_units TEXT NOT NULL,
+    payout_units TEXT NOT NULL,
+    stake_usd_cents INTEGER NOT NULL,
+    payout_usd_cents INTEGER NOT NULL,
+    sol_usd REAL NOT NULL,
+    result_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )\`).run();
+  await db.prepare("CREATE INDEX IF NOT EXISTS idx_book_of_ra_real_rounds_user_created ON book_of_ra_real_rounds(user_id, created_at DESC)").run();
+}
+
+async function getRealSolUsd(): Promise<number | null> {
+  const urls = [
+    "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+    "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT"
+  ];
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, { headers: { Accept: "application/json" }, cf: { cacheTtl: 15, cacheEverything: true } });
+      if (!response.ok) continue;
+      const data: any = await response.json();
+      const value = url.includes("coingecko") ? data?.solana?.usd : data?.price;
+      const price = typeof value === "number" ? value : Number(value);
+      if (Number.isFinite(price) && price > 0) return price;
+    } catch { /* try the next quote source */ }
+  }
+  return null;
+}
+
+function usdCentsToLamports(cents: number, solUsd: number, roundUp: boolean): bigint {
+  const exact = (cents / 100 / solUsd) * 1_000_000_000;
+  if (!Number.isFinite(exact) || exact < 0 || exact > Number.MAX_SAFE_INTEGER) throw new Error("SOL conversion is outside the safe range.");
+  return BigInt(roundUp ? Math.ceil(exact) : Math.floor(exact));
+}
+
+function lamportsToUsdCents(units: string, solUsd: number): number {
+  const amount = Number(units);
+  if (!Number.isFinite(amount) || amount < 0) return 0;
+  return Math.floor((amount / 1_000_000_000) * solUsd * 100);
+}
+
+async function handleRealAction(request: Request, env: Env, user: { id: string }, body: Record<string, unknown>): Promise<Response> {
+  if (!env.DB) return json({ error: "Game service is not configured." }, 503);
+  if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true") {
+    return json({ error: "Real-money Book of Ra is disabled until production deposits, custody, settlement and payout checks are approved.", realMoneyEnabled: false }, 423);
+  }
+
+  const action = body.action === "buyBonus" ? "buyBonus" : body.action === "spin" ? "spin" : null;
+  const bet = Number(body.bet);
+  const requestId = typeof body.requestId === "string" ? body.requestId.trim() : "";
+  if (!action) return json({ error: "Unknown game action." }, 400);
+  if (!/^[a-zA-Z0-9_-]{16,80}$/.test(requestId)) return json({ error: "A valid unique request ID is required." }, 400);
+  if (!Number.isSafeInteger(bet) || bet < 20 || bet > 100 || bet % 10 !== 0) return json({ error: "Bet must be between $0.20 and $1.00 in $0.10 increments." }, 400);
+
+  try {
+    await ensureRealSchema(env.DB);
+    const previous = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1")
+      .bind(requestId, user.id).first<{ result_json: string }>();
+    if (previous) {
+      const result = JSON.parse(previous.result_json);
+      const wallet = await env.DB.prepare("SELECT available_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1").bind(user.id).first<{ available_units: string }>();
+      const solUsd = await getRealSolUsd();
+      if (!solUsd) return json({ error: "Live SOL/USD quote is unavailable. The previous round remains recorded; retry shortly." }, 503);
+      return json({ result, balance: lamportsToUsdCents(wallet?.available_units || "0", solUsd), balanceSol: (Number(wallet?.available_units || "0") / 1e9), freeSpins: Number(result.freeSpinsRemaining || 0), expandingSymbol: result.expandingSymbol || null, mode: "real", replayed: true });
+    }
+
+    const solUsd = await getRealSolUsd();
+    if (!solUsd) return json({ error: "Live SOL/USD quote is unavailable. No wager was placed." }, 503);
+    const now = new Date().toISOString();
+    await env.DB.prepare("INSERT OR IGNORE INTO wallet_balances (user_id,asset,available_units,reserved_units,updated_at) VALUES (?,'SOL','0','0',?)").bind(user.id, now).run();
+    const wallet = await env.DB.prepare("SELECT available_units,reserved_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1")
+      .bind(user.id).first<{ available_units: string; reserved_units: string }>();
+    if (!wallet) return json({ error: "SOL wallet was not found." }, 500);
+
+    const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol FROM book_of_ra_real_features WHERE user_id=? LIMIT 1")
+      .bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName | null }>();
+    const freeSpinsBefore = Number(featureRow?.freeSpins || 0);
+    const freeSpinBetBefore = Math.max(20, Math.min(100, Number(featureRow?.freeSpinBet || 20)));
+    let activeExpanding: SymbolName | null = featureRow?.expandingSymbol || null;
+    const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
+    const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
+    const stakeUsdCents = action === "buyBonus" ? bet * BUY_BONUS_MULTIPLIER : isFreeSpin ? 0 : bet;
+    const stakeUnits = usdCentsToLamports(stakeUsdCents, solUsd, true);
+
+    let symbols = spinReels();
+    if (action === "buyBonus") {
+      symbols[0] = "book"; symbols[5] = "book"; symbols[10] = "book";
+    }
+    const bookCount = symbols.filter(s => s === "book").length;
+    let awardedFreeSpins = 0;
+    if (bookCount >= 3) {
+      awardedFreeSpins = bookCount >= 5
+        ? BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.fivePlusBooks
+        : bookCount === 4 ? BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.fourBooks : BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.threeBooks;
+      if (!isFreeSpin) activeExpanding = REGULAR_SYMBOLS[randomIndex(REGULAR_SYMBOLS.length)];
+    }
+    let freeSpinsAfter = Math.max(0, freeSpinsBefore - (isFreeSpin ? 1 : 0)) + awardedFreeSpins;
+    const freeSpinBetAfter = awardedFreeSpins > 0 && !isFreeSpin ? effectiveBet : freeSpinBetBefore;
+    const evaluated = evaluate(symbols, effectiveBet, isFreeSpin ? activeExpanding : null, isFreeSpin);
+    const payoutUsdCents = Math.min(evaluated.payout, effectiveBet * MAX_WIN_MULTIPLIER);
+    const payoutUnits = usdCentsToLamports(payoutUsdCents, solUsd, false);
+    if (freeSpinsAfter === 0) activeExpanding = null;
+
+    const available = BigInt(wallet.available_units || "0");
+    const reserved = BigInt(wallet.reserved_units || "0");
+    if (available < stakeUnits) {
+      return json({ error: "Insufficient available SOL balance for this wager. Deposit and verify SOL first." }, 400);
+    }
+    const nextAvailable = available - stakeUnits + payoutUnits;
+    const roundId = randomToken(16);
+    const result = {
+      id: roundId, symbols, outcome: evaluated.outcome, bet: effectiveBet,
+      stake: stakeUsdCents, payout: payoutUsdCents, mode: action,
+      wins: evaluated.wins, winningPositions: evaluated.winningPositions,
+      awardedFreeSpins, freeSpinsRemaining: freeSpinsAfter, expandingSymbol: activeExpanding
+    };
+    const metadata = JSON.stringify({ game: "Temple of Ra", requestId, solUsdAtSettlement: solUsd, stakeUsdCents, payoutUsdCents, stakeUnits: stakeUnits.toString(), payoutUnits: payoutUnits.toString() });
+    const statements = [
+      env.DB.prepare("UPDATE wallet_balances SET available_units=?,updated_at=? WHERE user_id=? AND asset='SOL' AND available_units=? AND reserved_units=? AND CAST(available_units AS INTEGER)>=?")
+        .bind(nextAvailable.toString(), now, user.id, wallet.available_units, wallet.reserved_units, stakeUnits.toString()),
+      env.DB.prepare("INSERT INTO book_of_ra_real_rounds (id,request_id,user_id,action,bet,stake_units,payout_units,stake_usd_cents,payout_usd_cents,sol_usd,result_json,created_at) SELECT ?,?,?,?,?,?,?,?,?,?,?,? WHERE changes()=1")
+        .bind(roundId, requestId, user.id, action, effectiveBet, stakeUnits.toString(), payoutUnits.toString(), stakeUsdCents, payoutUsdCents, solUsd, JSON.stringify(result), now),
+      env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) SELECT ?,?,'SOL','wager','confirmed',?,NULL,NULL,?,?,?,? WHERE ? > 0 AND EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?)")
+        .bind(randomToken(16), user.id, stakeUnits.toString(), requestId + ":wager", now, now, metadata, stakeUnits.toString(), requestId, user.id),
+      env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) SELECT ?,?,'SOL','payout','confirmed',?,NULL,NULL,?,?,?,? WHERE ? > 0 AND EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?)")
+        .bind(randomToken(16), user.id, payoutUnits.toString(), requestId + ":payout", now, now, metadata, payoutUnits.toString(), requestId, user.id),
+      env.DB.prepare("INSERT INTO book_of_ra_real_features (user_id,free_spins,free_spin_bet,expanding_symbol,updated_at) SELECT ?,?,?,?,? WHERE EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,free_spin_bet=excluded.free_spin_bet,expanding_symbol=excluded.expanding_symbol,updated_at=excluded.updated_at")
+        .bind(user.id, freeSpinsAfter, freeSpinBetAfter, activeExpanding, now, requestId, user.id)
+    ];
+    await env.DB.batch(statements);
+    const saved = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1").bind(requestId, user.id).first<{ result_json: string }>();
+    if (!saved) {
+      const replay = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1").bind(requestId, user.id).first<{ result_json: string }>();
+      if (replay) return json({ result: JSON.parse(replay.result_json), mode: "real", replayed: true });
+      return json({ error: "Wallet changed during the wager. No round was charged; refresh and try again." }, 409);
+    }
+    const finalWallet = await env.DB.prepare("SELECT available_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1").bind(user.id).first<{ available_units: string }>();
+    return json({
+      result: JSON.parse(saved.result_json),
+      balance: lamportsToUsdCents(finalWallet?.available_units || "0", solUsd),
+      balanceSol: Number(finalWallet?.available_units || "0") / 1e9,
+      freeSpins: freeSpinsAfter, freeSpinBet: freeSpinBetAfter,
+      expandingSymbol: activeExpanding, mode: "real", solUsd
+    });
+  } catch (error) {
+    const previous = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1").bind(requestId, user.id).first<{ result_json: string }>().catch(() => null);
+    if (previous) return json({ result: JSON.parse(previous.result_json), mode: "real", replayed: true });
+    console.error("[MAXWIN Book of Ra real settlement]", error instanceof Error ? error.message : String(error));
+    return json({ error: "The real-money round could not be settled. Check wallet history before retrying." }, 500);
+  }
+}
+
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Service not configured." }, 503);
   const user = await getUser(request, env.DB);
   if (!user) return json({ error: "Log in required." }, 401);
+
+  if (new URL(request.url).searchParams.get("mode") === "real") {
+    if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true") return json({ error: "Real-money Book of Ra is disabled until production deposits, custody, settlement and payout checks are approved.", realMoneyEnabled: false }, 423);
+    try {
+      await ensureRealSchema(env.DB);
+      const solUsd = await getRealSolUsd();
+      if (!solUsd) return json({ error: "Live SOL/USD quote is unavailable." }, 503);
+      const now = new Date().toISOString();
+      await env.DB.prepare("INSERT OR IGNORE INTO wallet_balances (user_id,asset,available_units,reserved_units,updated_at) VALUES (?,'SOL','0','0',?)").bind(user.id, now).run();
+      const wallet = await env.DB.prepare("SELECT available_units,reserved_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1").bind(user.id).first<{ available_units: string; reserved_units: string }>();
+      const features = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol FROM book_of_ra_real_features WHERE user_id=? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName | null }>();
+      return json({
+        balance: lamportsToUsdCents(wallet?.available_units || "0", solUsd),
+        balanceSol: Number(wallet?.available_units || "0") / 1e9,
+        availableUnits: wallet?.available_units || "0",
+        reservedUnits: wallet?.reserved_units || "0",
+        freeSpins: Number(features?.freeSpins || 0),
+        freeSpinBet: Number(features?.freeSpinBet || 20),
+        expandingSymbol: features?.expandingSymbol || null,
+        solUsd, mode: "real"
+      });
+    } catch (error) {
+      console.error("[MAXWIN Book of Ra real wallet]", error instanceof Error ? error.message : String(error));
+      return json({ error: "Could not load real SOL wallet." }, 500);
+    }
+  }
 
   try {
     await ensureSchema(env.DB);
@@ -201,6 +398,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   const body = await readJson(request);
   if (!body) return json({ error: "Invalid payload." }, 400);
+
+  if (body.walletMode === "real") return handleRealAction(request, env, user, body);
 
   // Legacy clients may still call resetDemo when leaving the slot.
   // Never reset persistent credits or bonus progress when a player leaves.
