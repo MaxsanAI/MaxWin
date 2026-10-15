@@ -18,7 +18,7 @@ const symbolMeta:Record<SymbolName,{label:string;Icon:typeof BookOpen;color:stri
 const formatUSD=(value:number)=>"$"+(value/100).toFixed(2);
 function requestId(){return typeof crypto.randomUUID==="function"?crypto.randomUUID():Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,"0")).join("");}
 
-export default function BookOfRaSlot({ onBackToLobby, mode = "demo" }: { onBackToLobby: () => void; mode?: "demo" | "real" }){
+export default function BookOfRaSlot({ onBackToLobby, onBusyChange, mode = "demo" }: { onBackToLobby: () => void; onBusyChange?: (busy: boolean) => void; mode?: "demo" | "real" }){
  const [balance,setBalance]=useState<number|null>(null);
  const [walletSol,setWalletSol]=useState<number|null>(null);
  const [realModeLocked,setRealModeLocked]=useState(false);
@@ -193,14 +193,14 @@ export default function BookOfRaSlot({ onBackToLobby, mode = "demo" }: { onBackT
   if(soundOn&&typeof window.AudioContext!=="undefined"){try{const ctx=audioContext.current||(audioContext.current=new window.AudioContext());if(ctx.state==="suspended")void ctx.resume();}catch{}}
   const stripPool:SymbolName[]=["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"];
   setReelStrips(Array.from({length:5},()=>Array.from({length:8},()=>stripPool[Math.floor(Math.random()*stripPool.length)])));
-  setBusy(true);setError("");setBuyConfirm(false);setReelStops(0);
+  setBusy(true);onBusyChange?.(true);setError("");setBuyConfirm(false);setReelStops(0);
   setShowBookCelebration(false);setScatterReveal(null);setScatterContinueReady(false);
   setMessage(action==="buyBonus"?"Opening the Sacred Book…":freeSpins>0?"Free spin in progress…":"Reels spinning…");
   const spinStartedAt=performance.now();
   try{
    const res=await fetch("/api/games/book-of-ra",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,bet,requestId:roundRequestId,walletMode:mode})});
    const data=await res.json();
-   if(!res.ok)throw new Error(data.error||"Spin failed.");
+   if(!res.ok){if(mode==="real"&&res.status<500)pendingRealRound.current=null;throw new Error(data.error||"Spin failed.");}
    if(mode==="real")pendingRealRound.current=null;
    const minimumSpin=speed==="slow"?1250:speed==="normal"?950:700;
    const remainingSpin=minimumSpin-(performance.now()-spinStartedAt);
@@ -279,7 +279,7 @@ export default function BookOfRaSlot({ onBackToLobby, mode = "demo" }: { onBackT
     }
    }
   }catch(e:unknown){setError(e instanceof Error?e.message:"Error during spin.");}
-  finally{setReelStops(5);setBusy(false);}
+  finally{setReelStops(5);setBusy(false);onBusyChange?.(mode==="real"&&pendingRealRound.current!==null);}
  };
  const leaveDemo=async()=>{
   if(busy||resettingDemo)return;
@@ -345,7 +345,7 @@ export default function BookOfRaSlot({ onBackToLobby, mode = "demo" }: { onBackT
   {message&&<p className={"rf-message bra-message"+(result?.payout?" is-win":"")} role="status">{message}</p>}{error&&<p className="rf-error" role="alert">{error}</p>}
   {result&&<div className="rf-last-result"><span>LAST RESULT<small>{result.wins?.length?result.wins.length+" winning line(s)":result.awardedFreeSpins?"Bonus triggered":"Round complete"}</small></span><strong>{formatUSD(result.payout)}<small>{mode==="real"?"USD-EQUIVALENT PAYOUT":"DEMO USD WON"}</small></strong></div>}
   <details className="rf-paytable bra-paytable" id="bra-paytable"><summary>TEMPLE OF RA · PAYTABLE &amp; SYMBOL GUIDE</summary><div>{(["book","pharaoh","anubis","scarab","statue","ace","king","queen","jack","ten"] as SymbolName[]).map(symbol=>{const item=symbolMeta[symbol];const payouts:Record<SymbolName,string>={book:"3 books: 0.5× total bet + 6 free spins · 4: 2× + 8 spins · 5+: 5× + 10 spins",pharaoh:"3: 4× total bet · 4: 7× · 5: 15×",anubis:"3: 3× total bet · 4: 6× · 5: 12×",scarab:"3: 2× total bet · 4: 4× · 5: 10×",statue:"3: 3× total bet · 4: 5× · 5: 10×",ace:"3: 2× total bet · 4: 4× · 5: 8×",king:"3: 2× total bet · 4: 4× · 5: 8×",queen:"3: 2× total bet · 4: 3× · 5: 5×",jack:"3: 2× total bet · 4: 3× · 5: 5×",ten:"3: 2× total bet · 4: 3× · 5: 5×"};return <div key={symbol}><span><img src={"/images/book-of-ra/"+symbol+".jpg"} alt="" loading="lazy" decoding="async" style={{width:26,height:26,objectFit:"contain",verticalAlign:"middle",marginRight:6}}/>{item.label}</span><b>{payouts[symbol]}</b></div>;})}</div><p>Regular-symbol wins require consecutive matches from the left on a payline and 3+ symbols. The Book acts as a wild, and a Book plus 2 matching regular symbols pays 2× total bet. Book scatter pays on 3+ books anywhere and triggers free spins. Free Spins use a separate, slightly improved symbol-payout table; two matching regular symbols do not pay. The selected expanding symbol receives an additional 35% expansion payout boost. Book probability: 2.0% per cell on the first 3 reels; 1.6% per cell on the final 2 reels. Buy Bonus costs 50× bet; maximum win is capped at 50× bet. {mode==="real"?"Real mode uses the same game rules, with wagers and payouts settled in SOL.":"All values are demo-game rules."}</p></details>
-  <button className="bra-lobby-button" type="button" disabled={busy||resettingDemo} onClick={()=>void leaveDemo()}><Crown size={15} strokeWidth={2.2}/> <span>{resettingDemo?(mode==="real"?"LEAVING…":"RESETTING DEMO…"):"TO LOBBY"}</span></button>
+  <button className="bra-lobby-button" type="button" disabled={busy||resettingDemo||(mode==="real"&&pendingRealRound.current!==null)} onClick={()=>void leaveDemo()}><Crown size={15} strokeWidth={2.2}/> <span>{resettingDemo?(mode==="real"?"LEAVING…":"RESETTING DEMO…"):"TO LOBBY"}</span></button>
   <div className="rf-demo-disclaimer">{mode==="real"?"REAL-MONEY MODE · SOL SETTLEMENT · PLAY RESPONSIBLY · 18+":"DEMO ONLY · CREDITS HAVE NO CASH VALUE · NO DEPOSITS OR WITHDRAWALS · PLAY RESPONSIBLY · 18+"}</div>
   {bonusReveal&&<div className="bra-awakening-backdrop" role="presentation">
    <section className="bra-awakening" role="dialog" aria-modal="true" aria-labelledby="bra-awakening-title">
