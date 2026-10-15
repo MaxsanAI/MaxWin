@@ -180,7 +180,7 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
 
  const play=async(action:"spin"|"buyBonus")=>{
   if(busy||bonusFinish!==null)return;
-  if(balance===null){setError(mode==="real"?"Real SOL wallet is still loading. Please wait and retry.":"Demo balance is still loading. Please wait and retry.");return;}
+  if(balance===null){if(mode==="real"){onRequestDeposit?.();return;}setError("Demo balance is still loading. Please wait and retry.");return;}
   if(action==="buyBonus"&&balance<bet*50){if(mode==="real"){setBuyConfirm(false);onRequestDeposit?.();}else setError("Not enough demo credits for Buy Bonus.");return;}
   if(action==="spin"&&freeSpins<=0&&balance<bet){if(mode==="real"){onRequestDeposit?.();}else setError("Not enough demo credits.");return;}
   if(mode==="real"&&pendingRealRound.current&&(pendingRealRound.current.action!==action||pendingRealRound.current.bet!==bet)){
