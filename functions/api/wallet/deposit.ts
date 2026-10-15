@@ -145,10 +145,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const transactionTime = tx.blockTime * 1000;
     const requestCreatedAt = Date.parse(depositRequest.created_at);
     const requestExpiresAt = Date.parse(depositRequest.expires_at);
-    if (transactionTime < requestCreatedAt - 15000) {
+    if (transactionTime < requestCreatedAt - 2000) {
       return json({ error: "This transaction predates the deposit request. No balance was changed." }, 400);
     }
-    if (transactionTime > requestExpiresAt + 60000) {
+    if (transactionTime > requestExpiresAt + 1000) {
       return json({ error: "The transaction was sent after the deposit quote expired. No balance was changed." }, 400);
     }
 
@@ -202,5 +202,31 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   } catch (error) {
     console.error("[MAXWIN deposit] Verification failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not verify and credit this deposit. Check the transaction in Solscan and retry." }, 500);
+  }
+};
+
+
+export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
+  if (!env.DB) return json({ error: "Wallet service is not configured." }, 503);
+  const user = await getUser(request, env.DB);
+  if (!user) return json({ error: "Log in to recover your deposit request." }, 401);
+  try {
+    await ensureWalletSchema(env.DB);
+    await ensureDepositSchema(env.DB);
+    const row = await env.DB.prepare(
+      "SELECT id, amount_units, usd_target, expires_at FROM wallet_deposit_requests WHERE user_id = ? AND status IN ('pending','expired') AND tx_hash IS NULL ORDER BY created_at DESC LIMIT 1"
+    ).bind(user.id).first<{ id: string; amount_units: string; usd_target: number | null; expires_at: string }>();
+    return json({
+      ok: true,
+      request: row ? {
+        id: row.id,
+        amountSol: (Number(row.amount_units) / 1e9).toFixed(9),
+        usdTarget: Number(row.usd_target || 5),
+        expiresAt: row.expires_at
+      } : null
+    });
+  } catch (error) {
+    console.error("[MAXWIN deposit] Request recovery failed:", error instanceof Error ? error.message : String(error));
+    return json({ error: "Could not recover the latest deposit request." }, 500);
   }
 };
