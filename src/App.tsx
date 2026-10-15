@@ -6,6 +6,7 @@ import AIDynasty from "./components/games/AIDynasty";
 import GoldenVault from "./components/games/GoldenVault";
 import MoonTemple from "./components/games/MoonTemple";
 import MathTuner from "./components/MathTuner";
+import AdminPanel from "./components/AdminPanel";
 
 type Game = { title: string; category: string; art: string; tag?: string; provider: string; };
 type AuthUser = { id: string; username: string; email: string; createdAt: string };
@@ -262,6 +263,7 @@ function App() {
       body: JSON.stringify({ action: "resetDemo" })
     }).finally(() => setModal(null));
   };
+  if (window.location.pathname.replace(/\/+$/, "") === "/admin") return <AdminPanel />;
   if (window.location.pathname.replace(/\/+$/, "") === "/admin/math-tuner") return <MathTuner />;
   return <div className={theme === "light" ? "app-shell theme-light" : "app-shell"}>
     <div className="topline"><span><Sparkles size={13}/> MAXWIN ORIGINALS · A NEW ERA OF PLAY</span><span className="topline-right"><ShieldCheck size={13}/> Security-first platform <i /> 18+ only</span></div>
