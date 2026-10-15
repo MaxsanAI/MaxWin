@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, RefreshCw, ShieldCheck, Wallet, Users, Gift, ArrowDownToLine, ArrowUpFromLine, LockKeyhole, Activity } from "lucide-react";
 
 type Overview = {
@@ -50,7 +50,7 @@ export default function AdminPanel() {
     finally { setWithdrawalBusy(null); }
   };
 
-  const addTestBalance = async (event: React.FormEvent<HTMLFormElement>) => {
+  const addTestBalance = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setTestCreditBusy(true); setTestCreditMessage(""); setError("");
     try {
