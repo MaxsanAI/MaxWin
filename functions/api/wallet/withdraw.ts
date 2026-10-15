@@ -15,10 +15,6 @@ function usdCentsToLamports(usdCents: number, solUsd: number): bigint | null {
   return BigInt(units);
 }
 
-function isSundayInSerbia(date = new Date()): boolean {
-  return new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Belgrade", weekday: "short" }).format(date) === "Sun";
-}
-
 function validSolAddress(address: string): boolean {
   return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
 }
