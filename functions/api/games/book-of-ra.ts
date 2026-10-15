@@ -169,22 +169,22 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
     payout += scatterPayout;
   }
 
-  return { payout, wins, winningPositions: [...winningPositions], outcome: wins.length ? "win" : "no-match" };
+  return { payout, wins, winningPositions: [...winningPositions], outcome: payout > 0 ? "win" : "no-match" };
 }
 
 
 
 async function ensureRealSchema(db: D1Database): Promise<void> {
   await ensureWalletSchema(db);
-  await db.prepare(\`CREATE TABLE IF NOT EXISTS book_of_ra_real_features (
+  await db.prepare(`CREATE TABLE IF NOT EXISTS book_of_ra_real_features (
     user_id TEXT PRIMARY KEY,
     free_spins INTEGER NOT NULL DEFAULT 0,
     free_spin_bet INTEGER NOT NULL DEFAULT 20,
     expanding_symbol TEXT,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  )\`).run();
-  await db.prepare(\`CREATE TABLE IF NOT EXISTS book_of_ra_real_rounds (
+  )`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS book_of_ra_real_rounds (
     id TEXT PRIMARY KEY,
     request_id TEXT NOT NULL UNIQUE,
     user_id TEXT NOT NULL,
@@ -198,7 +198,7 @@ async function ensureRealSchema(db: D1Database): Promise<void> {
     result_json TEXT NOT NULL,
     created_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-  )\`).run();
+  )`).run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_book_of_ra_real_rounds_user_created ON book_of_ra_real_rounds(user_id, created_at DESC)").run();
 }
 
