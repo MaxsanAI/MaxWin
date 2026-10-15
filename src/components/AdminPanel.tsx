@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ArrowLeft, RefreshCw, ShieldCheck, Wallet, Users, Gift, ArrowDownToLine, ArrowUpFromLine, LockKeyhole, Activity } from "lucide-react";
 
 type Overview = {
@@ -32,7 +32,7 @@ export default function AdminPanel() {
     finally { setBusy(false); }
   };
 
-  const card = (label: string, value: number | undefined, icon: React.ReactNode) => (
+  const card = (label: string, value: number | undefined, icon: ReactNode) => (
     <article className="mw-admin-stat" key={label}><span className="mw-admin-stat-icon">{icon}</span><span className="mw-admin-stat-label">{label}</span><strong>{(value ?? 0).toLocaleString()}</strong></article>
   );
 
