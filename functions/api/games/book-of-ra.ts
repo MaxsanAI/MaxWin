@@ -1,5 +1,6 @@
 import { BOOK_OF_SUNRISE_MATH } from "../../../src/lib/bookOfSunriseMath";
 import { Env, ensureWalletSchema, getUser, json, readJson, randomToken } from "../auth/_shared";
+import { getSolUsd } from "../_shared/sol-price";
 
 type SymbolName = "book" | "pharaoh" | "anubis" | "scarab" | "statue" | "ace" | "king" | "queen" | "jack" | "ten";
 const REGULAR_SYMBOLS: SymbolName[] = ["pharaoh", "anubis", "scarab", "statue", "ace", "king", "queen", "jack", "ten"];
@@ -223,43 +224,6 @@ async function ensureRealSchema(db: D1Database): Promise<void> {
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_book_of_ra_real_rounds_user_created ON book_of_ra_real_rounds(user_id, created_at DESC)").run();
 }
 
-// Keep a short-lived isolate cache so every spin does not wait on a market-price API.
-let cachedRealSolUsd: number | null = null;
-let cachedRealSolUsdAt = 0;
-const REAL_SOL_USD_CACHE_MS = 5 * 60 * 1000;
-
-async function getRealSolUsd(): Promise<number | null> {
-  const now = Date.now();
-  if (cachedRealSolUsd !== null && now - cachedRealSolUsdAt < REAL_SOL_USD_CACHE_MS) {
-    return cachedRealSolUsd;
-  }
-  // Use the last known valid quote immediately if the provider is slow or unavailable.
-  const lastKnown = cachedRealSolUsd;
-  const urls = [
-    "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
-    "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT"
-  ];
-  for (const url of urls) {
-    try {
-      const response = await fetch(url, {
-        headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(1200),
-        cf: { cacheTtl: 300, cacheEverything: true }
-      });
-      if (!response.ok) continue;
-      const data: any = await response.json();
-      const value = url.includes("coingecko") ? data?.solana?.usd : data?.price;
-      const price = typeof value === "number" ? value : Number(value);
-      if (Number.isFinite(price) && price > 0) {
-        cachedRealSolUsd = price;
-        cachedRealSolUsdAt = Date.now();
-        return price;
-      }
-    } catch { /* use the next source, then the last known quote */ }
-  }
-  return lastKnown;
-}
-
 function usdCentsToLamports(cents: number, solUsd: number, roundUp: boolean): bigint {
   const exact = (cents / 100 / solUsd) * 1_000_000_000;
   if (!Number.isFinite(exact) || exact < 0 || exact > Number.MAX_SAFE_INTEGER) throw new Error("SOL conversion is outside the safe range.");
@@ -288,12 +252,14 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
       if (previous.action !== action || previous.bet !== bet) return json({ error: "This request ID was already used for a different round. Refresh before placing another wager." }, 409);
       const result = JSON.parse(previous.result_json);
       const wallet = await env.DB.prepare("SELECT available_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1").bind(user.id).first<{ available_units: string }>();
-      const solUsd = await getRealSolUsd();
+      const quote = await getSolUsd(env.DB, 10 * 60 * 1000);
+      const solUsd = quote?.price ?? null;
       if (!solUsd) return json({ error: "Live SOL/USD quote is unavailable. The previous round remains recorded; retry shortly." }, 503);
       return json({ result, balance: lamportsToUsdCents(wallet?.available_units || "0", solUsd), balanceSol: (Number(wallet?.available_units || "0") / 1e9), freeSpins: Number(result.freeSpinsRemaining || 0), expandingSymbol: result.expandingSymbol || null, mode: "real", replayed: true });
     }
 
-    const solUsd = await getRealSolUsd();
+    const quote = await getSolUsd(env.DB, 90 * 1000);
+    const solUsd = quote?.price ?? null;
     if (!solUsd) return json({ error: "Live SOL/USD quote is unavailable. No wager was placed." }, 503);
     const now = new Date().toISOString();
     await env.DB.prepare("INSERT OR IGNORE INTO wallet_balances (user_id,asset,available_units,reserved_units,updated_at) VALUES (?,'SOL','0','0',?)").bind(user.id, now).run();
@@ -375,7 +341,8 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
   } catch (error) {
     const previous = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1").bind(requestId, user.id).first<{ result_json: string }>().catch(() => null);
     if (previous) {
-      const solUsd = await getRealSolUsd();
+      const quote = await getSolUsd(env.DB, 10 * 60 * 1000);
+      const solUsd = quote?.price ?? null;
       if (!solUsd) return json({ error: "The round is recorded, but the live SOL/USD quote is unavailable. Retry with the same request ID to recover its balance." }, 503);
       const wallet = await env.DB.prepare("SELECT available_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1").bind(user.id).first<{ available_units: string }>().catch(() => null);
       const result = JSON.parse(previous.result_json);
@@ -402,7 +369,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (new URL(request.url).searchParams.get("mode") === "real") {
     try {
       await ensureRealSchema(env.DB);
-      const solUsd = await getRealSolUsd();
+      const quote = await getSolUsd(env.DB, 30 * 60 * 1000);
+      const solUsd = quote?.price ?? null;
       if (!solUsd) return json({ error: "Live SOL/USD quote is unavailable." }, 503);
       const now = new Date().toISOString();
       await env.DB.prepare("INSERT OR IGNORE INTO wallet_balances (user_id,asset,available_units,reserved_units,updated_at) VALUES (?,'SOL','0','0',?)").bind(user.id, now).run();
