@@ -234,7 +234,7 @@ function lamportsToUsdCents(units: string, solUsd: number): number {
 
 async function handleRealAction(request: Request, env: Env, user: { id: string }, body: Record<string, unknown>): Promise<Response> {
   if (!env.DB) return json({ error: "Game service is not configured." }, 503);
-  if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true") {
+  if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true" || env.REAL_MONEY_CUSTODY_APPROVED !== "true" || env.REAL_MONEY_MATH_APPROVED !== "true") {
     return json({ error: "Real-money Book of Ra is disabled until production deposits, custody, settlement and payout checks are approved.", realMoneyEnabled: false }, 423);
   }
 
@@ -350,7 +350,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   if (!user) return json({ error: "Log in required." }, 401);
 
   if (new URL(request.url).searchParams.get("mode") === "real") {
-    if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true") return json({ error: "Real-money Book of Ra is disabled until production deposits, custody, settlement and payout checks are approved.", realMoneyEnabled: false }, 423);
+    if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true" || env.REAL_MONEY_CUSTODY_APPROVED !== "true" || env.REAL_MONEY_MATH_APPROVED !== "true") return json({ error: "Real-money Book of Ra is disabled until production deposits, custody, settlement and payout checks are approved.", realMoneyEnabled: false }, 423);
     try {
       await ensureRealSchema(env.DB);
       const solUsd = await getRealSolUsd();
