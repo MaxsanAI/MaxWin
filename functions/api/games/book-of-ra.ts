@@ -268,6 +268,7 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
     const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol FROM book_of_ra_real_features WHERE user_id=? LIMIT 1")
       .bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName | null }>();
     const freeSpinsBefore = Number(featureRow?.freeSpins || 0);
+    if (action === "buyBonus" && freeSpinsBefore > 0) return json({ error: "Finish the current free-spin round before buying another bonus." }, 409);
     const freeSpinBetBefore = Math.max(20, Math.min(100, Number(featureRow?.freeSpinBet || 20)));
     let activeExpanding: SymbolName | null = featureRow?.expandingSymbol || null;
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
