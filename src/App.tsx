@@ -89,6 +89,7 @@ function App() {
   const [depositSignature, setDepositSignature] = useState("");
   const [depositMessage, setDepositMessage] = useState("");
   const [depositBusy, setDepositBusy] = useState(false);
+  const [depositRequest, setDepositRequest] = useState<{ id: string; amountSol: string; usdTarget: number; expiresAt: string } | null>(null);
   const loadWallet = async () => {
     setWalletLoading(true); setWalletError("");
     try {
@@ -193,22 +194,40 @@ function App() {
       const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || "Could not save profile photo."); setProfileData(data.profile); setProfileMessage("Profile photo saved.");
     } catch (error) { setProfileMessage(error instanceof Error ? error.message : "Could not save profile photo."); } finally { setProfileBusy(false); }
   };
+  const createDepositRequest = async () => {
+    setDepositBusy(true); setDepositMessage(""); setDepositRequest(null); setDepositSignature("");
+    try {
+      const response = await fetch("/api/wallet/deposit", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", usd: depositUsd })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not create deposit request.");
+      setDepositRequest(data.request);
+      setDepositMessage(data.message || "Deposit request created.");
+    } catch (error) {
+      setDepositMessage(error instanceof Error ? error.message : "Could not create deposit request.");
+    } finally {
+      setDepositBusy(false);
+    }
+  };
   const submitDeposit = async () => {
     const signature = depositSignature.trim();
+    if (!depositRequest) { setDepositMessage("Create a deposit request first."); return; }
     if (!signature) { setDepositMessage("Paste the Solana transaction signature first."); return; }
     setDepositBusy(true); setDepositMessage("");
     try {
       const response = await fetch("/api/wallet/deposit", {
-        method: "POST",
-        credentials: "same-origin",
-        cache: "no-store",
+        method: "POST", credentials: "same-origin", cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signature })
+        body: JSON.stringify({ requestId: depositRequest.id, signature })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not verify this deposit.");
       setDepositMessage(data.message || "Deposit verified.");
       setDepositSignature("");
+      setDepositRequest(null);
       await loadWallet();
     } catch (error) {
       setDepositMessage(error instanceof Error ? error.message : "Could not verify this deposit.");
@@ -365,7 +384,67 @@ function App() {
       {walletData && <div className="modal-status"><span className="status-dot"/><span><b>Available balance: {(Number(walletData.balances?.[walletAsset]?.availableUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })} {walletAsset}</b><small>Reserved: {(Number(walletData.balances?.[walletAsset]?.reservedUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })} {walletAsset}</small></span></div>}
       {modal === "deposit" ? <div className="wallet-address-panel">
         <p><b>Choose deposit amount (USD)</b></p>
-        <div className="category-tabs wallet-network-tabs">{[5, 10, 15, 20, 25, 30].map(amount => <button key={amount} type="button" className={depositUsd === amount ? "category active" : "category"} onClick={() => setDepositUsd(amount)}>{'$'}{amount}</button>)}</div>
+        <div className="category-tabs wallet-network-tabs">{[5, 10, 15, 20, 25, 30].map(amount => <button key={amount} type="button" className={depositUsd === amount ? "category active" : "category"} onClick={() => { setDepositUsd(amount); setDepositRequest(null); setDepositSignature(""); setDepositMessage(""); }}>{'</div>
+        <div className="modal-status"><span className="status-dot"/><span><b>{solUsdRate ? ((depositUsd / solUsdRate).toFixed(6) + " SOL") : "SOL quote loading…"}</b><small>{'$'}{depositUsd.toFixed(2)} USD {solUsdRate ? ("at $" + solUsdRate.toLocaleString(undefined, { maximumFractionDigits: 4 }) + " per SOL") : ""}</small></span></div>
+        {solRateUpdatedAt && <small className="auth-note">Rate updated: {new Date(solRateUpdatedAt).toLocaleTimeString()}</small>}
+        {solRateError && <p className="auth-error" role="alert">{solRateError}</p>}
+        <label>SOL deposit address<input readOnly value={walletData?.deposits?.SOL?.address || ""} placeholder={walletLoading ? "Loading…" : "Deposit address not configured"} /></label>
+        {walletData?.deposits?.SOL?.address ? <button type="button" className="btn btn-gold modal-done" onClick={() => { void navigator.clipboard?.writeText(walletData.deposits.SOL.address); }}>Copy SOL deposit address</button> : <p className="auth-note">Set SOL_DEPOSIT_ADDRESS in Cloudflare Pages → Settings → Variables and secrets. Use only an address controlled by you.</p>}
+        <button type="button" className="btn btn-gold modal-done" onClick={() => void createDepositRequest()} disabled={depositBusy || !walletData?.deposits?.SOL?.address || !solUsdRate}>{depositBusy ? "Preparing request…" : "Create test deposit request"}</button>
+        {depositRequest && <div className="modal-status"><span className="status-dot"/><span><b>Send exactly {depositRequest.amountSol} SOL</b><small>For the ${depositRequest.usdTarget} test deposit · expires {new Date(depositRequest.expiresAt).toLocaleTimeString()}</small></span></div>}
+        {depositRequest && <label>Solana transaction signature<input value={depositSignature} onChange={e => setDepositSignature(e.target.value)} placeholder="Paste signature from Solflare" autoComplete="off" spellCheck={false} /></label>}
+        {depositRequest && <button type="button" className="btn btn-gold modal-done" onClick={() => void submitDeposit()} disabled={depositBusy || !depositSignature.trim()}>{depositBusy ? "Verifying on Solana…" : "Verify deposit and credit wallet"}</button>}
+        {depositMessage && <p className={depositMessage.toLowerCase().includes("credited") || depositMessage.toLowerCase().includes("verified") || depositMessage.toLowerCase().includes("request created") ? "auth-note" : "auth-error"} role="status">{depositMessage}</p>}
+        <p className="auth-note">TEST MODE: first create a request, then send the exact SOL amount shown to this address within 30 minutes. After sending, paste the transaction signature from Solflare. MAXWIN verifies final confirmation through Solana RPC and prevents the same transaction from being credited twice. Use this shared address for controlled testing only, not public customer deposits.</p>
+      </div> : <form className="auth-form" onSubmit={e => { e.preventDefault(); void submitWithdrawal(); }}>
+        <label>Amount (SOL)<input required inputMode="decimal" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="0.1" /></label>
+        <label>Destination Solana address<input required value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value.trim())} placeholder="Solana address" /></label>
+        <button className="btn btn-gold modal-done" type="submit" disabled={withdrawBusy}>{withdrawBusy ? "Submitting…" : "Request withdrawal"}</button>
+        {withdrawMessage && <p className={withdrawMessage.startsWith("Request recorded") ? "" : "auth-error"} role="status">{withdrawMessage}</p>}
+      </form>}
+      {walletData?.notice && <small className="auth-note">{walletData.notice}</small>}
+      <button className="btn btn-ghost modal-done" onClick={() => void loadWallet()}>Refresh wallet</button>
+    </div> : modal === "profile" && authUser ? <div className="auth-form profile-form">
+      <div className="profile-identity"><div className="profile-avatar">{profileData?.avatarDataUrl ? <img src={profileData.avatarDataUrl} alt="Profile photo" /> : authUser.username.slice(0,1).toUpperCase()}</div><div><b>{authUser.username}</b><small>{authUser.email}</small></div></div>
+      <label className="upload-photo"><span>Upload profile photo</span><span className="upload-photo-button">{profileBusy ? "Saving…" : "Choose file"}</span><input className="profile-file-input" type="file" accept="image/*" disabled={profileBusy} aria-label="Choose profile photo" onChange={e => { void uploadAvatar(e.target.files?.[0]); e.currentTarget.value = ""; }} /></label>
+      {profileBusy && <p>Saving photo…</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("choose") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}
+      <div className="profile-account-info"><span>Email</span><b>{authUser.email}</b><span>Account created</span><b>{new Date(authUser.createdAt).toLocaleDateString()}</b></div>
+      <section className="profile-wallet"><h3>Wallet balances</h3>{walletLoading && <p>Loading balances…</p>}{walletError && <p className="auth-error">{walletError}</p>}<div className="profile-balance-grid">{(["SOL"] as const).map(asset => <div key={asset}><span>{asset}</span><b>{(Number(walletData?.balances?.[asset]?.availableUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })}</b><small>Available</small></div>)}</div>{walletData?.transactions?.length ? <div className="profile-transactions"><b>Recent wallet activity</b>{walletData.transactions.slice(0, 4).map((tx: any) => <div key={tx.id}><span>{tx.kind} · {tx.asset}<small>{tx.status} · {new Date(tx.created_at).toLocaleDateString()}</small></span><strong>{(Number(tx.amount_units || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })}</strong></div>)}</div> : <p className="profile-muted">Deposits and transactions appear here after verified processing is active.</p>}</section>
+      <section className="free-spins-panel"><div className="free-spins-heading"><span className="free-spins-icon"><Sparkles size={20}/></span><div><small>MAXWIN REWARDS</small><h3>Free Spins</h3></div><strong>{profileData?.freeSpins?.available ?? 0}</strong></div><p className="free-spins-desc">Welcome spins are awarded once after registration. Claim 30 more every 15 days. Your balance is stored on your account; playable spins require the game engine integration to be enabled.</p><div className="free-spins-next"><span>Next 30-spin reward</span><b>{profileData?.freeSpins?.nextRecurringAt ? new Date(profileData.freeSpins.nextRecurringAt).toLocaleDateString() : "Pending setup"}</b></div><button type="button" className="bonus-claim free-spins-claim" disabled={freeSpinBusy || !profileData?.freeSpins?.nextRecurringAt || new Date(profileData.freeSpins.nextRecurringAt).getTime() > Date.now()} onClick={() => void claimRecurringSpins()}>{freeSpinBusy ? "Claiming…" : "Claim 30 Free Spins"}</button><small className="auth-note">Total awarded: {profileData?.freeSpins?.totalAwarded ?? 0} · Free spins cannot currently be wagered or redeemed.</small></section>
+      <div className="profile-actions"><button className="btn btn-gold" onClick={() => setModal("deposit")}>Deposit</button><button className="btn btn-outline" onClick={() => setModal("withdraw")}>Withdraw</button></div>
+      <section className="profile-bonuses"><h3>Bonuses</h3>{profileData?.bonuses?.length ? profileData.bonuses.map(bonus => <div className="bonus-row" key={bonus.id}><span><b>{bonus.title}</b><small>{new Date(bonus.created_at).toLocaleDateString()}</small></span><strong>{bonus.amount}</strong><em>{bonus.status}</em>{bonus.status === "available" && <button className="bonus-claim" disabled={bonusBusy !== null} onClick={() => void requestBonus(bonus.id)}>{bonusBusy === bonus.id ? "Requesting…" : "Request bonus"}</button>}</div>) : <p>Your bonus offers and rewards will appear here when they are added to your account.</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("not found") || profileMessage.toLowerCase().includes("already") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}</section>
+      <small className="auth-note">Wallet balances and transaction history are loaded from the wallet service. Deposits and withdrawals remain unavailable until their secure processing services are active.</small>
+    </div> : selectedGame && selectedPlayMode === "real" ? <div className="auth-form"><div className="modal-status"><span className="status-dot"/><span><b>REAL-MONEY PLAY IS LOCKED</b><small>No deposits or cash wagers are accepted. Licensing, age/jurisdiction controls, audited game outcomes, wallet settlement and withdrawals must be verified before real-money play can be enabled.</small></span></div><button className="btn btn-gold modal-done" type="button" onClick={() => setModal(null)}>Back to lobby</button></div> : selectedGame?.title === "AI NEON DYNASTY" && authUser ? <AIDynasty onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "AI NEON DYNASTY" ? <div className="auth-form"><p>Log in to play AI NEON DYNASTY. Demo credits have no cash value.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Temple of Ra" && authUser ? <BookOfRaSlot onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Temple of Ra" ? <div className="auth-form"><p>Log in to play Temple of Ra and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Golden Vault" && authUser ? <GoldenVault onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Golden Vault" ? <div className="auth-form"><p>Log in to play Golden Vault. Demo credits have no cash value.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Moon Temple" && authUser ? <MoonTemple onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Moon Temple" ? <div className="auth-form"><p>Log in to play Moon Temple and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Royal Fortune" && authUser ? <RoyalFortune onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Royal Fortune" ? <div className="auth-form"><p>Log in to play Royal Fortune and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame ? <div className="auth-form spin-game-panel">
+      <div className="spin-game-provider"><span className={"game-art spin-mini-art art-" + selectedGame.art}><span className="art-symbol">{selectedGame.art === "royal" ? "♛" : selectedGame.art === "neon" ? "✦" : selectedGame.art === "vault" ? "◈" : selectedGame.art === "moon" ? "☾" : selectedGame.art === "lucky" ? "7" : selectedGame.art === "cosmic" ? "✧" : selectedGame.art === "crown" ? "♕" : "✺"}</span></span><span><b>{selectedGame.title}</b><small>MAXWIN promotional slot · Demo mode</small></span></div>
+      {!authUser ? <><p>Log in to use free spins stored on your MAXWIN account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></> : <>
+        <div className="spin-balance-bar"><span>FREE SPINS AVAILABLE</span><strong>{spinBalance ?? profileData?.freeSpins?.available ?? "…"}</strong></div>
+        <div className="spin-reels" aria-live="polite" aria-label="Slot result">{(spinRound?.symbols || ["✦", "♛", "✦"]).map((symbol, index) => <div className={"spin-reel" + (spinRound ? " spin-reel-result" : "")} key={spinRound?.id + "-" + index}>{symbol}</div>)}</div>
+        {spinNotice && <p className={"spin-result-message " + (spinRound?.outcome === "triple-match" ? "spin-result-win" : "")} role="status">{spinNotice}</p>}
+        {spinError && <p className="auth-error" role="alert">{spinError}</p>}
+        <button className="btn btn-gold modal-done spin-play-button" type="button" onClick={() => void playFreeSpin()} disabled={spinBusy || (spinBalance ?? profileData?.freeSpins?.available ?? 0) < 1}>{spinBusy ? "Spinning…" : (spinBalance ?? profileData?.freeSpins?.available ?? 0) < 1 ? "No free spins left" : "SPIN · USE 1 FREE SPIN"}</button>
+        <small className="auth-note spin-demo-note">Promotional demo only. Results have no cash value, no monetary payout, and cannot be redeemed. Each spin is generated and recorded server-side. Switching slots does not reset your balance.</small>
+        {spinHistory.length > 0 && <section className="spin-history"><h3>Recent spins</h3>{spinHistory.slice(0,5).map(round => <div key={round.id}><span>{round.gameTitle}<small>{new Date(round.createdAt).toLocaleString()}</small></span><strong>{round.symbols.join(" ")}</strong></div>)}</section>}
+      </>}
+    </div> : <><p>{authUser ? "You are signed in. Your account is active, but financial features remain disabled." : "Authentication, real-money payments, certified game outcomes, and financial transactions are not yet implemented. MAXWIN will not accept wagers or claim to process payments at this stage."}</p>{authUser && modal === "game" && !selectedGame && <div className="modal-status"><span className="status-dot"/><span><b>{authUser.username}</b><small>{authUser.email}</small></span></div>}<div className="modal-status"><span className="status-dot"/><span><b>Real-money play disabled</b><small>No funds are being accepted or transferred.</small></span></div><button className="btn btn-gold modal-done" onClick={() => setModal(null)}>Understood</button></>}</section></div>}
+    {welcomePromoOpen && !authUser && <div className="welcome-promo-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) closeWelcomePromo(); }}>
+      <section className="welcome-promo" role="dialog" aria-modal="true" aria-labelledby="welcome-promo-title">
+        <button className="welcome-promo-close" type="button" aria-label="Close welcome offer" onClick={closeWelcomePromo}><X size={19}/></button>
+        <div className="welcome-promo-orbit promo-orbit-one"/><div className="welcome-promo-orbit promo-orbit-two"/>
+        <div className="welcome-promo-badge"><Sparkles size={14}/> EXCLUSIVE WELCOME OFFER</div>
+        <div className="welcome-promo-crown"><Crown size={43}/><span>MAXWIN</span></div>
+        <p className="welcome-promo-kicker">YOUR FIRST SPIN STARTS HERE</p>
+        <h2 id="welcome-promo-title">GET <strong>25</strong><br/><em>FREE SPINS</em></h2>
+        <p className="welcome-promo-copy">A royal welcome for new members. Your promotional spin balance is designed to stay with your account when you switch between supported slots.</p>
+        <div className="welcome-promo-perks"><span><ShieldCheck size={15}/> One welcome offer per account</span><span><Gem size={15}/> Bonus rules shown before activation</span></div>
+        <button className="welcome-promo-cta" type="button" onClick={registerFromPromo}>REGISTER NOW <span>↗</span></button>
+        <button className="welcome-promo-later" type="button" onClick={closeWelcomePromo}>Maybe later</button>
+        <small className="welcome-promo-note">Promotional offer preview. Free spins activate only when bonus-enabled games and server-side bonus tracking are live. 18+ · Terms apply.</small>
+      </section>
+    </div>}
+    <div className="bottom-dock"><button onClick={() => authUser ? setModal("profile") : openAuth("signin")}><Wallet size={18}/> Account</button><button onClick={() => document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" })}><Gamepad2 size={18}/> Casino</button><button onClick={() => authUser ? setModal("profile") : openAuth("signin")}>Bonuses</button><button onClick={() => authUser ? setModal("profile") : openAuth("register")}><Crown size={18}/> Join</button></div>
+  </div>;
+}
+export default App;}{amount}</button>)}</div>
         <div className="modal-status"><span className="status-dot"/><span><b>{solUsdRate ? ((depositUsd / solUsdRate).toFixed(6) + " SOL") : "SOL quote loading…"}</b><small>{'$'}{depositUsd.toFixed(2)} USD {solUsdRate ? ("at $" + solUsdRate.toLocaleString(undefined, { maximumFractionDigits: 4 }) + " per SOL") : ""}</small></span></div>
         {solRateUpdatedAt && <small className="auth-note">Rate updated: {new Date(solRateUpdatedAt).toLocaleTimeString()}</small>}
         {solRateError && <p className="auth-error" role="alert">{solRateError}</p>}
