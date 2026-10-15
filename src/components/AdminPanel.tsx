@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, RefreshCw, ShieldCheck, Wallet, Users, Gift, ArrowDownToLine, ArrowUpFromLine, LockKeyhole, Activity, Trash2 } from "lucide-react";
 
 type Overview = {
@@ -15,7 +15,7 @@ const moneyUnits = (units: string, asset: string) => {
 };
 
 export default function AdminPanel() {
-  const [key, setKey] = useState("");
+  const [key, setKey] = useState(() => { try { return sessionStorage.getItem("maxwin-admin-key") || ""; } catch { return ""; } });
   const [authorized, setAuthorized] = useState(false);
   const [overview, setOverview] = useState<Overview | null>(null);
   const [busy, setBusy] = useState(false);
@@ -29,6 +29,7 @@ export default function AdminPanel() {
   const [selectedTransactionIds, setSelectedTransactionIds] = useState<string[]>([]);
   const [deleteTransactionsBusy, setDeleteTransactionsBusy] = useState(false);
   const [transactionDeleteMessage, setTransactionDeleteMessage] = useState("");
+  const [supportUnreadCount, setSupportUnreadCount] = useState(0);
 
 
   const load = async (candidate = key) => {
@@ -38,9 +39,32 @@ export default function AdminPanel() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not load admin dashboard.");
       setOverview(data as Overview); setKey(candidate); setAuthorized(true);
+      try { sessionStorage.setItem("maxwin-admin-key", candidate); } catch { /* keep current session usable */ }
     } catch (e) { setAuthorized(false); setOverview(null); setError(e instanceof Error ? e.message : "Could not load admin dashboard."); }
     finally { setBusy(false); }
   };
+
+  useEffect(() => {
+    if (!authorized || !key) return;
+    let active = true;
+    const refreshSupportUnread = async () => {
+      try {
+        const response = await fetch("/api/admin/support", {
+          headers: { "X-MAXWIN-ADMIN-KEY": key },
+          cache: "no-store"
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const count = Array.isArray(data.tickets)
+          ? data.tickets.reduce((sum: number, ticket: { unread?: number }) => sum + (Number(ticket.unread) === 1 ? 1 : 0), 0)
+          : 0;
+        if (active) setSupportUnreadCount(count);
+      } catch { /* the dashboard remains usable if support is temporarily unavailable */ }
+    };
+    void refreshSupportUnread();
+    const timer = window.setInterval(() => void refreshSupportUnread(), 20000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [authorized, key]);
 
   const updateWithdrawal = async (requestId: string, action: "approve" | "reject" | "mark_sent") => {
     setWithdrawalBusy(requestId); setError("");
@@ -127,7 +151,7 @@ export default function AdminPanel() {
         {error && <div className="mw-admin-alert" role="alert">{error}</div>}
         <p className="mw-admin-muted">This dashboard records wallet activity and lets you approve SOL withdrawals manually. Never put the admin key in source code or a public repository.</p>
       </section> : <>
-        <header className="mw-admin-top"><div><div className="mw-admin-brand"><span className="mw-admin-brand-mark"><ShieldCheck size={24}/></span> MAXWIN <span className="mw-admin-eyebrow">ADMIN</span></div><h1 className="mw-admin-title">Casino overview</h1><p className="mw-admin-muted">Internal dashboard · approve and record SOL payouts manually</p></div><div style={{display:"flex",gap:9,flexWrap:"wrap"}}><a className="mw-admin-btn" href="/admin/support" style={{textDecoration:"none"}}>Support Inbox</a><button className="mw-admin-btn" onClick={() => void load()} disabled={busy}><RefreshCw size={16}/>{busy ? "Refreshing…" : "Refresh data"}</button><button className="mw-admin-btn" onClick={() => {setAuthorized(false);setOverview(null);setKey("");}}><ArrowLeft size={16}/>Lock dashboard</button></div></header>
+        <header className="mw-admin-top"><div><div className="mw-admin-brand"><span className="mw-admin-brand-mark"><ShieldCheck size={24}/></span> MAXWIN <span className="mw-admin-eyebrow">ADMIN</span></div><h1 className="mw-admin-title">Casino overview</h1><p className="mw-admin-muted">Internal dashboard · approve and record SOL payouts manually</p></div><div style={{display:"flex",gap:9,flexWrap:"wrap"}}><a className="mw-admin-btn" href="/admin/support" style={{textDecoration:"none",position:"relative"}}>Support Inbox{supportUnreadCount>0&&<span aria-label={supportUnreadCount+" unread support tickets"} style={{display:"inline-grid",placeItems:"center",minWidth:20,height:20,padding:"0 5px",borderRadius:99,background:"#d84c65",color:"#fff",fontSize:11,fontWeight:900}}>{supportUnreadCount>99?"99+":supportUnreadCount}</span>}</a><button className="mw-admin-btn" onClick={() => void load()} disabled={busy}><RefreshCw size={16}/>{busy ? "Refreshing…" : "Refresh data"}</button><button className="mw-admin-btn" onClick={() => {setAuthorized(false);setOverview(null);setKey("");setSupportUnreadCount(0);try{sessionStorage.removeItem("maxwin-admin-key");}catch{}}}><ArrowLeft size={16}/>Lock dashboard</button></div></header>
         {error && <div className="mw-admin-alert" role="alert">{error}</div>}
         <div className="mw-admin-status"><span className="mw-admin-pill" style={{borderColor:"#3c624d",color:"#a7efc1",background:"#15271f"}}><ShieldCheck size={14}/> BOOK OF RA REAL PLAY ENABLED</span><span className="mw-admin-pill" style={{borderColor:"#3c624d",color:"#a7efc1",background:"#15271f"}}><Wallet size={14}/> SOL DEPOSIT VERIFICATION ENABLED</span><span className="mw-admin-pill"><ArrowUpFromLine size={14}/> MANUAL SOL PAYOUTS</span><span className="mw-admin-pill" style={{borderColor:"#3c624d",color:"#a7efc1",background:"#15271f"}}><ShieldCheck size={14}/> MANUAL SOL APPROVALS ENABLED</span></div>
         <div className="mw-admin-grid">
