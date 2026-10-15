@@ -1,4 +1,5 @@
 import { Env, ensureWalletSchema, getUser, isAdminTestAccount, json, readJson, randomToken } from "../auth/_shared";
+import { getSolUsd } from "../_shared/sol-price";
 
 type RpcTransaction = {
   slot?: number;
@@ -28,49 +29,6 @@ async function ensureDepositSchema(db: D1Database): Promise<void> {
   if (!columnNames.has("sol_usd_at_request")) await db.prepare("ALTER TABLE wallet_deposit_requests ADD COLUMN sol_usd_at_request REAL").run();
   await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_wallet_deposit_request_tx_hash ON wallet_deposit_requests(tx_hash) WHERE tx_hash IS NOT NULL").run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_wallet_deposit_request_user_status ON wallet_deposit_requests(user_id, status, created_at DESC)").run();
-}
-
-async function fetchValidPrice(url: string, extract: (data: any) => unknown): Promise<number | null> {
-  try {
-    const response = await fetch(url, {
-      headers: { Accept: "application/json" },
-      cf: { cacheTtl: 20, cacheEverything: true }
-    });
-    if (!response.ok) return null;
-    const data: unknown = await response.json();
-    const value = extract(data);
-    const price = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
-    return Number.isFinite(price) && price > 0 ? price : null;
-  } catch {
-    return null;
-  }
-}
-
-async function getSolUsd(): Promise<number | null> {
-  const providers: Array<{ url: string; extract: (data: any) => unknown }> = [
-    {
-      url: "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
-      extract: data => data?.solana?.usd
-    },
-    {
-      url: "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT",
-      extract: data => data?.price
-    },
-    {
-      url: "https://api.kraken.com/0/public/Ticker?pair=SOLUSD",
-      extract: data => {
-        const result = data?.result;
-        if (!result || typeof result !== "object") return null;
-        const pair = Object.values(result)[0] as { c?: unknown[] } | undefined;
-        return pair?.c?.[0];
-      }
-    }
-  ];
-  for (const provider of providers) {
-    const price = await fetchValidPrice(provider.url, provider.extract);
-    if (price !== null) return price;
-  }
-  return null;
 }
 
 async function autoScanDeposits(db: D1Database, destination: string, rpcUrl: string, currentUserId: string): Promise<{ credited: number; currentUserCredited: boolean }> {
@@ -112,7 +70,7 @@ async function autoScanDeposits(db: D1Database, destination: string, rpcUrl: str
     // Shared-address deposits must map to exactly one unique amount/time quote.
     if (candidates.length !== 1) continue;
     const quote = candidates[0];
-    const solUsd = quote.sol_usd_at_request && Number.isFinite(quote.sol_usd_at_request) && quote.sol_usd_at_request > 0 ? quote.sol_usd_at_request : await getSolUsd();
+    const solUsd = quote.sol_usd_at_request && Number.isFinite(quote.sol_usd_at_request) && quote.sol_usd_at_request > 0 ? quote.sol_usd_at_request : (await getSolUsd(db, 10 * 60 * 1000))?.price ?? null;
     if (!solUsd || (received / 1e9) * solUsd + 1e-9 < Number(quote.usd_target || 5)) continue;
 
     const timestamp = new Date().toISOString();
@@ -183,8 +141,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       if (!Number.isInteger(usd) || usd < 5 || usd > 30 || usd % 5 !== 0) {
         return json({ error: "Choose a deposit amount from $5 to $30 in $5 increments." }, 400);
       }
-      const solUsd = await getSolUsd();
-      if (!solUsd) return json({ error: "Live SOL/USD rate is unavailable. No deposit request was created." }, 503);
+      const solUsd = (await getSolUsd(env.DB, 5 * 60 * 1000))?.price ?? null;
+      if (!solUsd) return json({ error: "SOL/USD price sources are temporarily unavailable and no recent safe quote is cached. No deposit request was created." }, 503);
       const random = new Uint16Array(1);
       crypto.getRandomValues(random);
       const uniqueOffset = (random[0] % 900) + 100;
@@ -258,7 +216,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     }
 
     const quoteAtRequest = depositRequest.sol_usd_at_request;
-    const solUsd = quoteAtRequest && Number.isFinite(quoteAtRequest) && quoteAtRequest > 0 ? quoteAtRequest : await getSolUsd();
+    const solUsd = quoteAtRequest && Number.isFinite(quoteAtRequest) && quoteAtRequest > 0 ? quoteAtRequest : (await getSolUsd(env.DB, 10 * 60 * 1000))?.price ?? null;
     const minimumUsd = Number(depositRequest.usd_target || 5);
     if (!solUsd || (receivedLamports / 1e9) * solUsd + 1e-9 < minimumUsd) {
       return json({ error: "The received amount does not meet the USD value of this deposit request. No balance was changed." }, 400);
