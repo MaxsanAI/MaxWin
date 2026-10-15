@@ -33,6 +33,10 @@ export const BOOK_OF_SUNRISE_MATH = {
     jack:    { 3: 1, 4: 2, 5: 5 },
     ten:     { 3: 1, 4: 2, 5: 5 },
   },
+  // Free Spins use their own payout factors, separate from the base game.
+  freeSpinPayoutMultiplier: 1.25,
+  // A modest extra boost applies specifically when the chosen symbol expands.
+  expandingSymbolPayoutMultiplier: 1.35,
   scatterPayoutByBookCount: {
     threeBooks: 0.5,
     fourBooks: 2,
