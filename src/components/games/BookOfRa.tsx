@@ -151,6 +151,7 @@ export default function BookOfRaSlot({ onBackToLobby, mode = "demo" }: { onBackT
  const [displaySymbols,setDisplaySymbols]=useState<SymbolName[]>(defaultGrid);
  const [reelStrips,setReelStrips]=useState<SymbolName[][]>(Array.from({length:5},()=>Array.from({length:8},(_,i)=>defaultGrid[i%defaultGrid.length])));
  const rollTimer=useRef<number|undefined>(undefined);
+ const pendingRealRound=useRef<{id:string;action:"spin"|"buyBonus";bet:number}|null>(null);
 
  useEffect(()=>{
   const audio=musicAudio.current;
@@ -181,6 +182,12 @@ export default function BookOfRaSlot({ onBackToLobby, mode = "demo" }: { onBackT
   if(busy||balance===null||bonusFinish!==null)return;
   if(action==="buyBonus"&&balance<bet*50){setError(mode==="real"?"Insufficient available SOL wallet balance for Buy Bonus.":"Not enough demo credits for Buy Bonus.");return;}
   if(action==="spin"&&freeSpins<=0&&balance<bet){setError(mode==="real"?"Insufficient available SOL wallet balance.":"Not enough demo credits.");return;}
+  if(mode==="real"&&pendingRealRound.current&&(pendingRealRound.current.action!==action||pendingRealRound.current.bet!==bet)){
+   setError("A previous real-money round may still be processing. Retry that same action before starting another round.");
+   return;
+  }
+  const roundRequestId=mode==="real"?(pendingRealRound.current?.id||requestId()):requestId();
+  if(mode==="real"&&!pendingRealRound.current)pendingRealRound.current={id:roundRequestId,action,bet};
   const isBonusSpin=action==="spin"&&freeSpins>0;
   const activeBonusSymbol=isBonusSpin?expandingSymbol:null;
   if(soundOn&&typeof window.AudioContext!=="undefined"){try{const ctx=audioContext.current||(audioContext.current=new window.AudioContext());if(ctx.state==="suspended")void ctx.resume();}catch{}}
@@ -191,9 +198,10 @@ export default function BookOfRaSlot({ onBackToLobby, mode = "demo" }: { onBackT
   setMessage(action==="buyBonus"?"Opening the Sacred Book…":freeSpins>0?"Free spin in progress…":"Reels spinning…");
   const spinStartedAt=performance.now();
   try{
-   const res=await fetch("/api/games/book-of-ra",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,bet,requestId:requestId(),walletMode:mode})});
+   const res=await fetch("/api/games/book-of-ra",{method:"POST",credentials:"same-origin",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,bet,requestId:roundRequestId,walletMode:mode})});
    const data=await res.json();
    if(!res.ok)throw new Error(data.error||"Spin failed.");
+   if(mode==="real")pendingRealRound.current=null;
    const minimumSpin=speed==="slow"?1250:speed==="normal"?950:700;
    const remainingSpin=minimumSpin-(performance.now()-spinStartedAt);
    if(remainingSpin>0)await new Promise(resolve=>window.setTimeout(resolve,remainingSpin));
