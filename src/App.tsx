@@ -95,7 +95,8 @@ function App() {
   const [depositBusy, setDepositBusy] = useState(false);
   const [depositRequest, setDepositRequest] = useState<{ id: string; amountSol: string; usdTarget: number; expiresAt: string } | null>(null);
   const [depositNow, setDepositNow] = useState(() => Date.now());
-  const depositSecondsLeft = depositRequest ? Math.max(0, Math.ceil((Date.parse(depositRequest.expiresAt) - depositNow) / 1000)) : null;
+  const depositExpiryMs = depositRequest ? Date.parse(depositRequest.expiresAt) : NaN;
+  const depositSecondsLeft = depositRequest && Number.isFinite(depositExpiryMs) ? Math.max(0, Math.ceil((depositExpiryMs - depositNow) / 1000)) : null;
   const loadWallet = async () => {
     setWalletLoading(true); setWalletError("");
     try {
@@ -250,8 +251,8 @@ function App() {
       const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || "Could not save profile photo."); setProfileData(data.profile); setProfileMessage("Profile photo saved.");
     } catch (error) { setProfileMessage(error instanceof Error ? error.message : "Could not save profile photo."); } finally { setProfileBusy(false); }
   };
-  const cancelDepositRequest = async () => {
-    if (!depositRequest) return;
+  const cancelDepositRequest = async (nextAmount?: number) => {
+    if (!depositRequest) { if (typeof nextAmount === "number") setDepositUsd(nextAmount); return; }
     setDepositBusy(true); setDepositMessage("");
     try {
       const response = await fetch("/api/wallet/deposit", {
@@ -263,6 +264,7 @@ function App() {
       if (!response.ok) throw new Error(data.error || "Could not change deposit quote.");
       setDepositRequest(null);
       setDepositSignature("");
+      if (typeof nextAmount === "number") setDepositUsd(nextAmount);
       setDepositMessage("Quote closed. Choose a new deposit amount. Any transfer already sent before the original expiry can still be verified.");
     } catch (error) {
       setDepositMessage(error instanceof Error ? error.message : "Could not change deposit quote.");
@@ -472,7 +474,7 @@ function App() {
       {walletData && <div className="modal-status"><span className="status-dot"/><span><b>Available balance: {(Number(walletData.balances?.[walletAsset]?.availableUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })} {walletAsset}</b><small>Reserved: {(Number(walletData.balances?.[walletAsset]?.reservedUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })} {walletAsset}</small></span></div>}
       {modal === "deposit" ? <div className="wallet-address-panel">
         <p><b>Choose deposit amount (USD)</b></p><p className="auth-note">Automatic SOL deposit detection is active while this window is open. Keep this page open after sending; MAXWIN checks finalized Solana transactions every 8 seconds. If detection fails, the transaction-signature field remains available as a fallback.</p>
-        <div className="category-tabs wallet-network-tabs">{[5, 10, 15, 20, 25, 30].map(amount => <button key={amount} type="button" disabled={depositBusy} className={depositUsd === amount ? "category active" : "category"} onClick={() => { if (depositRequest) { setDepositMessage("Cancel the current quote before choosing a different amount."); return; } setDepositUsd(amount); setDepositSignature(""); setDepositMessage(""); }}>{amount}</button>)}</div>
+        <div className="category-tabs wallet-network-tabs">{[5, 10, 15, 20, 25, 30].map(amount => <button key={amount} type="button" disabled={depositBusy} className={depositUsd === amount ? "category active" : "category"} onClick={() => { if (depositRequest) { void cancelDepositRequest(amount); return; } setDepositUsd(amount); setDepositSignature(""); setDepositMessage(""); }}>{amount}</button>)}</div>
         <div className="modal-status"><span className="status-dot"/><span><b>{solUsdRate ? ((depositUsd / solUsdRate).toFixed(6) + " SOL") : "SOL quote loading…"}</b><small>{'$'}{depositUsd.toFixed(2)} USD {solUsdRate ? ("at $" + solUsdRate.toLocaleString(undefined, { maximumFractionDigits: 4 }) + " per SOL") : ""}</small></span></div>
         {solRateUpdatedAt && <small className="auth-note">Rate updated: {new Date(solRateUpdatedAt).toLocaleTimeString()}</small>}
         {solRateError && <p className="auth-error" role="alert">{solRateError}</p>}
