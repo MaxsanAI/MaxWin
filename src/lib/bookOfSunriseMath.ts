@@ -22,20 +22,31 @@ export const BOOK_OF_SUNRISE_MATH = {
     jack: 18,
     ten: 22
   },
+  // Base-game payouts: two matching regular symbols never pay.
   payouts: {
     pharaoh: { 3: 4, 4: 7, 5: 15 },
     anubis:  { 3: 3, 4: 6, 5: 12 },
-    scarab:  { 2: 4, 3: 6, 4: 10, 5: 10 },
+    scarab:  { 3: 2, 4: 4, 5: 10 },
     statue:  { 3: 3, 4: 5, 5: 10 },
-    ace:     { 2: 4, 3: 6, 4: 10, 5: 8 },
-    king:    { 2: 4, 3: 6, 4: 10, 5: 8 },
-    queen:   { 2: 4, 3: 6, 4: 10, 5: 5 },
-    jack:    { 2: 4, 3: 6, 4: 10, 5: 5 },
-    ten:     { 2: 4, 3: 6, 4: 10, 5: 5 },
+    ace:     { 3: 2, 4: 4, 5: 8 },
+    king:    { 3: 2, 4: 4, 5: 8 },
+    queen:   { 3: 2, 4: 3, 5: 5 },
+    jack:    { 3: 2, 4: 3, 5: 5 },
+    ten:     { 3: 2, 4: 3, 5: 5 },
   },
-  // Free Spins use their own payout factors, separate from the base game.
-  freeSpinPayoutMultiplier: 1.25,
-  // A modest extra boost applies specifically when the chosen symbol expands.
+  // Separate, slightly improved Free Spins symbol payouts. Two symbols still pay nothing.
+  freeSpinPayouts: {
+    pharaoh: { 3: 5, 4: 9, 5: 18 },
+    anubis:  { 3: 4, 4: 8, 5: 14 },
+    scarab:  { 3: 3, 4: 5, 5: 12 },
+    statue:  { 3: 4, 4: 6, 5: 12 },
+    ace:     { 3: 3, 4: 5, 5: 10 },
+    king:    { 3: 3, 4: 5, 5: 10 },
+    queen:   { 3: 3, 4: 4, 5: 7 },
+    jack:    { 3: 3, 4: 4, 5: 7 },
+    ten:     { 3: 3, 4: 4, 5: 7 },
+  },
+  // Kept for the expanding-symbol feature only; ordinary payouts are not globally multiplied.
   expandingSymbolPayoutMultiplier: 1.35,
   scatterPayoutByBookCount: {
     threeBooks: 0.5,
