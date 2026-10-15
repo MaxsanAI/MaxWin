@@ -45,6 +45,10 @@ export default function AdminPanel() {
   };
 
   useEffect(() => {
+    if (key && !authorized) void load(key);
+  }, []);
+
+  useEffect(() => {
     if (!authorized || !key) return;
     let active = true;
     const refreshSupportUnread = async () => {
