@@ -4284,3 +4284,57 @@ html, body {
 /* Moon Temple uses the same full-height game modal as the other original slots. */
 .modal-slot>.moon-temple-game{flex:1;min-height:0;width:100%;max-width:none;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:0 3px 10px;scrollbar-width:thin;scrollbar-color:#66517d #0c0b18}
 @media(max-width:720px){.modal-slot>.moon-temple-game{padding:0 1px 5px}.modal-slot>.moon-temple-game .mt-board{grid-template-rows:repeat(4,clamp(58px,18.4vw,96px))}}
+
+
+/* MAXWIN wallet/deposit modal: keep the full form reachable on short screens. */
+.modal-backdrop:has(.wallet-form) {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding: 12px !important;
+}
+.modal:has(.wallet-form) {
+  width: min(100%, 520px) !important;
+  max-height: calc(100dvh - 24px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: auto !important;
+  padding: 22px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #66517d #0c0b18;
+}
+.modal:has(.wallet-form) > .modal-mark { margin-bottom: 10px !important; }
+.modal:has(.wallet-form) > .eyebrow { font-size: 10px !important; }
+.modal:has(.wallet-form) > h2 { margin: 7px 38px 10px 0 !important; font-size: clamp(21px, 3vh, 26px) !important; }
+.wallet-form { gap: 10px !important; min-width: 0; }
+.wallet-form > p { margin: 0 !important; font-size: 13px !important; line-height: 1.5 !important; }
+.wallet-form .modal-status { margin-top: 4px !important; padding: 10px !important; }
+.wallet-form .modal-done { margin-top: 4px !important; min-height: 42px; }
+.wallet-form .auth-note { overflow-wrap: anywhere; }
+.wallet-address-panel { min-width: 0; }
+.wallet-address-panel > p { margin: 0 0 5px !important; }
+.wallet-address-panel .category-tabs { gap: 5px !important; }
+.wallet-address-panel .category { padding: 7px 10px !important; font-size: 13px !important; }
+.wallet-address-panel .modal-status { margin-top: 8px !important; }
+@media (max-width: 520px) {
+  .modal-backdrop:has(.wallet-form) { padding: 6px !important; }
+  .modal:has(.wallet-form) {
+    width: 100% !important;
+    max-height: calc(100dvh - 12px) !important;
+    padding: 18px 15px 16px !important;
+    border-radius: 14px !important;
+  }
+  .modal:has(.wallet-form) > .modal-close { top: 10px !important; right: 10px !important; }
+  .modal:has(.wallet-form) > .modal-mark { width: 36px; height: 36px; margin-bottom: 8px !important; }
+  .wallet-form { gap: 9px !important; }
+  .wallet-form .modal-status b { font-size: 14px !important; overflow-wrap: anywhere; }
+  .wallet-form .modal-status small { font-size: 12px !important; }
+  .wallet-address-panel .category-tabs { gap: 4px !important; }
+  .wallet-address-panel .category { padding: 7px 8px !important; font-size: 12px !important; }
+}
