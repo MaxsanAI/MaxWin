@@ -2,9 +2,8 @@ export type BookOfSunriseSymbol = "book" | "pharaoh" | "anubis" | "scarab" | "st
 export type BookOfSunriseRegularSymbol = Exclude<BookOfSunriseSymbol, "book">;
 
 /**
- * Temple of Ra demo math v3.
+ * Temple of Ra demo math.
  * Regular payouts are per payline bet; scatter payouts use total bet.
- * Reduced premium-symbol frequency, Book frequency and top-end payouts.
  */
 export const BOOK_OF_SUNRISE_MATH = {
   // 1.2% per cell; 15 independent cells.
@@ -22,15 +21,15 @@ export const BOOK_OF_SUNRISE_MATH = {
     ten: 22
   },
   payouts: {
-    pharaoh: { 3: 2, 4: 8, 5: 20 },
-    anubis:  { 3: 2, 4: 6, 5: 15 },
-    scarab:  { 3: 2, 4: 4, 5: 10 },
-    statue:  { 3: 2, 4: 4, 5: 10 },
-    ace:     { 3: 2, 4: 3, 5: 8 },
-    king:    { 3: 2, 4: 3, 5: 8 },
-    queen:   { 3: 2, 4: 2, 5: 5 },
-    jack:    { 3: 2, 4: 2, 5: 5 },
-    ten:     { 3: 2, 4: 2, 5: 5 },
+    pharaoh: { 3: 1, 4: 8, 5: 20 },
+    anubis:  { 3: 1, 4: 6, 5: 15 },
+    scarab:  { 3: 1, 4: 4, 5: 10 },
+    statue:  { 3: 1, 4: 4, 5: 10 },
+    ace:     { 3: 1, 4: 3, 5: 8 },
+    king:    { 3: 1, 4: 3, 5: 8 },
+    queen:   { 3: 1, 4: 2, 5: 5 },
+    jack:    { 3: 1, 4: 2, 5: 5 },
+    ten:     { 3: 1, 4: 2, 5: 5 },
   },
   scatterPayoutByBookCount: {
     threeBooks: 0.5,
