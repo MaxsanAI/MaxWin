@@ -247,9 +247,10 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
 
   try {
     await ensureRealSchema(env.DB);
-    const previous = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1")
-      .bind(requestId, user.id).first<{ result_json: string }>();
+    const previous = await env.DB.prepare("SELECT result_json,action,bet FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1")
+      .bind(requestId, user.id).first<{ result_json: string; action: string; bet: number }>();
     if (previous) {
+      if (previous.action !== action || previous.bet !== bet) return json({ error: "This request ID was already used for a different round. Refresh before placing another wager." }, 409);
       const result = JSON.parse(previous.result_json);
       const wallet = await env.DB.prepare("SELECT available_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1").bind(user.id).first<{ available_units: string }>();
       const solUsd = await getRealSolUsd();
