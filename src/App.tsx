@@ -293,7 +293,7 @@ function App() {
   const submitWithdrawal = async () => {
     setWithdrawBusy(true); setWithdrawMessage("");
     try {
-      const response = await fetch("/api/wallet/withdraw", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ asset: "SOL", amount: withdrawAmount, address: withdrawAddress }) });
+      const response = await fetch("/api/wallet/withdraw", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ asset: "SOL", amountUsd: withdrawAmount, address: withdrawAddress }) });
       const data = await response.json().catch(() => ({}));
       setWithdrawMessage(response.ok ? (data.message || ("Request recorded: " + (data.request?.status || "pending"))) : (data.error || "Withdrawal request failed."));
       if (response.ok) { setWithdrawAmount(""); await loadWallet(); }
@@ -461,10 +461,10 @@ function App() {
         {depositMessage && <p className={depositMessage.toLowerCase().includes("credited") || depositMessage.toLowerCase().includes("verified") || depositMessage.toLowerCase().includes("request created") ? "auth-note" : "auth-error"} role="status">{depositMessage}</p>}
         <p className="auth-note">CONTROLLED TEST MODE: create a request and send the exact SOL amount shown within 3 minutes. If the transaction was sent before the quote expired but final confirmation arrives later, paste its Solflare signature to verify it. MAXWIN checks the on-chain transaction and prevents duplicate credits. This shared address is not ready for public customer deposits.</p>
       </div> : <form className="auth-form" onSubmit={e => { e.preventDefault(); void submitWithdrawal(); }}>
-        <label>Amount (SOL)<input required inputMode="decimal" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="0.1" /></label>
-        <label>Destination Solana address<input required value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value.trim())} placeholder="Solana address" /></label>
+        <label>Withdrawal amount (USD)<input required inputMode="decimal" type="number" min="10" step="0.01" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="10.00" /><small className="auth-note">Minimum withdrawal: $10. {solUsdRate && Number(withdrawAmount) > 0 ? `Estimated payout: ${(Number(withdrawAmount) / solUsdRate).toFixed(6)} SOL at ${solUsdRate.toFixed(2)}/SOL.` : solRateError || "Fetching the live SOL/USD rate…"}</small></label>
+        <label>Your Solana address (SOL payout)<input required value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value.trim())} placeholder="Solana address" /></label>
         <button className="btn btn-gold modal-done" type="submit" disabled={withdrawBusy}>{withdrawBusy ? "Submitting…" : "Request withdrawal"}</button>
-        {withdrawMessage && <p className={withdrawMessage.startsWith("Request recorded") ? "" : "auth-error"} role="status">{withdrawMessage}</p>}
+        {withdrawMessage && <p className={withdrawMessage.startsWith("Request recorded") ? "auth-note" : "auth-error"} role="status">{withdrawMessage}</p>}<p className="auth-note">Withdrawals are processed Monday–Saturday, Serbia time. Requests submitted on Sunday remain pending until Monday. Every payout requires manual admin approval; no SOL is sent automatically.</p>
       </form>}
       {walletData?.notice && <small className="auth-note">{walletData.notice}</small>}
       <button className="btn btn-ghost modal-done" onClick={() => void loadWallet()}>Refresh wallet</button>
