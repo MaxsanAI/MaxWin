@@ -1,4 +1,4 @@
-import { Env, ensureWalletSchema, getUser, json, readJson, randomToken } from "../auth/_shared";
+import { Env, ensureWalletSchema, getUser, isAdminTestAccount, json, readJson, randomToken } from "../auth/_shared";
 
 type RpcTransaction = {
   slot?: number;
@@ -106,7 +106,7 @@ async function autoScanDeposits(db: D1Database, destination: string, rpcUrl: str
     const received = post - pre;
     if (!Number.isSafeInteger(received) || received <= 0) continue;
     const txTime = tx.blockTime * 1000;
-    const matches = await db.prepare("SELECT id,user_id,amount_units,usd_target,sol_usd_at_request,created_at,expires_at FROM wallet_deposit_requests WHERE amount_units=? AND status IN ('pending','expired') AND tx_hash IS NULL AND created_at<=? AND expires_at>=? ORDER BY created_at DESC LIMIT 2")
+    const matches = await db.prepare("SELECT d.id,d.user_id,d.amount_units,d.usd_target,d.sol_usd_at_request,d.created_at,d.expires_at FROM wallet_deposit_requests d WHERE d.amount_units=? AND d.status IN ('pending','expired') AND d.tx_hash IS NULL AND d.created_at<=? AND d.expires_at>=? AND NOT EXISTS (SELECT 1 FROM admin_test_accounts ta WHERE ta.user_id=d.user_id AND ta.enabled=1) ORDER BY d.created_at DESC LIMIT 2")
       .bind(String(received), new Date(txTime + 2000).toISOString(), new Date(txTime - 1000).toISOString()).all<{id:string;user_id:string;amount_units:string;usd_target:number|null;sol_usd_at_request:number|null;created_at:string;expires_at:string}>();
     const candidates = matches.results || [];
     // Shared-address deposits must map to exactly one unique amount/time quote.
@@ -153,6 +153,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureWalletSchema(env.DB);
     await ensureDepositSchema(env.DB);
+
+    if (body.action !== "autoScan" && await isAdminTestAccount(env.DB, user.id)) {
+      return json({ error: "This account is in simulated real-play mode. Real deposits are disabled for test accounts." }, 403);
+    }
 
     if (body.action === "autoScan") {
       const scan = await autoScanDeposits(env.DB, destination, env.SOLANA_RPC_URL?.trim() || "https://solana-rpc.publicnode.com", user.id);
