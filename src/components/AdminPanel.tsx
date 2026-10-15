@@ -61,7 +61,7 @@ export default function AdminPanel() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Could not add simulated balance.");
-      setTestCreditMessage(`Added ${Number(data.amountUsd).toFixed(2)} simulated balance to ${data.username}. Estimated wallet balance: ${Number(data.balanceUsdEstimate).toFixed(2)}. Cash-out is disabled for this account.`);
+      setTestCreditMessage(`Added ${Number(data.amountUsd).toFixed(2)} in simulated credits to ${data.username}. Test conversion: ${Number(data.testSolUsd || 100).toFixed(2)}/SOL (fixed; no live price API used). Estimated test balance: ${Number(data.balanceUsdEstimate).toFixed(2)}. Deposits and withdrawals are disabled for this account.`);
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not add simulated balance.");
@@ -112,7 +112,7 @@ export default function AdminPanel() {
         <section className="mw-admin-section">
           <div className="mw-admin-section-head"><h2>Simulate real-money balance</h2><span className="mw-admin-eyebrow">TEST ONLY · NO CASH-OUT</span></div>
           <div style={{padding:18}}>
-            <p className="mw-admin-muted">Add test credits to a registered username so you can test Book of Ra in real-play mode. The account is marked as a test account; deposits and withdrawals are blocked for it. These credits are not real funds.</p>
+            <p className="mw-admin-muted">Add test credits to a registered username so you can test Book of Ra in real-play mode. Test credits use a fixed $100/SOL conversion and do not call live price APIs. The account is marked as a test account; deposits and withdrawals are blocked. These credits are not real funds.</p>
             <form onSubmit={addTestBalance} style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,alignItems:"end",maxWidth:760}}>
               <label className="mw-admin-muted">Registered username
                 <input className="mw-admin-input" style={{marginBottom:0}} value={testUsername} onChange={e=>setTestUsername(e.target.value)} maxLength={32} autoComplete="off" placeholder="Exact account username" required />
