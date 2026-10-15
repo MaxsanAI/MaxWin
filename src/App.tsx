@@ -195,7 +195,7 @@ function App() {
     try {
       const response = await fetch("/api/wallet/withdraw", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ asset: "SOL", amount: withdrawAmount, address: withdrawAddress }) });
       const data = await response.json().catch(() => ({}));
-      setWithdrawMessage(response.ok ? "Request recorded: " + (data.request?.status || "pending") : (data.error || "Withdrawal request failed."));
+      setWithdrawMessage(response.ok ? (data.message || ("Request recorded: " + (data.request?.status || "pending"))) : (data.error || "Withdrawal request failed."));
       if (response.ok) { setWithdrawAmount(""); await loadWallet(); }
     } catch { setWithdrawMessage("Wallet API is not available. Please try again after deployment."); }
     finally { setWithdrawBusy(false); }
