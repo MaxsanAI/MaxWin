@@ -3,7 +3,8 @@ export type BookOfSunriseRegularSymbol = Exclude<BookOfSunriseSymbol, "book">;
 
 /**
  * Temple of Ra demo math.
- * Regular payouts are per payline bet; scatter payouts use total bet.
+ * Regular line payouts use the displayed total-bet multiplier, matching the paytable.
+ * Expanding-symbol payout uses lineBet × 10 lines; scatter payouts use total bet.
  */
 export const BOOK_OF_SUNRISE_MATH = {
   // 1.6% per cell; slightly more frequent Books for suspense moments.
