@@ -15,11 +15,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       env.DB.prepare("SELECT id, asset, amount_units, destination_address, status, tx_hash, created_at, updated_at FROM withdrawal_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 20").bind(user.id).all()
     ]);
     const balances = {
-      SOL: { availableUnits: "0", reservedUnits: "0", decimals: 9 },
-      TON: { availableUnits: "0", reservedUnits: "0", decimals: 9 }
+      SOL: { availableUnits: "0", reservedUnits: "0", decimals: 9 }
     };
     for (const row of balanceResult.results || []) {
-      if (row.asset === "SOL" || row.asset === "TON") {
+      if (row.asset === "SOL") {
         balances[row.asset] = {
           availableUnits: String(row.available_units),
           reservedUnits: String(row.reserved_units),
@@ -31,8 +30,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       user: { id: user.id, username: user.username },
       balances,
       deposits: {
-        SOL: { address: env.SOL_DEPOSIT_ADDRESS || null, configured: Boolean(env.SOL_DEPOSIT_ADDRESS) },
-        TON: { address: env.TON_DEPOSIT_ADDRESS || null, configured: Boolean(env.TON_DEPOSIT_ADDRESS) }
+        SOL: { address: env.SOL_DEPOSIT_ADDRESS || null, configured: Boolean(env.SOL_DEPOSIT_ADDRESS) }
       },
       withdrawals: {
         requestsEnabled: true,
