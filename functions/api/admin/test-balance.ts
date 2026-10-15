@@ -11,23 +11,6 @@ async function authorize(request: Request, env: Env): Promise<boolean> {
   return mismatch === 0;
 }
 
-async function getSolUsd(): Promise<number | null> {
-  const providers = [
-    { url: "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd", get: (data: any) => data?.solana?.usd },
-    { url: "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT", get: (data: any) => data?.price }
-  ];
-  for (const provider of providers) {
-    try {
-      const response = await fetch(provider.url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(1500), cf: { cacheTtl: 60, cacheEverything: true } });
-      if (!response.ok) continue;
-      const data: any = await response.json();
-      const price = Number(provider.get(data));
-      if (Number.isFinite(price) && price > 0) return price;
-    } catch { /* try next quote source */ }
-  }
-  return null;
-}
-
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Admin test balance database is not configured." }, 503);
   if (!await authorize(request, env)) return json({ error: env.MAXWIN_ADMIN_KEY ? "Unauthorized admin access." : "Set MAXWIN_ADMIN_KEY as a Cloudflare secret." }, 401);
@@ -44,8 +27,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const user = await env.DB.prepare("SELECT id, username FROM users WHERE username_key=? OR lower(username)=lower(?) LIMIT 1")
       .bind(username.toLowerCase(), username).first<{ id: string; username: string }>();
     if (!user) return json({ error: "No registered user was found with that username." }, 404);
-    const solUsd = await getSolUsd();
-    if (!solUsd) return json({ error: "Could not get the live SOL/USD rate. No test credit was added." }, 503);
+    // Test credits must never depend on public market-price APIs. This fixed rate is for simulation only.
+    const solUsd = 100;
     const lamportsNumber = Math.floor((amountUsd / solUsd) * 1_000_000_000);
     if (!Number.isSafeInteger(lamportsNumber) || lamportsNumber <= 0) return json({ error: "This amount cannot be converted safely to SOL units." }, 400);
     const credit = BigInt(lamportsNumber);
@@ -73,7 +56,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         .bind(previous.toString(), now, user.id, next.toString()).run();
       throw error;
     }
-    return json({ ok: true, username: user.username, amountUsd, addedSol: Number(credit) / 1e9, balanceUsdEstimate: (Number(next) / 1e9) * solUsd, simulated: true, cashoutDisabled: true, message: "Simulated balance added. This account is locked to test-only play; deposits and withdrawals are disabled." }, 201);
+    return json({ ok: true, username: user.username, amountUsd, addedSol: Number(credit) / 1e9, balanceUsdEstimate: (Number(next) / 1e9) * solUsd, testSolUsd: solUsd, simulated: true, cashoutDisabled: true, message: "Simulated balance added using the fixed test-only rate of $100/SOL. This is not a live market quote; deposits and withdrawals are disabled." }, 201);
   } catch (error) {
     console.error("[MAXWIN admin test balance] Failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not add the simulated balance." }, 500);
