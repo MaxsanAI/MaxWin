@@ -178,6 +178,35 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
   return ()=>{live=false;if(rollTimer.current)clearInterval(rollTimer.current);};
  },[mode]);
 
+ // Keep the real wallet display in sync when credits are added from the admin panel
+ // or when the player returns to this tab. Demo balance behavior stays unchanged.
+ useEffect(()=>{
+  if(mode!=="real")return;
+  let live=true;
+  const refreshRealWallet=async()=>{
+   if(document.visibilityState==="hidden")return;
+   try{
+    const response=await fetch("/api/games/book-of-ra?mode=real",{cache:"no-store",credentials:"same-origin"});
+    const data=await response.json();
+    if(!live||!response.ok)return;
+    setBalance(Number(data.balance));
+    setWalletSol(typeof data.balanceSol==="number"?data.balanceSol:null);
+    setFreeSpins(Number(data.freeSpins||0));
+    setRealModeLocked(false);
+   }catch{}
+  };
+  const onVisibilityChange=()=>{if(document.visibilityState==="visible")void refreshRealWallet();};
+  window.addEventListener("focus",onVisibilityChange);
+  document.addEventListener("visibilitychange",onVisibilityChange);
+  const timer=window.setInterval(()=>void refreshRealWallet(),10000);
+  return ()=>{
+   live=false;
+   window.removeEventListener("focus",onVisibilityChange);
+   document.removeEventListener("visibilitychange",onVisibilityChange);
+   window.clearInterval(timer);
+  };
+ },[mode]);
+
  const play=async(action:"spin"|"buyBonus")=>{
   if(busy||bonusFinish!==null)return;
   if(balance===null){if(mode==="real"){onRequestDeposit?.();return;}setError("Demo balance is still loading. Please wait and retry.");return;}
