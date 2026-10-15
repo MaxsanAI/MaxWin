@@ -24,17 +24,47 @@ async function ensureDepositSchema(db: D1Database): Promise<void> {
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_wallet_deposit_request_user_status ON wallet_deposit_requests(user_id, status, created_at DESC)").run();
 }
 
-async function getSolUsd(): Promise<number | null> {
+async function fetchValidPrice(url: string, extract: (data: any) => unknown): Promise<number | null> {
   try {
-    const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd", {
+    const response = await fetch(url, {
       headers: { Accept: "application/json" },
-      cf: { cacheTtl: 30, cacheEverything: true }
+      cf: { cacheTtl: 20, cacheEverything: true }
     });
     if (!response.ok) return null;
-    const data = await response.json() as { solana?: { usd?: number } };
-    const rate = data.solana?.usd;
-    return typeof rate === "number" && Number.isFinite(rate) && rate > 0 ? rate : null;
-  } catch { return null; }
+    const data: unknown = await response.json();
+    const value = extract(data);
+    const price = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+    return Number.isFinite(price) && price > 0 ? price : null;
+  } catch {
+    return null;
+  }
+}
+
+async function getSolUsd(): Promise<number | null> {
+  const providers: Array<{ url: string; extract: (data: any) => unknown }> = [
+    {
+      url: "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+      extract: data => data?.solana?.usd
+    },
+    {
+      url: "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT",
+      extract: data => data?.price
+    },
+    {
+      url: "https://api.kraken.com/0/public/Ticker?pair=SOLUSD",
+      extract: data => {
+        const result = data?.result;
+        if (!result || typeof result !== "object") return null;
+        const pair = Object.values(result)[0] as { c?: unknown[] } | undefined;
+        return pair?.c?.[0];
+      }
+    }
+  ];
+  for (const provider of providers) {
+    const price = await fetchValidPrice(provider.url, provider.extract);
+    if (price !== null) return price;
+  }
+  return null;
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
