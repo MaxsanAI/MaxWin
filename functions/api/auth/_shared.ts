@@ -9,6 +9,8 @@ export interface Env {
   TON_API_KEY?: string;
   WITHDRAWALS_ENABLED?: string;
   REAL_MONEY_BOOK_OF_RA_ENABLED?: string;
+  REAL_MONEY_MATH_APPROVED?: string;
+  REAL_MONEY_CUSTODY_APPROVED?: string;
   MAXWIN_ADMIN_KEY?: string;
 }
 
