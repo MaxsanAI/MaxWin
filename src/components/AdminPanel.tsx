@@ -22,6 +22,11 @@ export default function AdminPanel() {
   const [error, setError] = useState("");
   const [withdrawalBusy, setWithdrawalBusy] = useState<string | null>(null);
   const [withdrawalTxHashes, setWithdrawalTxHashes] = useState<Record<string, string>>({});
+  const [testUsername, setTestUsername] = useState("");
+  const [testAmount, setTestAmount] = useState("100");
+  const [testCreditBusy, setTestCreditBusy] = useState(false);
+  const [testCreditMessage, setTestCreditMessage] = useState("");
+
 
   const load = async (candidate = key) => {
     setBusy(true); setError("");
@@ -43,6 +48,26 @@ export default function AdminPanel() {
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : "Could not update withdrawal request."); }
     finally { setWithdrawalBusy(null); }
+  };
+
+  const addTestBalance = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setTestCreditBusy(true); setTestCreditMessage(""); setError("");
+    try {
+      const response = await fetch("/api/admin/test-balance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-MAXWIN-ADMIN-KEY": key },
+        body: JSON.stringify({ username: testUsername.trim(), amountUsd: Number(testAmount) })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not add simulated balance.");
+      setTestCreditMessage(`Added ${Number(data.amountUsd).toFixed(2)} simulated balance to ${data.username}. Estimated wallet balance: ${Number(data.balanceUsdEstimate).toFixed(2)}. Cash-out is disabled for this account.`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not add simulated balance.");
+    } finally {
+      setTestCreditBusy(false);
+    }
   };
 
   const card = (label: string, value: number | undefined, icon: ReactNode) => (
@@ -84,6 +109,22 @@ export default function AdminPanel() {
           {card("Registered users",overview.stats.users,<Users size={20}/>)}{card("Wallet transactions",overview.stats.walletTransactions,<Activity size={20}/>)}{card("Pending deposits",overview.stats.pendingDeposits,<ArrowDownToLine size={20}/>)}{card("Pending withdrawals",overview.stats.pendingWithdrawals,<ArrowUpFromLine size={20}/>)}{card("Withdrawal requests",overview.stats.withdrawalRequests,<Wallet size={20}/>)}{card("Wallet accounts",overview.stats.walletAccounts,<Wallet size={20}/>)}{card("Free spins awarded",overview.stats.freeSpinsAwarded,<Gift size={20}/>)}{card("Bonus records",overview.stats.bonusRecords,<Gift size={20}/>)}
         </div>
         <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Configured policies</h2><span className="mw-admin-eyebrow">Preview only</span></div><div className="mw-admin-rules" style={{padding:14}}><div className="mw-admin-rule"><span>Minimum deposit</span><b>$5</b><span>Increase in $5 steps</span></div><div className="mw-admin-rule"><span>Welcome spins</span><b>25 × $0.20</b><span>All 25 spins must be completed</span></div><div className="mw-admin-rule"><span>Minimum withdrawal</span><b>$10</b><span>Across the casino, subject to bonus rules</span></div><div className="mw-admin-rule"><span>Available free spins</span><b>{overview.stats.freeSpinsAvailable.toLocaleString()}</b><span>Promotional records, not cash</span></div></div></section>
+        <section className="mw-admin-section">
+          <div className="mw-admin-section-head"><h2>Simulate real-money balance</h2><span className="mw-admin-eyebrow">TEST ONLY · NO CASH-OUT</span></div>
+          <div style={{padding:18}}>
+            <p className="mw-admin-muted">Add test credits to a registered username so you can test Book of Ra in real-play mode. The account is marked as a test account; deposits and withdrawals are blocked for it. These credits are not real funds.</p>
+            <form onSubmit={addTestBalance} style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,alignItems:"end",maxWidth:760}}>
+              <label className="mw-admin-muted">Registered username
+                <input className="mw-admin-input" style={{marginBottom:0}} value={testUsername} onChange={e=>setTestUsername(e.target.value)} maxLength={32} autoComplete="off" placeholder="Exact account username" required />
+              </label>
+              <label className="mw-admin-muted">Amount to add (USD)
+                <input className="mw-admin-input" style={{marginBottom:0}} type="number" min="1" max="10000" step="0.01" value={testAmount} onChange={e=>setTestAmount(e.target.value)} required />
+              </label>
+              <button className="mw-admin-btn" type="submit" disabled={testCreditBusy || !testUsername.trim() || !testAmount}><Wallet size={16}/>{testCreditBusy ? "Adding test balance…" : "Add test balance"}</button>
+            </form>
+            {testCreditMessage && <p role="status" style={{color:"#a7efc1",fontSize:13,marginTop:14}}>{testCreditMessage}</p>}
+          </div>
+        </section>
         <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Recent wallet transactions</h2><span className="mw-admin-muted">Latest 30</span></div><div className="mw-admin-table-wrap"><table className="mw-admin-table"><thead><tr><th>User</th><th>Type</th><th>Asset</th><th>Amount</th><th>Status</th><th>Transaction hash</th><th>Date</th></tr></thead><tbody>{overview.recentTransactions.length ? overview.recentTransactions.map(tx => <tr key={tx.id}><td>{tx.username}</td><td>{tx.kind}</td><td>{tx.asset}</td><td>{moneyUnits(tx.amountUnits,tx.asset)}</td><td className="mw-admin-status-text">{tx.status}</td><td>{tx.txHash ? tx.txHash.slice(0,16)+"…" : "—"}</td><td>{new Date(tx.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={7} className="mw-admin-empty">No wallet transactions recorded yet.</td></tr>}</tbody></table></div></section>
         <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Withdrawal requests</h2><span className="mw-admin-muted">Latest 30 · manual approval</span></div><div className="mw-admin-table-wrap"><table className="mw-admin-table"><thead><tr><th>User</th><th>Asset</th><th>Amount</th><th>Destination</th><th>Status</th><th>Transaction / action</th><th>Date</th></tr></thead><tbody>{overview.recentWithdrawals.length ? overview.recentWithdrawals.map(w => <tr key={w.id}><td>{w.username}</td><td>{w.asset}</td><td>{moneyUnits(w.amountUnits,w.asset)}</td><td title={w.address}>{w.address.slice(0,13)}…</td><td className="mw-admin-status-text">{w.status}</td><td>{w.txHash ? <a href={"https://solscan.io/tx/" + encodeURIComponent(w.txHash)} target="_blank" rel="noreferrer" style={{color:"#d8bc70"}}>{w.txHash.slice(0,16)}…</a> : w.status === "pending" ? <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"approve")}>Approve</button><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"reject")}>Reject</button></div> : w.status === "approved" ? <div style={{display:"grid",gap:7,minWidth:220}}><input className="mw-admin-input" style={{margin:0}} aria-label={"Solana transaction signature for "+w.username} placeholder="Paste confirmed Solana signature" value={withdrawalTxHashes[w.id] || ""} onChange={e => setWithdrawalTxHashes(prev => ({...prev,[w.id]:e.target.value}))}/><div style={{display:"flex",gap:6,flexWrap:"wrap"}}><button className="mw-admin-btn" disabled={withdrawalBusy===w.id || !(withdrawalTxHashes[w.id] || "").trim()} onClick={() => void updateWithdrawal(w.id,"mark_sent")}>Record sent</button><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"reject")}>Reject</button></div></div> : "—"}</td><td>{new Date(w.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={7} className="mw-admin-empty">No withdrawal requests recorded yet.</td></tr>}</tbody></table></div><p className="mw-admin-muted" style={{padding:"0 18px 16px"}}>Approve a request, send SOL manually from your own wallet, then paste the confirmed Solana transaction signature and choose “Record sent”. Approval never sends funds automatically.</p></section>
         <p className="mw-admin-muted">{overview.notice}</p>
