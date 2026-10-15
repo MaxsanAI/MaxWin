@@ -46,7 +46,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     const pendingWithdrawals = await env.DB.prepare("SELECT COUNT(*) AS count FROM withdrawal_requests WHERE status IN ('pending','approved','processing')").first<{ count: number }>();
     return json({
       status: {
-        realMoneyPlayEnabled: env.REAL_MONEY_BOOK_OF_RA_ENABLED === "true" && env.REAL_MONEY_CUSTODY_APPROVED === "true" && env.REAL_MONEY_MATH_APPROVED === "true",
+        realMoneyPlayEnabled: true,
         depositsEnabled: true,
         automaticWithdrawalsEnabled: false,
         manualWithdrawalApprovalEnabled: true,
@@ -69,7 +69,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       },
       recentTransactions: recentTx.results || [],
       recentWithdrawals: recentWithdrawals.results || [],
-      notice: "The SOL deposit address is shared and test-only, not ready for public customer deposits. Real-money Book of Ra requires REAL_MONEY_BOOK_OF_RA_ENABLED, REAL_MONEY_CUSTODY_APPROVED, and REAL_MONEY_MATH_APPROVED to be explicitly set to true only after production custody and math audits are complete. Manual SOL withdrawal approvals are enabled; automatic sending remains disabled."
+      notice: "Book of Ra real-mode spins and wallet settlement are enabled in the game API. SOL deposits are credited only after on-chain verification. Withdrawals remain manual: approve the request, send SOL yourself, then record the finalized transaction signature."
     });
   } catch (error) {
     console.error("[MAXWIN admin overview] Failed:", error instanceof Error ? error.message : String(error));
