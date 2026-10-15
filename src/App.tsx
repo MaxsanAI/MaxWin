@@ -90,6 +90,8 @@ function App() {
   const [depositMessage, setDepositMessage] = useState("");
   const [depositBusy, setDepositBusy] = useState(false);
   const [depositRequest, setDepositRequest] = useState<{ id: string; amountSol: string; usdTarget: number; expiresAt: string } | null>(null);
+  const [depositNow, setDepositNow] = useState(() => Date.now());
+  const depositSecondsLeft = depositRequest ? Math.max(0, Math.ceil((Date.parse(depositRequest.expiresAt) - depositNow) / 1000)) : null;
   const loadWallet = async () => {
     setWalletLoading(true); setWalletError("");
     try {
@@ -101,6 +103,13 @@ function App() {
     finally { setWalletLoading(false); }
   };
   useEffect(() => { if (modal === "deposit" || modal === "withdraw" || modal === "profile") void loadWallet(); }, [modal, authUser?.id]);
+  useEffect(() => {
+    if (modal !== "deposit" || !depositRequest) return;
+    const updateNow = () => setDepositNow(Date.now());
+    updateNow();
+    const interval = window.setInterval(updateNow, 1000);
+    return () => window.clearInterval(interval);
+  }, [modal, depositRequest?.expiresAt]);
   useEffect(() => {
     if (modal !== "deposit") return;
     let cancelled = false;
@@ -391,9 +400,9 @@ function App() {
         <label>SOL deposit address<input readOnly value={walletData?.deposits?.SOL?.address || ""} placeholder={walletLoading ? "Loading…" : "Deposit address not configured"} /></label>
         {walletData?.deposits?.SOL?.address ? <button type="button" className="btn btn-gold modal-done" onClick={() => { void navigator.clipboard?.writeText(walletData.deposits.SOL.address); }}>Copy SOL deposit address</button> : <p className="auth-note">Set SOL_DEPOSIT_ADDRESS in Cloudflare Pages → Settings → Variables and secrets. Use only an address controlled by you.</p>}
         <button type="button" className="btn btn-gold modal-done" onClick={() => void createDepositRequest()} disabled={depositBusy || !walletData?.deposits?.SOL?.address || !solUsdRate}>{depositBusy ? "Preparing request…" : "Create test deposit request"}</button>
-        {depositRequest && <div className="modal-status"><span className="status-dot"/><span><b>Send exactly {depositRequest.amountSol} SOL</b><small>For the ${depositRequest.usdTarget} test deposit · expires {new Date(depositRequest.expiresAt).toLocaleTimeString()}</small></span></div>}
+        {depositRequest && <div className="modal-status"><span className="status-dot"/><span><b>Send exactly {depositRequest.amountSol} SOL</b><small>For the ${depositRequest.usdTarget} test deposit · expires {new Date(depositRequest.expiresAt).toLocaleTimeString()}</small><small>{depositSecondsLeft === 0 ? "REQUEST EXPIRED — create a new request." : `Time remaining: ${String(Math.floor((depositSecondsLeft ?? 0) / 60)).padStart(2, "0")}:${String((depositSecondsLeft ?? 0) % 60).padStart(2, "0")}`}</small></span></div>}
         {depositRequest && <label>Solana transaction signature<input value={depositSignature} onChange={e => setDepositSignature(e.target.value)} placeholder="Paste signature from Solflare" autoComplete="off" spellCheck={false} /></label>}
-        {depositRequest && <button type="button" className="btn btn-gold modal-done" onClick={() => void submitDeposit()} disabled={depositBusy || !depositSignature.trim()}>{depositBusy ? "Verifying on Solana…" : "Verify deposit and credit wallet"}</button>}
+        {depositRequest && <button type="button" className="btn btn-gold modal-done" onClick={() => void submitDeposit()} disabled={depositBusy || !depositSignature.trim() || depositSecondsLeft === 0}>{depositBusy ? "Verifying on Solana…" : depositSecondsLeft === 0 ? "Request expired — create a new request" : "Verify deposit and credit wallet"}</button>}
         {depositMessage && <p className={depositMessage.toLowerCase().includes("credited") || depositMessage.toLowerCase().includes("verified") || depositMessage.toLowerCase().includes("request created") ? "auth-note" : "auth-error"} role="status">{depositMessage}</p>}
         <p className="auth-note">TEST MODE: first create a request, then send the exact SOL amount shown to this address within 30 minutes. After sending, paste the transaction signature from Solflare. MAXWIN verifies final confirmation through Solana RPC and prevents the same transaction from being credited twice. Use this shared address for controlled testing only, not public customer deposits.</p>
       </div> : <form className="auth-form" onSubmit={e => { e.preventDefault(); void submitWithdrawal(); }}>
