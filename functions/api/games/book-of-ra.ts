@@ -92,7 +92,7 @@ function spinReels(): SymbolName[] {
   });
 }
 
-function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: SymbolName | null) {
+function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: SymbolName | null, isFreeSpin = false) {
   const lineBet = totalBet / PAYLINES.length;
   let payout = 0;
   const wins: { line: number; symbol: SymbolName; count: number; payout: number; positions: number[] }[] = [];
@@ -120,7 +120,8 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
     const mult = count === 3 && hasBookInRun && regularMatches === 2
       ? 2
       : PAYOUTS[regKey][count as 2 | 3 | 4 | 5] || 0;
-    const linePayout = Math.floor(totalBet * mult);
+    const baseLinePayout = Math.floor(totalBet * mult);
+    const linePayout = isFreeSpin ? Math.floor(baseLinePayout * BOOK_OF_SUNRISE_MATH.freeSpinPayoutMultiplier) : baseLinePayout;
     if (linePayout <= 0) return;
 
     const positions = Array.from({ length: count }, (_, reel) => reel * 3 + line[reel]);
@@ -146,7 +147,8 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
     if (expandCount >= minCount) {
       const mult = PAYOUTS[regKey][expandCount as 2 | 3 | 4 | 5] || 0;
       // Isplaćuje se na svih 10 linija kada se proširi
-      const expandPayout = Math.floor(lineBet * mult * PAYLINES.length);
+      const baseExpandPayout = Math.floor(lineBet * mult * PAYLINES.length);
+      const expandPayout = Math.floor(baseExpandPayout * BOOK_OF_SUNRISE_MATH.expandingSymbolPayoutMultiplier * (isFreeSpin ? BOOK_OF_SUNRISE_MATH.freeSpinPayoutMultiplier : 1));
       payout += expandPayout;
 
       reelHasExpanding.forEach((has, reel) => {
@@ -162,7 +164,8 @@ function evaluate(symbols: SymbolName[], totalBet: number, expandingSymbol?: Sym
   const bookCount = symbols.filter(s => s === "book").length;
   if (bookCount >= 3) {
     const scatterMult = bookCount === 3 ? BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.threeBooks : bookCount === 4 ? BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.fourBooks : BOOK_OF_SUNRISE_MATH.scatterPayoutByBookCount.fivePlusBooks;
-    const scatterPayout = Math.floor(totalBet * scatterMult);
+    const baseScatterPayout = Math.floor(totalBet * scatterMult);
+    const scatterPayout = isFreeSpin ? Math.floor(baseScatterPayout * BOOK_OF_SUNRISE_MATH.freeSpinPayoutMultiplier) : baseScatterPayout;
     payout += scatterPayout;
   }
 
@@ -270,7 +273,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       freeSpinBetAfter = effectiveBet;
     }
 
-    const evaluated = evaluate(symbols, effectiveBet, isFreeSpin ? activeExpanding : null);
+    const evaluated = evaluate(symbols, effectiveBet, isFreeSpin ? activeExpanding : null, isFreeSpin);
     let payout = evaluated.payout;
 
     // Protection cap
