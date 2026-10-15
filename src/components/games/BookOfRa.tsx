@@ -203,15 +203,27 @@ export default function BookOfRaSlot({ onBackToLobby }: { onBackToLobby: () => v
     if(reel===4&&bookHunt){tone(330,0.9,"sawtooth",0.085,690);tone(620,0.65,"triangle",0.07,1040,0.08);}
     // If two Books land anywhere on reels 1–3, reels 4 and 5 spin rapidly, then pause and stop one at a time.
     const stopDelay=bookHunt&&reel===3
-      ? (speed==="slow"?1750:speed==="normal"?1600:1450)
+      ? (speed==="slow"?2250:speed==="normal"?2050:1850)
       : bookHunt&&reel===4
-        ? (speed==="slow"?1500:speed==="normal"?1400:1250)
+        ? (speed==="slow"?2050:speed==="normal"?1850:1650)
         : (speed==="slow"?210:speed==="normal"?155:105);
-    if(bookHunt&&reel>=3)tone(reel===3?520:690,0.22,"triangle",0.07,reel===3?760:980); 
+    if(bookHunt&&reel>=3)tone(reel===3?520:690,0.32,"triangle",0.07,reel===3?760:980);
     await new Promise(resolve=>window.setTimeout(resolve,stopDelay));
-    setDisplaySymbols(current=>current.map((symbol,index)=>Math.floor(index/3)===reel?finalSymbols[index]:symbol));
+    if(bookHunt&&reel>=3){
+     // Reveal each symbol as the reel eases to a stop instead of dropping all three at once.
+     setReelStops(reel+1);
+     await new Promise(resolve=>window.setTimeout(resolve,180));
+     for(let row=0;row<3;row++){
+      await new Promise(resolve=>window.setTimeout(resolve,speed==="slow"?300:speed==="normal"?260:220));
+      const position=reel*3+row;
+      setDisplaySymbols(current=>current.map((symbol,index)=>index===position?finalSymbols[position]:symbol));
+      tone(330-row*28,0.09,"triangle",0.045,230-row*18);
+     }
+    }else{
+     setDisplaySymbols(current=>current.map((symbol,index)=>Math.floor(index/3)===reel?finalSymbols[index]:symbol));
+     setReelStops(reel+1);
+    }
     playReelStop();
-    setReelStops(reel+1);
    }
    await new Promise(resolve=>window.setTimeout(resolve,500));
    const symbolToExpand=(activeBonusSymbol||null) as SymbolName|null;
