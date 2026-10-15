@@ -20,6 +20,8 @@ export default function AdminPanel() {
   const [overview, setOverview] = useState<Overview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [withdrawalBusy, setWithdrawalBusy] = useState<string | null>(null);
+  const [withdrawalTxHashes, setWithdrawalTxHashes] = useState<Record<string, string>>({});
 
   const load = async (candidate = key) => {
     setBusy(true); setError("");
@@ -30,6 +32,17 @@ export default function AdminPanel() {
       setOverview(data as Overview); setKey(candidate); setAuthorized(true);
     } catch (e) { setAuthorized(false); setOverview(null); setError(e instanceof Error ? e.message : "Could not load admin dashboard."); }
     finally { setBusy(false); }
+  };
+
+  const updateWithdrawal = async (requestId: string, action: "approve" | "reject" | "mark_sent") => {
+    setWithdrawalBusy(requestId); setError("");
+    try {
+      const response = await fetch("/api/admin/withdrawals", { method: "POST", headers: { "Content-Type": "application/json", "X-MAXWIN-ADMIN-KEY": key }, body: JSON.stringify({ requestId, action, txHash: withdrawalTxHashes[requestId] || "" }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not update withdrawal request.");
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not update withdrawal request."); }
+    finally { setWithdrawalBusy(null); }
   };
 
   const card = (label: string, value: number | undefined, icon: ReactNode) => (
@@ -55,7 +68,7 @@ export default function AdminPanel() {
       {!authorized || !overview ? <section className="mw-admin-login">
         <div className="mw-admin-brand"><span className="mw-admin-brand-mark"><ShieldCheck size={24}/></span> MAXWIN <span className="mw-admin-eyebrow">ADMIN</span></div>
         <h1 className="mw-admin-title">Secure control room</h1>
-        <p className="mw-admin-muted">Read-only overview of accounts, bonus records, wallet activity and withdrawal requests. Enter the Cloudflare secret configured as <b>MAXWIN_ADMIN_KEY</b>.</p>
+        <p className="mw-admin-muted">Overview of accounts, wallet activity, and manual withdrawal approvals. Enter the Cloudflare secret configured as <b>MAXWIN_ADMIN_KEY</b>.</p>
         <form onSubmit={e => { e.preventDefault(); void load(key); }}>
           <label className="mw-admin-muted" htmlFor="mw-admin-key">Admin access key</label>
           <input id="mw-admin-key" className="mw-admin-input" type="password" autoComplete="current-password" value={key} onChange={e => setKey(e.target.value)} required />
@@ -64,14 +77,14 @@ export default function AdminPanel() {
         {error && <div className="mw-admin-alert" role="alert">{error}</div>}
         <p className="mw-admin-muted">This page does not activate payments or real-money wagers. Never put the admin key in source code or a public repository.</p>
       </section> : <>
-        <header className="mw-admin-top"><div><div className="mw-admin-brand"><span className="mw-admin-brand-mark"><ShieldCheck size={24}/></span> MAXWIN <span className="mw-admin-eyebrow">ADMIN</span></div><h1 className="mw-admin-title">Casino overview</h1><p className="mw-admin-muted">Internal preparation dashboard · live database counts, read-only controls</p></div><div style={{display:"flex",gap:9,flexWrap:"wrap"}}><button className="mw-admin-btn" onClick={() => void load()} disabled={busy}><RefreshCw size={16}/>{busy ? "Refreshing…" : "Refresh data"}</button><button className="mw-admin-btn" onClick={() => {setAuthorized(false);setOverview(null);setKey("");}}><ArrowLeft size={16}/>Lock dashboard</button></div></header>
+        <header className="mw-admin-top"><div><div className="mw-admin-brand"><span className="mw-admin-brand-mark"><ShieldCheck size={24}/></span> MAXWIN <span className="mw-admin-eyebrow">ADMIN</span></div><h1 className="mw-admin-title">Casino overview</h1><p className="mw-admin-muted">Internal dashboard · manual SOL payout approvals</p></div><div style={{display:"flex",gap:9,flexWrap:"wrap"}}><button className="mw-admin-btn" onClick={() => void load()} disabled={busy}><RefreshCw size={16}/>{busy ? "Refreshing…" : "Refresh data"}</button><button className="mw-admin-btn" onClick={() => {setAuthorized(false);setOverview(null);setKey("");}}><ArrowLeft size={16}/>Lock dashboard</button></div></header>
         <div className="mw-admin-status"><span className="mw-admin-pill"><LockKeyhole size={14}/> REAL-MONEY PLAY DISABLED</span><span className="mw-admin-pill"><Wallet size={14}/> DEPOSITS DISABLED</span><span className="mw-admin-pill"><ArrowUpFromLine size={14}/> AUTOMATIC PAYOUTS DISABLED</span></div>
         <div className="mw-admin-grid">
           {card("Registered users",overview.stats.users,<Users size={20}/>)}{card("Wallet transactions",overview.stats.walletTransactions,<Activity size={20}/>)}{card("Pending deposits",overview.stats.pendingDeposits,<ArrowDownToLine size={20}/>)}{card("Pending withdrawals",overview.stats.pendingWithdrawals,<ArrowUpFromLine size={20}/>)}{card("Withdrawal requests",overview.stats.withdrawalRequests,<Wallet size={20}/>)}{card("Wallet accounts",overview.stats.walletAccounts,<Wallet size={20}/>)}{card("Free spins awarded",overview.stats.freeSpinsAwarded,<Gift size={20}/>)}{card("Bonus records",overview.stats.bonusRecords,<Gift size={20}/>)}
         </div>
         <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Configured policies</h2><span className="mw-admin-eyebrow">Preview only</span></div><div className="mw-admin-rules" style={{padding:14}}><div className="mw-admin-rule"><span>Minimum deposit</span><b>$5</b><span>Increase in $5 steps</span></div><div className="mw-admin-rule"><span>Welcome spins</span><b>25 × $0.20</b><span>All 25 spins must be completed</span></div><div className="mw-admin-rule"><span>Minimum withdrawal</span><b>$10</b><span>Across the casino, subject to bonus rules</span></div><div className="mw-admin-rule"><span>Available free spins</span><b>{overview.stats.freeSpinsAvailable.toLocaleString()}</b><span>Promotional records, not cash</span></div></div></section>
         <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Recent wallet transactions</h2><span className="mw-admin-muted">Latest 30</span></div><div className="mw-admin-table-wrap"><table className="mw-admin-table"><thead><tr><th>User</th><th>Type</th><th>Asset</th><th>Amount</th><th>Status</th><th>Transaction hash</th><th>Date</th></tr></thead><tbody>{overview.recentTransactions.length ? overview.recentTransactions.map(tx => <tr key={tx.id}><td>{tx.username}</td><td>{tx.kind}</td><td>{tx.asset}</td><td>{moneyUnits(tx.amountUnits,tx.asset)}</td><td className="mw-admin-status-text">{tx.status}</td><td>{tx.txHash ? tx.txHash.slice(0,16)+"…" : "—"}</td><td>{new Date(tx.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={7} className="mw-admin-empty">No wallet transactions recorded yet.</td></tr>}</tbody></table></div></section>
-        <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Withdrawal requests</h2><span className="mw-admin-muted">Latest 30 · view only</span></div><div className="mw-admin-table-wrap"><table className="mw-admin-table"><thead><tr><th>User</th><th>Asset</th><th>Amount</th><th>Destination</th><th>Status</th><th>Transaction hash</th><th>Date</th></tr></thead><tbody>{overview.recentWithdrawals.length ? overview.recentWithdrawals.map(w => <tr key={w.id}><td>{w.username}</td><td>{w.asset}</td><td>{moneyUnits(w.amountUnits,w.asset)}</td><td>{w.address.slice(0,13)}…</td><td className="mw-admin-status-text">{w.status}</td><td>{w.txHash ? w.txHash.slice(0,16)+"…" : "—"}</td><td>{new Date(w.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={7} className="mw-admin-empty">No withdrawal requests recorded yet.</td></tr>}</tbody></table></div></section>
+        <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Withdrawal requests</h2><span className="mw-admin-muted">Latest 30 · manual approval</span></div><div className="mw-admin-table-wrap"><table className="mw-admin-table"><thead><tr><th>User</th><th>Asset</th><th>Amount</th><th>Destination</th><th>Status</th><th>Transaction / action</th><th>Date</th></tr></thead><tbody>{overview.recentWithdrawals.length ? overview.recentWithdrawals.map(w => <tr key={w.id}><td>{w.username}</td><td>{w.asset}</td><td>{moneyUnits(w.amountUnits,w.asset)}</td><td title={w.address}>{w.address.slice(0,13)}…</td><td className="mw-admin-status-text">{w.status}</td><td>{w.txHash ? <a href={"https://solscan.io/tx/" + encodeURIComponent(w.txHash)} target="_blank" rel="noreferrer" style={{color:"#d8bc70"}}>{w.txHash.slice(0,16)}…</a> : w.status === "pending" ? <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"approve")}>Approve</button><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"reject")}>Reject</button></div> : w.status === "approved" ? <div style={{display:"grid",gap:7,minWidth:220}}><input className="mw-admin-input" style={{margin:0}} aria-label={"Solana transaction signature for "+w.username} placeholder="Paste confirmed Solana signature" value={withdrawalTxHashes[w.id] || ""} onChange={e => setWithdrawalTxHashes(prev => ({...prev,[w.id]:e.target.value}))}/><div style={{display:"flex",gap:6,flexWrap:"wrap"}}><button className="mw-admin-btn" disabled={withdrawalBusy===w.id || !(withdrawalTxHashes[w.id] || "").trim()} onClick={() => void updateWithdrawal(w.id,"mark_sent")}>Record sent</button><button className="mw-admin-btn" disabled={withdrawalBusy===w.id} onClick={() => void updateWithdrawal(w.id,"reject")}>Reject</button></div></div> : "—"}</td><td>{new Date(w.createdAt).toLocaleString()}</td></tr>) : <tr><td colSpan={7} className="mw-admin-empty">No withdrawal requests recorded yet.</td></tr>}</tbody></table></div><p className="mw-admin-muted" style={{padding:"0 18px 16px"}}>Approve a request, send SOL manually from your own wallet, then paste the confirmed Solana transaction signature and choose “Record sent”. Approval never sends funds automatically.</p></section>
         <p className="mw-admin-muted">{overview.notice}</p>
       </>}
     </div>
