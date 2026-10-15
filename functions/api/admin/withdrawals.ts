@@ -90,6 +90,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const now = new Date().toISOString();
 
     if (action === "approve") {
+      if (isSundayInSerbia()) return json({ error: "Withdrawals are not processed on Sundays (Serbia time). This request remains pending until Monday." }, 409);
       if (row.status !== "pending") return json({ error: "Only pending requests can be approved." }, 409);
       await env.DB.prepare("UPDATE withdrawal_requests SET status = 'approved', updated_at = ? WHERE id = ? AND status = 'pending'").bind(now, requestId).run();
       return json({ ok: true, status: "approved", message: "Approved for manual payout. Send SOL yourself, then record the confirmed transaction signature." });
@@ -111,7 +112,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
       return json({ ok: true, status: "rejected", message: "Request rejected and reserved SOL returned to the user's available balance." });
     }
 
-    if (isSundayInSerbia()) return json({ error: "Withdrawals are not processed on Sundays (Serbia time). Record the payout on Monday instead." }, 409);\n    if (row.status !== "approved") return json({ error: "Approve the request first, send the SOL manually, then record the transaction signature." }, 409);
+    if (isSundayInSerbia()) return json({ error: "Withdrawals are not processed on Sundays (Serbia time). Record the payout on Monday instead." }, 409);
+    if (row.status !== "approved") return json({ error: "Approve the request first, send the SOL manually, then record the transaction signature." }, 409);
     const existing = await env.DB.prepare("SELECT id FROM wallet_transactions WHERE asset = 'SOL' AND tx_hash = ? LIMIT 1").bind(txHash).first<{ id: string }>();
     if (existing) return json({ error: "That Solana transaction signature is already recorded." }, 409);
     const verifiedPayout = await verifyFinalizedPayout(env, txHash, row.destination_address, row.amount_units, row.created_at);
