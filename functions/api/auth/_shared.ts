@@ -71,6 +71,13 @@ export async function ensureWalletSchema(db: D1Database): Promise<void> {
   await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_wallet_tx_hash_asset ON wallet_transactions(asset, tx_hash) WHERE tx_hash IS NOT NULL").run();
   await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_wallet_tx_idempotency ON wallet_transactions(user_id, idempotency_key) WHERE idempotency_key IS NOT NULL").run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_wallet_tx_user_created ON wallet_transactions(user_id, created_at DESC)").run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS admin_test_accounts (
+    user_id TEXT PRIMARY KEY,
+    enabled INTEGER NOT NULL DEFAULT 1 CHECK (enabled IN (0,1)),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS withdrawal_requests (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -84,6 +91,11 @@ export async function ensureWalletSchema(db: D1Database): Promise<void> {
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   )`).run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_withdrawals_user_created ON withdrawal_requests(user_id, created_at DESC)").run();
+}
+
+export async function isAdminTestAccount(db: D1Database, userId: string): Promise<boolean> {
+  const row = await db.prepare("SELECT enabled FROM admin_test_accounts WHERE user_id=? LIMIT 1").bind(userId).first<{ enabled: number }>();
+  return Number(row?.enabled || 0) === 1;
 }
 
 export async function getUser(request: Request, db: D1Database): Promise<PublicUser | null> {
