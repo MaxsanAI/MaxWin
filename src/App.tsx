@@ -250,6 +250,26 @@ function App() {
       const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || "Could not save profile photo."); setProfileData(data.profile); setProfileMessage("Profile photo saved.");
     } catch (error) { setProfileMessage(error instanceof Error ? error.message : "Could not save profile photo."); } finally { setProfileBusy(false); }
   };
+  const cancelDepositRequest = async () => {
+    if (!depositRequest) return;
+    setDepositBusy(true); setDepositMessage("");
+    try {
+      const response = await fetch("/api/wallet/deposit", {
+        method: "POST", credentials: "same-origin", cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancel", requestId: depositRequest.id })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not change deposit quote.");
+      setDepositRequest(null);
+      setDepositSignature("");
+      setDepositMessage("Quote closed. Choose a new deposit amount. Any transfer already sent before the original expiry can still be verified.");
+    } catch (error) {
+      setDepositMessage(error instanceof Error ? error.message : "Could not change deposit quote.");
+    } finally {
+      setDepositBusy(false);
+    }
+  };
   const createDepositRequest = async () => {
     setDepositBusy(true); setDepositMessage(""); setDepositRequest(null); setDepositSignature("");
     try {
@@ -452,17 +472,18 @@ function App() {
       {walletData && <div className="modal-status"><span className="status-dot"/><span><b>Available balance: {(Number(walletData.balances?.[walletAsset]?.availableUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })} {walletAsset}</b><small>Reserved: {(Number(walletData.balances?.[walletAsset]?.reservedUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })} {walletAsset}</small></span></div>}
       {modal === "deposit" ? <div className="wallet-address-panel">
         <p><b>Choose deposit amount (USD)</b></p><p className="auth-note">Automatic SOL deposit detection is active while this window is open. Keep this page open after sending; MAXWIN checks finalized Solana transactions every 8 seconds. If detection fails, the transaction-signature field remains available as a fallback.</p>
-        <div className="category-tabs wallet-network-tabs">{[5, 10, 15, 20, 25, 30].map(amount => <button key={amount} type="button" disabled={Boolean(depositRequest)} className={depositUsd === amount ? "category active" : "category"} onClick={() => { setDepositUsd(amount); setDepositSignature(""); setDepositMessage(""); }}>{amount}</button>)}</div>
+        <div className="category-tabs wallet-network-tabs">{[5, 10, 15, 20, 25, 30].map(amount => <button key={amount} type="button" disabled={depositBusy} className={depositUsd === amount ? "category active" : "category"} onClick={() => { if (depositRequest) { setDepositMessage("Cancel the current quote before choosing a different amount."); return; } setDepositUsd(amount); setDepositSignature(""); setDepositMessage(""); }}>{amount}</button>)}</div>
         <div className="modal-status"><span className="status-dot"/><span><b>{solUsdRate ? ((depositUsd / solUsdRate).toFixed(6) + " SOL") : "SOL quote loading…"}</b><small>{'$'}{depositUsd.toFixed(2)} USD {solUsdRate ? ("at $" + solUsdRate.toLocaleString(undefined, { maximumFractionDigits: 4 }) + " per SOL") : ""}</small></span></div>
         {solRateUpdatedAt && <small className="auth-note">Rate updated: {new Date(solRateUpdatedAt).toLocaleTimeString()}</small>}
         {solRateError && <p className="auth-error" role="alert">{solRateError}</p>}
         <label>SOL deposit address<input readOnly value={walletData?.deposits?.SOL?.address || ""} placeholder={walletLoading ? "Loading…" : "Deposit address not configured"} /></label>
         {walletData?.deposits?.SOL?.address ? <button type="button" className="btn btn-gold modal-done" onClick={() => { void navigator.clipboard?.writeText(walletData.deposits.SOL.address); }}>Copy SOL deposit address</button> : <p className="auth-note">Set SOL_DEPOSIT_ADDRESS in Cloudflare Pages → Settings → Variables and secrets. Use only an address controlled by you.</p>}
         <button type="button" className="btn btn-gold modal-done" onClick={() => void createDepositRequest()} disabled={depositBusy || Boolean(depositRequest) || !walletData?.deposits?.SOL?.address || !solUsdRate}>{depositBusy ? "Preparing request…" : depositRequest ? "Verify or clear the current request first" : "Create SOL deposit request"}</button>
-        {depositRequest && <div className="modal-status"><span className="status-dot"/><span><b>Send exactly {depositRequest.amountSol} SOL</b><small>For the ${depositRequest.usdTarget} deposit quote · expires {new Date(depositRequest.expiresAt).toLocaleTimeString()}</small><small>{depositSecondsLeft === 0 ? "QUOTE EXPIRED — only a transaction sent before expiry can still be verified." : `Time remaining: ${String(Math.floor((depositSecondsLeft ?? 0) / 60)).padStart(2, "0")}:${String((depositSecondsLeft ?? 0) % 60).padStart(2, "0")}`}</small></span></div>}
+        {depositRequest && <div className="modal-status"><span className="status-dot"/><span><b>Send exactly {depositRequest.amountSol} SOL</b><small>For the ${depositRequest.usdTarget} deposit quote · expires {new Date(depositRequest.expiresAt).toLocaleTimeString()}</small><small>{depositSecondsLeft === null ? "Calculating expiry…" : depositSecondsLeft === 0 ? "QUOTE EXPIRED — only a transaction sent before expiry can still be verified." : `Time remaining: ${String(Math.floor(depositSecondsLeft / 60)).padStart(2, "0")}:${String((depositSecondsLeft % 60)).padStart(2, "0")}`}</small></span></div>}
+        {depositRequest && <button type="button" className="auth-switch" disabled={depositBusy} onClick={() => void cancelDepositRequest()}>{depositBusy ? "Updating quote…" : "Change deposit amount"}</button>}
         {depositRequest && <label>Transaction signature (fallback only)<input value={depositSignature} onChange={e => setDepositSignature(e.target.value)} placeholder="Only if automatic detection fails" autoComplete="off" spellCheck={false} /></label>}
         {depositRequest && <button type="button" className="btn btn-gold modal-done" onClick={() => void submitDeposit()} disabled={depositBusy || !depositSignature.trim()}>{depositBusy ? "Verifying on Solana…" : depositSecondsLeft === 0 ? "Verify on-chain transaction" : "Verify deposit and credit wallet"}</button>}
-        {depositRequest && depositSecondsLeft === 0 && <button type="button" className="auth-switch" onClick={() => { setDepositRequest(null); setDepositSignature(""); setDepositMessage("Expired quote cleared. Use this only if you did not send SOL for that request."); }}>I did not send SOL — clear expired quote</button>}
+        {depositRequest && depositSecondsLeft === 0 && <small className="auth-note">You can choose a new amount now. Any SOL sent for this quote before its expiry can still be verified.</small>}
         {depositMessage && <p className={depositMessage.toLowerCase().includes("credited") || depositMessage.toLowerCase().includes("verified") || depositMessage.toLowerCase().includes("request created") ? "auth-note" : "auth-error"} role="status">{depositMessage}</p>}
         <p className="auth-note">Send the exact SOL amount shown before the quote expires. MAXWIN checks the finalized Solana transaction and prevents duplicate credits. Keep your transaction signature until the deposit appears in your wallet.</p>
       </div> : <form className="auth-form" onSubmit={e => { e.preventDefault(); void submitWithdrawal(); }}>
