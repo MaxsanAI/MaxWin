@@ -254,10 +254,12 @@ function lamportsToUsdCents(units: string, solUsd: number): number {
 }
 
 async function handleRealAction(request: Request, env: Env, user: { id: string }, body: Record<string, unknown>): Promise<Response> {
-  if (!env.DB) return json({ error: "Game service is not configured." }, 503);
-  if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true" || env.REAL_MONEY_CUSTODY_APPROVED !== "true" || env.REAL_MONEY_MATH_APPROVED !== "true") {
-    return json({ error: "Real-money Book of Ra is disabled until production deposits, custody, settlement and payout checks are approved.", realMoneyEnabled: false }, 423);
-  }
+  if (env.REAL_MONEY_BOOK_OF_RA_ENABLED !== "true") {
+  return json({
+    error: "Real Play for Book of Ra is disabled. Check REAL_MONEY_BOOK_OF_RA_ENABLED.",
+    realMoneyEnabled: false
+  }, 423);
+}
 
   const action = body.action === "buyBonus" ? "buyBonus" : body.action === "spin" ? "spin" : null;
   const bet = Number(body.bet);
