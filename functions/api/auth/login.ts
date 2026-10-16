@@ -1,4 +1,4 @@
-import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, readJson, SESSION_MAX_AGE } from "./_shared";
+import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, readJson, recordAuthIp, SESSION_MAX_AGE } from "./_shared";
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Account service is not configured yet.", diagnostic: "D1 binding env.DB is missing." }, 503);
@@ -15,6 +15,10 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     if (!user) return json({ error: "Email or password is incorrect." }, 401);
     const candidate = await hashPassword(password, user.password_salt);
     if (candidate !== user.password_hash) return json({ error: "Email or password is incorrect." }, 401);
+    await env.DB.prepare("INSERT OR IGNORE INTO user_security (user_id,updated_at) VALUES (?,?)").bind(user.id,new Date().toISOString()).run();
+    const security = await env.DB.prepare("SELECT account_status FROM user_security WHERE user_id=? LIMIT 1").bind(user.id).first<{account_status:string}>();
+    if (security?.account_status === "suspended") return json({ error: "This account is temporarily restricted. Please contact MAXWIN support." }, 403);
+    await recordAuthIp(env.DB, request, user.id, "login");
     const token = await createSession(env.DB, user.id);
     return json({ authenticated: true, user: { id: user.id, username: user.username, email: user.email, createdAt: user.createdAt } }, 200, {
       "Set-Cookie": cookie(token, SESSION_MAX_AGE)
