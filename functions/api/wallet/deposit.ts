@@ -1,5 +1,6 @@
 import { Env, ensureWalletSchema, getUser, isAdminTestAccount, json, readJson, randomToken } from "../auth/_shared";
 import { getSolUsd } from "../_shared/sol-price";
+import { refreshReferralEligibility } from "../referrals/_shared";
 
 type RpcTransaction = {
   slot?: number;
@@ -95,6 +96,7 @@ async function autoScanDeposits(db: D1Database, destination: string, rpcUrl: str
       if (!duplicate) console.error("[MAXWIN auto-deposit] Could not credit verified transaction:", error instanceof Error ? error.message : String(error));
     }
   }
+  if (credited > 0) await refreshReferralEligibility(db);
   return {credited,currentUserCredited};
 }
 
@@ -243,6 +245,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     const credited = await env.DB.prepare("SELECT id FROM wallet_transactions WHERE id=? AND user_id=? AND tx_hash=?").bind(txId, user.id, signature).first();
     if (!credited) return json({ error: "This deposit request was already used or expired. Refresh the wallet and check transaction history." }, 409);
+    await refreshReferralEligibility(env.DB);
     return json({
       ok: true,
       credited: { asset: "SOL", amount: (receivedLamports / 1e9).toFixed(9), amountUnits, status: "confirmed" },
