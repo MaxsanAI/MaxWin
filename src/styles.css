@@ -4476,22 +4476,35 @@ html, body {
 }
 
 
-/* Temple of Ra: widen the Anubis artwork so both side statues and columns remain visible around the centered slot. */
-.modal-backdrop:has(.modal-slot .book-of-ra-slot) {
-  background-color: #080b19 !important;
-  background-image:
-    linear-gradient(180deg, rgba(5, 7, 19, 0.10), rgba(5, 7, 19, 0.18)),
-    url("/images/book-of-ra/anubis-temple-bg.jpg") !important;
-  background-size: 100% 100% !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  background-attachment: fixed !important;
+/* Temple of Ra: desktop-only Anubis background, stretched edge-to-edge to reveal both side statues and columns. */
+@media (min-width: 721px) {
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) {
+    background-color: #080b19 !important;
+    background-image:
+      linear-gradient(180deg, rgba(5, 7, 19, 0.10), rgba(5, 7, 19, 0.18)),
+      url("/images/book-of-ra/anubis-temple-bg.jpg") !important;
+    background-size: 100% 100% !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+  }
+
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) .modal-slot {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
 }
 
-.modal-backdrop:has(.modal-slot .book-of-ra-slot) .modal-slot {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
+@media (max-width: 720px) {
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) {
+    background-image: none !important;
+    background-color: #080b19 !important;
+  }
+
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) .modal-slot {
+    background: initial !important;
+  }
 }
 
 .book-of-ra-slot {
@@ -4500,12 +4513,4 @@ html, body {
   border-radius: 18px;
   background: transparent !important;
   background-image: none !important;
-}
-
-/* On phones, keep the artwork naturally cropped rather than distorting it into a narrow portrait. */
-@media (max-width: 720px) {
-  .modal-backdrop:has(.modal-slot .book-of-ra-slot) {
-    background-size: cover !important;
-    background-position: center center !important;
-  }
 }
