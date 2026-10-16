@@ -69,6 +69,8 @@ function App() {
   const [walletData, setWalletData] = useState<any>(null);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [profileBusy, setProfileBusy] = useState(false);
+  const [referralData, setReferralData] = useState<any>(null);
+  const [referralBusy, setReferralBusy] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [bonusBusy, setBonusBusy] = useState<string | null>(null);
   const [freeSpinBusy, setFreeSpinBusy] = useState(false);
@@ -108,6 +110,31 @@ function App() {
     finally { setWalletLoading(false); }
   };
   useEffect(() => { if (modal === "deposit" || modal === "withdraw" || modal === "profile") void loadWallet(); }, [modal, authUser?.id]);
+  useEffect(() => { if (modal === "profile" && authUser) void loadReferrals(); }, [modal, authUser?.id]);
+  const loadReferrals = async () => {
+    setReferralBusy(true);
+    try {
+      const response = await fetch("/api/referrals", { credentials: "same-origin", cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not load referral program.");
+      setReferralData(data);
+    } catch (error) {
+      setProfileMessage(error instanceof Error ? error.message : "Could not load referral program.");
+    } finally { setReferralBusy(false); }
+  };
+  const chooseReferralReward = async (rewardId: string, choice: "wallet" | "book_of_temple") => {
+    setReferralBusy(true); setProfileMessage("");
+    try {
+      const response = await fetch("/api/referrals", { method:"POST", credentials:"same-origin", headers:{"Content-Type":"application/json"}, body:JSON.stringify({rewardId,choice}) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Could not request referral reward.");
+      setProfileMessage(data.message || "Referral reward request submitted.");
+      await loadReferrals();
+    } catch(error) {
+      setProfileMessage(error instanceof Error ? error.message : "Could not request referral reward.");
+    } finally { setReferralBusy(false); }
+  };
+
   useEffect(() => {
     if (modal !== "deposit" || !depositRequest) return;
     const updateNow = () => setDepositNow(Date.now());
@@ -360,7 +387,7 @@ function App() {
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(modal === "register"
-          ? { username: authUsername, email: authEmail, password: authPassword }
+          ? { username: authUsername, email: authEmail, password: authPassword, referralUsername: new URLSearchParams(window.location.search).get("ref") }
           : { email: authEmail, password: authPassword })
       });
       const data = await response.json().catch(() => ({}));
@@ -503,6 +530,13 @@ function App() {
       <div className="profile-account-info"><span>Email</span><b>{authUser.email}</b><span>Account created</span><b>{new Date(authUser.createdAt).toLocaleDateString()}</b></div>
       <section className="profile-wallet"><h3>Wallet balances</h3>{walletLoading && <p>Loading balances…</p>}{walletError && <p className="auth-error">{walletError}</p>}<div className="profile-balance-grid">{(["SOL"] as const).map(asset => <div key={asset}><span>{asset}</span><b>{(Number(walletData?.balances?.[asset]?.availableUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })}</b><small>Available</small></div>)}</div>{walletData?.transactions?.length ? <div className="profile-transactions"><b>Recent wallet activity</b>{walletData.transactions.slice(0, 4).map((tx: any) => <div key={tx.id}><span>{tx.kind} · {tx.asset}<small>{tx.status} · {new Date(tx.created_at).toLocaleDateString()}</small></span><strong>{(Number(tx.amount_units || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })}</strong></div>)}</div> : <p className="profile-muted">Deposits and transactions appear here after verified processing is active.</p>}</section>
       <section className="free-spins-panel"><div className="free-spins-heading"><span className="free-spins-icon"><Sparkles size={20}/></span><div><small>MAXWIN REWARDS</small><h3>Free Spins</h3></div><strong>{profileData?.freeSpins?.available ?? 0}</strong></div><p className="free-spins-desc">Welcome spins are awarded once after registration. Claim 30 more every 15 days. Your balance is stored on your account; playable spins require the game engine integration to be enabled.</p><div className="free-spins-next"><span>Next 30-spin reward</span><b>{profileData?.freeSpins?.nextRecurringAt ? new Date(profileData.freeSpins.nextRecurringAt).toLocaleDateString() : "Pending setup"}</b></div><button type="button" className="bonus-claim free-spins-claim" disabled={freeSpinBusy || !profileData?.freeSpins?.nextRecurringAt || new Date(profileData.freeSpins.nextRecurringAt).getTime() > Date.now()} onClick={() => void claimRecurringSpins()}>{freeSpinBusy ? "Claiming…" : "Claim 30 Free Spins"}</button><small className="auth-note">Total awarded: {profileData?.freeSpins?.totalAwarded ?? 0} · Free spins cannot currently be wagered or redeemed.</small></section>
+      <section className="profile-bonuses referral-profile"><h3>Refer friends · Earn $10</h3><p>Invite 10 new players. Each must make at least one confirmed deposit. Once all 10 qualify, request one $10 reward.</p>
+        {referralData && <><div className="profile-account-info"><span>Registered referrals</span><b>{referralData.total}/10</b><span>With confirmed deposit</span><b>{referralData.qualified}/10</b></div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}><input aria-label="Your referral link" readOnly value={referralData.referralUrl} style={{flex:"1 1 240px",minWidth:0}}/><button className="btn btn-outline" type="button" onClick={() => { void navigator.clipboard?.writeText(referralData.referralUrl).then(()=>setProfileMessage("Referral link copied.")).catch(()=>setProfileMessage("Copy failed; select the link and copy it manually.")); }}>Copy link</button></div>
+        {referralData.rewards?.map((reward:any) => <div className="bonus-row" key={reward.id}><span><b>$10 Referral Reward</b><small>{reward.choice === "wallet" ? "Wallet" : reward.choice === "book_of_temple" ? "Book of Temple" : "Choose destination"}</small></span><strong>{reward.status}</strong>{reward.status === "eligible" && <div style={{display:"flex",gap:6,flexWrap:"wrap"}}><button className="bonus-claim" disabled={referralBusy} onClick={() => void chooseReferralReward(reward.id,"wallet")}>Request wallet reward</button><button className="bonus-claim" disabled={referralBusy} onClick={() => void chooseReferralReward(reward.id,"book_of_temple")}>Play Book of Temple</button></div>}</div>)}
+        </>}
+        {referralBusy && <small className="auth-note">Updating referral status…</small>}
+      </section>
       <div className="profile-actions"><button className="btn btn-gold" onClick={() => setModal("deposit")}>Deposit</button><button className="btn btn-outline" onClick={() => setModal("withdraw")}>Withdraw</button></div>
       <section className="profile-bonuses"><h3>Bonuses</h3>{profileData?.bonuses?.length ? profileData.bonuses.map(bonus => <div className="bonus-row" key={bonus.id}><span><b>{bonus.title}</b><small>{new Date(bonus.created_at).toLocaleDateString()}</small></span><strong>{bonus.amount}</strong><em>{bonus.status}</em>{bonus.status === "available" && <button className="bonus-claim" disabled={bonusBusy !== null} onClick={() => void requestBonus(bonus.id)}>{bonusBusy === bonus.id ? "Requesting…" : "Request bonus"}</button>}</div>) : <p>Your bonus offers and rewards will appear here when they are added to your account.</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("not found") || profileMessage.toLowerCase().includes("already") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}</section>
       <small className="auth-note">Wallet balances and transaction history are stored server-side. SOL deposits require on-chain verification; withdrawals are manually approved and sent.</small>
