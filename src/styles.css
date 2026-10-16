@@ -4543,15 +4543,27 @@ html, body {
     transform: translateX(12px) !important;
   }
 
-  /* Keep the full symbol artwork visible instead of cropping the pharaoh, Anubis and scarab. */
+  /* Symbol artwork fills each symbol cell, with no decorative frame and no image cropping. */
+  .modal-slot .book-of-ra-slot .bra-final-column .bra-reel .rf-symbol-art {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
   .modal-slot .book-of-ra-slot .bra-final-column .bra-reel .rf-symbol-art img,
   .modal-slot .book-of-ra-slot .bra-strip-symbol img {
-    width: 88% !important;
-    height: 88% !important;
-    max-width: 88% !important;
-    max-height: 88% !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     object-fit: contain !important;
     object-position: center !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
     margin: auto !important;
   }
 
