@@ -1,4 +1,4 @@
-import { Env, ensureWalletSchema, randomToken } from "../auth/_shared";
+import { ensureWalletSchema, randomToken } from "../auth/_shared";
 
 export async function ensureReferralSchema(db: D1Database): Promise<void> {
   await ensureWalletSchema(db);
