@@ -22,6 +22,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!bonusId || bonusId.length > 100) return json({ error: "Choose a valid bonus." }, 400);
   try {
     await ensureBonusSchema(env.DB);
+    const security = await env.DB.prepare("SELECT bonus_frozen FROM user_security WHERE user_id=? LIMIT 1").bind(user.id).first<{bonus_frozen:number}>();
+    if (Number(security?.bonus_frozen || 0) === 1) return json({ error: "Bonus claims are temporarily paused on your account. Please contact support." }, 403);
     const now = new Date().toISOString();
     const result = await env.DB.prepare("UPDATE user_bonuses SET status = 'pending' WHERE id = ? AND user_id = ? AND status = 'available'")
       .bind(bonusId, user.id).run();
