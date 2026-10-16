@@ -4543,13 +4543,33 @@ html, body {
     transform: translateX(12px) !important;
   }
 
-  /* Symbol artwork fills each symbol cell, with no decorative frame and no image cropping. */
+  /* Full-bleed symbol tiles: remove every per-symbol frame and fill the entire cell without cropping. */
+  .modal-slot .book-of-ra-slot .bra-reel,
+  .modal-slot .book-of-ra-slot .bra-strip-symbol,
   .modal-slot .book-of-ra-slot .bra-final-column .bra-reel .rf-symbol-art {
-    border: 0 !important;
+    border:  0 !important;
     outline: 0 !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
     background: transparent !important;
-    overflow: visible !important;
+    background-image: none !important;
+  }
+
+  .modal-slot .book-of-ra-slot .bra-reel::before,
+  .modal-slot .book-of-ra-slot .bra-reel::after,
+  .modal-slot .book-of-ra-slot .bra-strip-symbol::before,
+  .modal-slot .book-of-ra-slot .bra-strip-symbol::after,
+  .modal-slot .book-of-ra-slot .bra-reel .rf-symbol-art::before,
+  .modal-slot .book-of-ra-slot .bra-reel .rf-symbol-art::after {
+    content: none !important;
+    display: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .modal-slot .book-of-ra-slot .bra-final-column .bra-reel .rf-symbol-art {
+    inset: 0 !important;
+    overflow: hidden !important;
   }
 
   .modal-slot .book-of-ra-slot .bra-final-column .bra-reel .rf-symbol-art img,
@@ -4557,14 +4577,16 @@ html, body {
     display: block !important;
     width: 100% !important;
     height: 100% !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-    object-fit: contain !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: fill !important;
     object-position: center !important;
     border: 0 !important;
     outline: 0 !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
-    margin: auto !important;
+    margin: 0 !important;
+    filter: none !important;
   }
 
   .modal-backdrop:has(.modal-slot .book-of-ra-slot)::before {
