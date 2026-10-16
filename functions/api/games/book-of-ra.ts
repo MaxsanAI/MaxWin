@@ -542,7 +542,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     // Upis u bazu
     await env.DB.prepare("INSERT INTO book_of_ra_demo_rounds (id, request_id, user_id, action, bet, stake, payout, result_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").bind(roundId, requestId, user.id, action, effectiveBet, stake, payout, JSON.stringify(result), now).run();
-    await env.DB.prepare("UPDATE book_of_ra_demo_wallets SET balance = balance - ? + ?, updated_at = ? WHERE user_id = ? AND balance >= ?").bind(stake, payout, now, user.id, stake).run();
+    const walletUpdate = await env.DB.prepare("UPDATE book_of_ra_demo_wallets SET balance = balance - ? + ?, updated_at = ? WHERE user_id = ? AND balance >= ?").bind(stake, payout, now, user.id, stake).run();
+    if (Number(walletUpdate.meta?.changes ?? 0) !== 1) {
+      await env.DB.prepare("DELETE FROM book_of_ra_demo_rounds WHERE id = ? AND user_id = ?").bind(roundId, user.id).run();
+      return json({ error: "Insufficient demo balance for this bonus purchase. The round was not played." }, 400);
+    }
     await env.DB.prepare("INSERT INTO book_of_ra_demo_features (user_id, free_spins, free_spin_bet, expanding_symbol, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(user_id) DO UPDATE SET free_spins = excluded.free_spins, free_spin_bet = excluded.free_spin_bet, expanding_symbol = excluded.expanding_symbol, updated_at = excluded.updated_at").bind(user.id, freeSpinsAfter, freeSpinBetAfter, activeExpanding, now).run();
 
     const wallet = await getOrCreateWallet(env.DB, user.id);
