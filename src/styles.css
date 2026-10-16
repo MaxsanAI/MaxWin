@@ -4415,3 +4415,8 @@ html, body {
 .game-mode-picker .game-mode-real{flex-direction:column;gap:3px!important;padding:5px 3px;font-size:9px;letter-spacing:0;line-height:1.05;white-space:nowrap}
 .game-mode-picker .game-mode-real small{font-size:7px;line-height:1;letter-spacing:.25px}
 @media(max-width:720px){.game-mode-picker .game-mode-real{font-size:8px;padding:5px 2px}.game-mode-picker .game-mode-real small{font-size:6.5px}}
+
+
+/* Temple of Ra: remove only the outer cabinet frame; preserve all slot dimensions and spacing. */
+.book-of-ra-slot .bra-cabinet{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.book-of-ra-slot .bra-cabinet:before{display:none!important}
