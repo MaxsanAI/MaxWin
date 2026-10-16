@@ -4483,7 +4483,7 @@ html, body {
     background-image:
       linear-gradient(180deg, rgba(5, 7, 19, 0.10), rgba(5, 7, 19, 0.18)),
       url("/images/book-of-ra/anubis-temple-bg.jpg") !important;
-    background-size: 100% 100% !important;
+    background-size: auto 88% !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
     background-attachment: fixed !important;
