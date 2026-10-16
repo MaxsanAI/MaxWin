@@ -270,8 +270,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     await env.DB.prepare("UPDATE wallet_deposit_requests SET status='expired', updated_at=? WHERE user_id=? AND status='pending' AND expires_at<=? AND tx_hash IS NULL")
       .bind(now, user.id, now).run();
     const row = await env.DB.prepare(
-      "SELECT id, amount_units, usd_target, expires_at FROM wallet_deposit_requests WHERE user_id = ? AND tx_hash IS NULL AND ((status='pending' AND expires_at>?) OR (status='expired' AND expires_at<=? AND cancelled_at IS NULL)) ORDER BY created_at DESC LIMIT 1"
-    ).bind(user.id, now, now).first<{ id: string; amount_units: string; usd_target: number | null; expires_at: string }>();
+      "SELECT id, amount_units, usd_target, expires_at FROM wallet_deposit_requests WHERE user_id = ? AND tx_hash IS NULL AND status='pending' AND expires_at>? ORDER BY created_at DESC LIMIT 1"
+    ).bind(user.id, now).first<{ id: string; amount_units: string; usd_target: number | null; expires_at: string }>();
     return json({
       ok: true,
       request: row ? {
