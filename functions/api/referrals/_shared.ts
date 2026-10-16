@@ -19,8 +19,17 @@ export async function ensureReferralSchema(db: D1Database): Promise<void> {
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     admin_note TEXT,
+    wallet_transaction_id TEXT,
+    credited_units TEXT,
+    sol_usd_at_credit REAL,
     FOREIGN KEY (referrer_user_id) REFERENCES users(id) ON DELETE CASCADE
   )`).run();
+  const columns = await db.prepare("PRAGMA table_info(referral_rewards)").all<{name:string}>();
+  const names = new Set((columns.results || []).map(column => column.name));
+  if (!names.has("wallet_transaction_id")) await db.prepare("ALTER TABLE referral_rewards ADD COLUMN wallet_transaction_id TEXT").run();
+  if (!names.has("credited_units")) await db.prepare("ALTER TABLE referral_rewards ADD COLUMN credited_units TEXT").run();
+  if (!names.has("sol_usd_at_credit")) await db.prepare("ALTER TABLE referral_rewards ADD COLUMN sol_usd_at_credit REAL").run();
+  await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_referral_rewards_wallet_tx ON referral_rewards(wallet_transaction_id) WHERE wallet_transaction_id IS NOT NULL").run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_referral_rewards_user ON referral_rewards(referrer_user_id, created_at DESC)").run();
 }
 
@@ -50,7 +59,9 @@ export async function refreshReferralEligibility(db: D1Database, referrerUserId?
           AND t.kind='deposit' AND t.status='confirmed'
       )`).bind(owner.referrer_user_id).first<{count:number}>();
     if (Number(qualified?.count || 0) < 10) continue;
-    const existing = await db.prepare("SELECT id FROM referral_rewards WHERE referrer_user_id=? AND status IN ('eligible','requested','approved','paid') LIMIT 1")
+    // One lifetime $10 referral reward per referrer: rejected or paid rewards must not
+    // create a second reward from the same ten qualifying accounts.
+    const existing = await db.prepare("SELECT id FROM referral_rewards WHERE referrer_user_id=? LIMIT 1")
       .bind(owner.referrer_user_id).first();
     if (!existing) {
       const now = new Date().toISOString();
