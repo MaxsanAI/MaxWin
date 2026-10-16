@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowLeft, RefreshCw, ShieldCheck, Wallet, Users, Gift, ArrowDownToLine, ArrowUpFromLine, LockKeyhole, Activity, Trash2 } from "lucide-react";
+import UserRiskControl from "./UserRiskControl";
 
 type Overview = {
   status: { realMoneyPlayEnabled: boolean; depositsEnabled: boolean; automaticWithdrawalsEnabled: boolean; manualWithdrawalApprovalEnabled: boolean; minimumDepositUsd: number; depositStepUsd: number; welcomeFreeSpins: number; welcomeSpinValueUsd: number; minimumWithdrawalUsd: number };
@@ -181,6 +182,7 @@ export default function AdminPanel() {
         <div className="mw-admin-grid">
           {card("Registered users",overview.stats.users,<Users size={20}/>)}{card("Wallet transactions",overview.stats.walletTransactions,<Activity size={20}/>)}{card("Pending deposits",overview.stats.pendingDeposits,<ArrowDownToLine size={20}/>)}{card("Pending withdrawals",overview.stats.pendingWithdrawals,<ArrowUpFromLine size={20}/>)}{card("Withdrawal requests",overview.stats.withdrawalRequests,<Wallet size={20}/>)}{card("Wallet accounts",overview.stats.walletAccounts,<Wallet size={20}/>)}{card("Free spins awarded",overview.stats.freeSpinsAwarded,<Gift size={20}/>)}{card("Bonus records",overview.stats.bonusRecords,<Gift size={20}/>)}
         </div>
+        <UserRiskControl adminKey={key} />
         <section className="mw-admin-section"><div className="mw-admin-section-head"><h2>Configured policies</h2><span className="mw-admin-eyebrow">Preview only</span></div><div className="mw-admin-rules" style={{padding:14}}><div className="mw-admin-rule"><span>Minimum deposit</span><b>$5</b><span>Increase in $5 steps</span></div><div className="mw-admin-rule"><span>Welcome spins</span><b>25 × $0.20</b><span>All 25 spins must be completed</span></div><div className="mw-admin-rule"><span>Minimum withdrawal</span><b>$10</b><span>Across the casino, subject to bonus rules</span></div><div className="mw-admin-rule"><span>Available free spins</span><b>{overview.stats.freeSpinsAvailable.toLocaleString()}</b><span>Promotional records, not cash</span></div></div></section>
         <section className="mw-admin-section">
           <div className="mw-admin-section-head"><h2>Simulate real-money balance</h2><span className="mw-admin-eyebrow">TEST ONLY · NO CASH-OUT</span></div>
