@@ -1,4 +1,5 @@
-import { Env, json, readJson } from "../auth/_shared";
+import { Env, ensureWalletSchema, isAdminTestAccount, json, randomToken, readJson } from "../auth/_shared";
+import { getSolUsd } from "../_shared/sol-price";
 import { ensureReferralSchema, refreshReferralEligibility } from "../referrals/_shared";
 
 async function authorized(request:Request,env:Env):Promise<boolean>{
@@ -21,6 +22,9 @@ export const onRequestGet:PagesFunction<Env>=async({request,env})=>{
       (SELECT status FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS rewardStatus,
       (SELECT choice FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS choice,
       (SELECT id FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS rewardId,
+      (SELECT wallet_transaction_id FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS walletTransactionId,
+      (SELECT credited_units FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS creditedUnits,
+      (SELECT sol_usd_at_credit FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS solUsdAtCredit,
       (SELECT updated_at FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS updatedAt
       FROM users u WHERE EXISTS(SELECT 1 FROM referrals r WHERE r.referrer_user_id=u.id) OR EXISTS(SELECT 1 FROM referral_rewards rr WHERE rr.referrer_user_id=u.id)
       ORDER BY qualified DESC, referrals DESC LIMIT 500`).all();
@@ -39,23 +43,91 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
   const rewardId=typeof body?.rewardId==="string"?body.rewardId.trim():"";
   const action=body?.action;
   const note=typeof body?.note==="string"?body.note.trim().slice(0,500):"";
-  if(!/^[a-f0-9]{32}$/.test(rewardId)||!["approve","paid","reject"].includes(action))return json({error:"Invalid referral reward action."},400);
+  if(!/^[a-f0-9]{32}$/.test(rewardId)||!["approve","paid","reject"].includes(String(action)))return json({error:"Invalid referral reward action."},400);
   try{
+    await ensureWalletSchema(env.DB);
     await ensureReferralSchema(env.DB);
-    const reward=await env.DB.prepare("SELECT id,referrer_user_id,status,choice FROM referral_rewards WHERE id=? LIMIT 1").bind(rewardId).first<{id:string;referrer_user_id:string;status:string;choice:string|null}>();
+    const reward=await env.DB.prepare("SELECT id,referrer_user_id,status,choice,wallet_transaction_id FROM referral_rewards WHERE id=? LIMIT 1")
+      .bind(rewardId).first<{id:string;referrer_user_id:string;status:string;choice:string|null;wallet_transaction_id:string|null}>();
     if(!reward)return json({error:"Referral reward not found."},404);
     const now=new Date().toISOString();
+
     if(action==="approve"){
       if(reward.status!=="requested")return json({error:"Only requested rewards can be approved."},409);
-      await env.DB.prepare("UPDATE referral_rewards SET status='approved',updated_at=?,admin_note=? WHERE id=? AND status='requested'").bind(now,note||null,rewardId).run();
-    }else if(action==="paid"){
-      if(reward.status!=="approved")return json({error:"Approve the reward before marking it paid."},409);
-      // This records the admin's payment confirmation; it deliberately does not fabricate wallet funds.
-      await env.DB.prepare("UPDATE referral_rewards SET status='paid',updated_at=?,admin_note=? WHERE id=? AND status='approved'").bind(now,note||null,rewardId).run();
-    }else{
-      if(reward.status==="paid")return json({error:"A paid reward cannot be rejected."},409);
-      await env.DB.prepare("UPDATE referral_rewards SET status='rejected',updated_at=?,admin_note=? WHERE id=? AND status IN ('eligible','requested','approved')").bind(now,note||null,rewardId).run();
+      if(reward.choice!=="wallet"&&reward.choice!=="book_of_temple")return json({error:"The reward destination is missing."},409);
+      const update=await env.DB.prepare("UPDATE referral_rewards SET status='approved',updated_at=?,admin_note=? WHERE id=? AND status='requested'")
+        .bind(now,note||null,rewardId).run();
+      if(!update.meta||update.meta.changes!==1)return json({error:"Reward status changed concurrently. Refresh and retry."},409);
+      return json({ok:true,status:"approved",message:"Referral reward approved. Wallet rewards can now be credited to the user's SOL wallet; Book of Temple activation is not connected by this endpoint."});
     }
-    return json({ok:true,message:action==="paid"?"Reward marked paid. This records confirmation only; it does not send funds.":action==="approve"?"Reward approved for manual processing.":"Reward rejected."});
-  }catch(error){console.error("[MAXWIN admin referrals] Update failed:",error instanceof Error?error.message:String(error));return json({error:"Could not update referral reward."},500);}
+
+    if(action==="reject"){
+      if(reward.status==="paid")return json({error:"A credited reward cannot be rejected; use an audited reversal instead."},409);
+      if(!["eligible","requested","approved"].includes(reward.status))return json({error:"This reward can no longer be rejected."},409);
+      const update=await env.DB.prepare("UPDATE referral_rewards SET status='rejected',updated_at=?,admin_note=? WHERE id=? AND status IN ('eligible','requested','approved')")
+        .bind(now,note||null,rewardId).run();
+      if(!update.meta||update.meta.changes!==1)return json({error:"Reward status changed concurrently. Refresh and retry."},409);
+      return json({ok:true,status:"rejected",message:"Referral reward rejected. A second reward will not be generated for the same referrer."});
+    }
+
+    if(reward.status==="paid"){
+      const posted=reward.wallet_transaction_id
+        ? await env.DB.prepare("SELECT id,amount_units FROM wallet_transactions WHERE id=? AND user_id=? AND kind='adjustment' AND status='confirmed' AND idempotency_key=? LIMIT 1")
+            .bind(reward.wallet_transaction_id,reward.referrer_user_id,"referral_reward:"+rewardId).first<{id:string;amount_units:string}>()
+        : null;
+      if(posted)return json({ok:true,alreadyCredited:true,status:"paid",walletTransactionId:posted.id,creditedUnits:posted.amount_units,message:"This reward is already credited. No second credit was created."});
+      return json({error:"Reward is marked paid but its matching confirmed wallet ledger entry is missing. No additional credit was attempted; investigate the ledger."},409);
+    }
+    if(reward.status!=="approved")return json({error:"Approve the reward request before crediting it to the wallet."},409);
+    if(reward.choice!=="wallet")return json({error:"This reward was chosen for Book of Temple, not the wallet. The game bonus activation is not connected, so it cannot be marked paid or credited as cash."},409);
+    if(await isAdminTestAccount(env.DB,reward.referrer_user_id))return json({error:"Referral cash rewards cannot be credited to a simulated test account."},403);
+
+    const idempotencyKey="referral_reward:"+rewardId;
+    const prior=await env.DB.prepare("SELECT id,amount_units FROM wallet_transactions WHERE user_id=? AND idempotency_key=? LIMIT 1")
+      .bind(reward.referrer_user_id,idempotencyKey).first<{id:string;amount_units:string}>();
+    if(prior)return json({error:"An idempotent ledger entry already exists but the reward is not marked paid. No second credit was made; inspect the wallet ledger before reconciling."},409);
+
+    const quote=await getSolUsd(env.DB,90_000);
+    if(!quote||!Number.isFinite(quote.price)||quote.price<=0)return json({error:"A fresh SOL/USD price is unavailable. No wallet credit was made."},503);
+    const lamportsNumber=Math.floor((10/quote.price)*1_000_000_000);
+    if(!Number.isSafeInteger(lamportsNumber)||lamportsNumber<=0)return json({error:"The $10 reward cannot be safely converted to SOL units at the current price."},503);
+    const amountUnits=BigInt(lamportsNumber).toString();
+    const transactionId=randomToken(16);
+    const metadata=JSON.stringify({source:"referral_reward",rewardId,usdCents:1000,solUsdAtCredit:quote.price,priceSource:quote.source,priceUpdatedAt:quote.updatedAt,creditedAt:now});
+    // One D1 batch makes ledger insert, available-balance increment and reward status
+    // atomic. SQLite changes() gates each step on the immediately preceding write,
+    // so retries/concurrent admin requests cannot increment the balance twice.
+    await env.DB.batch([
+      env.DB.prepare("INSERT OR IGNORE INTO wallet_balances (user_id,asset,available_units,reserved_units,updated_at) VALUES (?,'SOL','0','0',?)")
+        .bind(reward.referrer_user_id,now),
+      env.DB.prepare(`INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json)
+        SELECT ?,?,'SOL','adjustment','confirmed',?,NULL,NULL,?,?,?,?
+        WHERE EXISTS (SELECT 1 FROM referral_rewards WHERE id=? AND referrer_user_id=? AND status='approved' AND choice='wallet')
+        ON CONFLICT(user_id,idempotency_key) DO NOTHING`)
+        .bind(transactionId,reward.referrer_user_id,amountUnits,idempotencyKey,now,now,metadata,rewardId,reward.referrer_user_id),
+      env.DB.prepare(`UPDATE wallet_balances SET available_units=CAST(available_units AS INTEGER)+?,updated_at=?
+        WHERE user_id=? AND asset='SOL' AND changes()=1
+          AND EXISTS (SELECT 1 FROM wallet_transactions WHERE id=? AND user_id=? AND idempotency_key=? AND status='confirmed')`)
+        .bind(amountUnits,now,reward.referrer_user_id,transactionId,reward.referrer_user_id,idempotencyKey),
+      env.DB.prepare(`UPDATE referral_rewards SET status='paid',wallet_transaction_id=?,credited_units=?,sol_usd_at_credit=?,updated_at=?,admin_note=?
+        WHERE id=? AND referrer_user_id=? AND status='approved' AND choice='wallet' AND changes()=1
+          AND EXISTS (SELECT 1 FROM wallet_transactions WHERE id=? AND user_id=? AND idempotency_key=? AND status='confirmed')`)
+        .bind(transactionId,amountUnits,quote.price,now,note||"Credited to available SOL wallet balance",rewardId,reward.referrer_user_id,transactionId,reward.referrer_user_id,idempotencyKey)
+    ]);
+
+    // Verify the committed ledger, reward link, and resulting wallet row rather than
+    // treating the admin button response as proof of a credit.
+    const [posted,updatedReward,balance]=await Promise.all([
+      env.DB.prepare("SELECT id,amount_units,status,metadata_json FROM wallet_transactions WHERE id=? AND user_id=? AND kind='adjustment' AND status='confirmed' AND idempotency_key=? LIMIT 1")
+        .bind(transactionId,reward.referrer_user_id,idempotencyKey).first<{id:string;amount_units:string;status:string;metadata_json:string|null}>(),
+      env.DB.prepare("SELECT status,wallet_transaction_id,credited_units,sol_usd_at_credit FROM referral_rewards WHERE id=? AND referrer_user_id=? LIMIT 1")
+        .bind(rewardId,reward.referrer_user_id).first<{status:string;wallet_transaction_id:string|null;credited_units:string|null;sol_usd_at_credit:number|null}>(),
+      env.DB.prepare("SELECT available_units,reserved_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1")
+        .bind(reward.referrer_user_id).first<{available_units:string;reserved_units:string}>()
+    ]);
+    if(!posted||updatedReward?.status!=="paid"||updatedReward.wallet_transaction_id!==transactionId||updatedReward.credited_units!==amountUnits||!balance){
+      return json({error:"The wallet credit could not be verified from the committed ledger and balance records. Do not retry blindly; refresh admin data and inspect the referral reward and wallet ledger."},409);
+    }
+    return json({ok:true,status:"paid",credited:true,alreadyCredited:false,walletTransactionId:posted.id,asset:"SOL",creditedUnits:posted.amount_units,solAmount:(Number(posted.amount_units)/1_000_000_000).toFixed(9),usdValue:10,solUsdAtCredit:updatedReward.sol_usd_at_credit,availableUnits:balance.available_units,reservedUnits:balance.reserved_units,message:"$10 referral reward was credited to the user's available SOL wallet balance and verified against the confirmed wallet ledger. The user can request a withdrawal through the existing manual SOL withdrawal flow."});
+  }catch(error){console.error("[MAXWIN admin referrals] Update failed:",error instanceof Error?error.message:String(error));return json({error:"Could not update or credit the referral reward."},500);}
 };
