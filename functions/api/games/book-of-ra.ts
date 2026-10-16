@@ -286,11 +286,15 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
     let activeExpanding: SymbolName | null = featureRow?.expandingSymbol || null;
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
     const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
-    const stakeUsdCents = action === "buyBonus" ? bet * BUY_BONUS_MULTIPLIER : isFreeSpin ? 0 : bet;
-    // Promotional credits are ring-fenced to this slot and never enter the withdrawable SOL wallet.
-    // A round is bonus-funded only when the full stake can be covered by the bonus balance.
-    const usesBonusCredits = !isFreeSpin && stakeUsdCents>0 && bonusBalanceCentsBefore>=stakeUsdCents;
-    const isBonusFundedFreeSpin = isFreeSpin && bonusFundedSpinsBefore>0;
+    const available = BigInt(wallet.available_units || "0");
+    const reserved = BigInt(wallet.reserved_units || "0");
+    const walletBalanceUsdCents = lamportsToUsdCents(available.toString(), solUsd);
+    const stakeUsdCents = action === "buyBonus" ? Math.floor(walletBalanceUsdCents * 0.7) : isFreeSpin ? 0 : bet;
+    if (action === "buyBonus" && (stakeUsdCents <= 0 || available <= 0n)) return json({ error: "A positive available SOL wallet balance is required to buy the bonus." }, 400);
+    // Promotional credits are ring-fenced to this slot and never pay for a Buy Bonus purchase.
+    // Other rounds can use promotional credits only when they cover the full stake.
+    const usesBonusCredits = action !== "buyBonus" && !isFreeSpin && stakeUsdCents > 0 && bonusBalanceCentsBefore >= stakeUsdCents;
+    const isBonusFundedFreeSpin = isFreeSpin && bonusFundedSpinsBefore > 0;
     const stakeUnits = usesBonusCredits ? 0n : usdCentsToLamports(stakeUsdCents, solUsd, true);
 
     let symbols = spinReels();
@@ -311,8 +315,6 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
     const payoutUsdCents = Math.min(evaluated.payout, effectiveBet * MAX_WIN_MULTIPLIER);
     if (freeSpinsAfter === 0) activeExpanding = null;
 
-    const available = BigInt(wallet.available_units || "0");
-    const reserved = BigInt(wallet.reserved_units || "0");
     if (!usesBonusCredits && available < stakeUnits) {
       return json({ error: "Insufficient available SOL balance or Book of Temple bonus credits for this wager. Deposit and verify SOL first." }, 400);
     }
@@ -471,7 +473,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   try {
     await ensureSchema(env.DB);
-    await getOrCreateWallet(env.DB, user.id);
+    const demoWallet = await getOrCreateWallet(env.DB, user.id);
 
     const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol FROM book_of_ra_demo_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName }>();
 
@@ -481,7 +483,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
     const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
-    const stake = action === "buyBonus" ? bet * BUY_BONUS_MULTIPLIER : isFreeSpin ? 0 : bet;
+    const demoBalance = Number(demoWallet?.balance ?? 0);
+    const stake = action === "buyBonus" ? Math.floor(demoBalance * 0.7) : isFreeSpin ? 0 : bet;
+    if (action === "buyBonus" && (stake <= 0 || demoBalance < stake)) return json({ error: "A positive demo balance is required to buy the bonus." }, 400);
 
     const now = new Date().toISOString();
     const roundId = randomToken(16);
