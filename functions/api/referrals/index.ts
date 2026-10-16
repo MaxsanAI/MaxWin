@@ -11,7 +11,7 @@ export const onRequestGet: PagesFunction<Env> = async ({request,env}) => {
     const [total,qualified,rewards] = await Promise.all([
       env.DB.prepare("SELECT COUNT(*) AS count FROM referrals WHERE referrer_user_id=?").bind(user.id).first<{count:number}>(),
       env.DB.prepare(`SELECT COUNT(*) AS count FROM referrals r WHERE r.referrer_user_id=? AND EXISTS (SELECT 1 FROM wallet_transactions t WHERE t.user_id=r.referred_user_id AND t.kind='deposit' AND t.status='confirmed')`).bind(user.id).first<{count:number}>(),
-      env.DB.prepare("SELECT id,reward_usd AS rewardUsd,status,choice,created_at AS createdAt,updated_at AS updatedAt FROM referral_rewards WHERE referrer_user_id=? ORDER BY created_at DESC").bind(user.id).all()
+      env.DB.prepare("SELECT id,reward_usd AS rewardUsd,status,choice,wallet_transaction_id AS walletTransactionId,credited_units AS creditedUnits,sol_usd_at_credit AS solUsdAtCredit,created_at AS createdAt,updated_at AS updatedAt FROM referral_rewards WHERE referrer_user_id=? ORDER BY created_at DESC").bind(user.id).all()
     ]);
     return json({username:user.username, referralUrl:new URL("/?ref="+encodeURIComponent(user.username),request.url).toString(),total:Number(total?.count||0),qualified:Number(qualified?.count||0),target:10,rewardUsd:10,rewards:rewards.results||[]});
   } catch (error) {
