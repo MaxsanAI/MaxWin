@@ -4429,3 +4429,20 @@ html, body {
   background:transparent!important;
   box-shadow:none!important;
 }
+
+/* Temple of Ra desktop: place the vertical scrollbar at the viewport's far-right edge. */
+@media (min-width: 721px) {
+  .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
+    display: block !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 12px 14px !important;
+    align-items: initial !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 auto !important;
+  }
+}
