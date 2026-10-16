@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bell, CircleHelp, Crown, Gamepad2, Gem, Menu, Moon, Search, ShieldCheck, Sparkles, Star, Sun, Trophy, Wallet, X } from "lucide-react";
 import RoyalFortune from "./components/RoyalFortune";
 import BookOfRaSlot from "./components/games/BookOfRa";
