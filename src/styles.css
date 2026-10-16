@@ -3457,7 +3457,7 @@ html, body {
     position: absolute !important;
     z-index: 20 !important;
     top: 25px !important;
-    left: max(4px, calc(50% - 395px - 172px)) !important;
+    left: max(4px, calc(50% - 385px - 172px)) !important;
     right: auto !important;
     transform: none !important;
     margin: 0 !important;
@@ -3469,15 +3469,15 @@ html, body {
 }
 
 
-/* Royal Fortune desktop only: match Book of Ra's 790×465 stage and single-row controls.
+/* Royal Fortune desktop only: match Book of Ra's 770×485 stage and single-row controls.
    Mobile rules and every Book of Ra selector remain untouched. */
 @media (min-width: 721px) {
   .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-cabinet {
-    width: min(790px, 100%) !important;
-    max-width: 790px !important;
-    height: 465px !important;
-    min-height: 465px !important;
-    max-height: 465px !important;
+    width: min(770px, 100%) !important;
+    max-width: 770px !important;
+    height: 485px !important;
+    min-height: 485px !important;
+    max-height: 485px !important;
     margin: 0 auto !important;
     padding: 0 !important;
     overflow: hidden !important;
@@ -3490,9 +3490,9 @@ html, body {
   }
   .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window {
     width: 100% !important;
-    height: 409px !important;
-    min-height: 409px !important;
-    max-height: 409px !important;
+    height: 429px !important;
+    min-height: 429px !important;
+    max-height: 429px !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
     grid-template-rows: repeat(4, minmax(0, 1fr)) !important;
     gap: 3px !important;
@@ -3518,8 +3518,8 @@ html, body {
   .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-symbol-art img {
     width: 100% !important;
     height: 100% !important;
-    max-width: 88px !important;
-    max-height: 88px !important;
+    max-width: 94px !important;
+    max-height: 94px !important;
     object-fit: contain !important;
   }
   .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel small {
@@ -3535,8 +3535,8 @@ html, body {
     display: grid !important;
     grid-template-columns: minmax(105px, 1fr) minmax(150px, 1.25fr) minmax(110px, .9fr) minmax(105px, 1fr) minmax(128px, 1.15fr) !important;
     align-items: stretch !important;
-    width: min(790px, 100%) !important;
-    max-width: 790px !important;
+    width: min(770px, 100%) !important;
+    max-width: 770px !important;
     gap: 7px !important;
     margin: 5px auto 0 !important;
   }
@@ -3794,6 +3794,21 @@ html, body {
 .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window.rf-speed-normal .rf-reel-column.is-spinning .rf-reel-strip{animation-duration:460ms}
 .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-reel-window.rf-speed-turbo .rf-reel-column.is-spinning .rf-reel-strip{animation-duration:260ms}
 
+
+/* Royal Fortune desktop-only final sizing: larger artwork; mobile and Book of Ra unchanged. */
+@media (min-width: 721px) {
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-final-column .rf-symbol-art img {
+    width: 94% !important;
+    height: 94% !important;
+    max-width: 94px !important;
+    max-height: 94px !important;
+    object-fit: contain !important;
+  }
+  .modal-slot:has(.rf-cabinet:not(.bra-cabinet)) .rf-strip-symbol img {
+    width: 92% !important;
+    height: 92% !important;
+  }
+}
 
 /* AI NEON DYNASTY lobby cover: landscape desktop and true square mobile art. */
 .neon-cover-art:before { background: #0a0b18 !important; }
