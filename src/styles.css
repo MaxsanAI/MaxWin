@@ -4446,3 +4446,20 @@ html, body {
     margin: 0 auto !important;
   }
 }
+
+
+/* Temple of Ra desktop: remove the inner game-content scrollbar; use the full-width backdrop scrollbar instead. */
+@media (min-width: 721px) {
+  .modal-slot:has(.book-of-ra-slot) > .rf-game {
+    height: auto !important;
+    max-height: none !important;
+    min-height: max-content !important;
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+  .modal-slot:has(.book-of-ra-slot) .book-of-ra-slot {
+    overflow: visible !important;
+  }
+}
