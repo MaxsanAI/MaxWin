@@ -1,4 +1,4 @@
-import { Env, json, readJson, randomToken } from "../auth/_shared";
+import { Env, json, readJson } from "../auth/_shared";
 import { ensureReferralSchema, refreshReferralEligibility } from "../referrals/_shared";
 
 async function authorized(request:Request,env:Env):Promise<boolean>{
