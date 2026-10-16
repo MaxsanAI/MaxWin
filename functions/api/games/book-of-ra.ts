@@ -309,7 +309,6 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
     const freeSpinBetAfter = awardedFreeSpins > 0 && !isFreeSpin ? effectiveBet : freeSpinBetBefore;
     const evaluated = evaluate(symbols, effectiveBet, isFreeSpin ? activeExpanding : null, isFreeSpin);
     const payoutUsdCents = Math.min(evaluated.payout, effectiveBet * MAX_WIN_MULTIPLIER);
-    const payoutUnits = usdCentsToLamports(payoutUsdCents, solUsd, false);
     if (freeSpinsAfter === 0) activeExpanding = null;
 
     const available = BigInt(wallet.available_units || "0");
@@ -331,12 +330,12 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
       wins: evaluated.wins, winningPositions: evaluated.winningPositions,
       awardedFreeSpins, freeSpinsRemaining: freeSpinsAfter, expandingSymbol: activeExpanding
     };
-    const metadata = JSON.stringify({ game: "Temple of Ra", requestId, solUsdAtSettlement: solUsd, stakeUsdCents, payoutUsdCents, stakeUnits: stakeUnits.toString(), payoutUnits: payoutUnits.toString() });
+    const metadata = JSON.stringify({ game: "Temple of Ra", requestId, solUsdAtSettlement: solUsd, stakeUsdCents, payoutUsdCents, stakeUnits: stakeUnits.toString(), cashPayoutUnits: settledPayoutUnits.toString(), bonusPayoutCents: usesBonusCredits || isBonusFundedFreeSpin ? payoutUsdCents : 0, bonusFunded: usesBonusCredits || isBonusFundedFreeSpin });
     const statements = [
       env.DB.prepare("UPDATE wallet_balances SET available_units=?,updated_at=? WHERE user_id=? AND asset='SOL' AND available_units=? AND reserved_units=? AND CAST(available_units AS INTEGER)>=?")
         .bind(nextAvailable.toString(), now, user.id, wallet.available_units, wallet.reserved_units, stakeUnits.toString()),
       env.DB.prepare("INSERT INTO book_of_ra_real_rounds (id,request_id,user_id,action,bet,stake_units,payout_units,stake_usd_cents,payout_usd_cents,sol_usd,result_json,created_at) SELECT ?,?,?,?,?,?,?,?,?,?,?,? WHERE changes()=1")
-        .bind(roundId, requestId, user.id, action, effectiveBet, stakeUnits.toString(), payoutUnits.toString(), stakeUsdCents, payoutUsdCents, solUsd, JSON.stringify(result), now),
+        .bind(roundId, requestId, user.id, action, effectiveBet, stakeUnits.toString(), settledPayoutUnits.toString(), stakeUsdCents, cashPayoutUsdCents, solUsd, JSON.stringify(result), now),
       env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) SELECT ?,?,'SOL','wager','confirmed',?,NULL,NULL,?,?,?,? WHERE ? > 0 AND EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?)")
         .bind(randomToken(16), user.id, stakeUnits.toString(), requestId + ":wager", now, now, metadata, stakeUnits.toString(), requestId, user.id),
       env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) SELECT ?,?,'SOL','payout','confirmed',?,NULL,NULL,?,?,?,? WHERE ? > 0 AND EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?)")
