@@ -199,6 +199,20 @@ async function ensureRealSchema(db: D1Database): Promise<void> {
     free_spin_bet INTEGER NOT NULL DEFAULT 20,
     expanding_symbol TEXT,
     updated_at TEXT NOT NULL,
+    bonus_balance_cents INTEGER NOT NULL DEFAULT 0,
+    bonus_funded_spins INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`).run();
+  const featureColumns=await db.prepare("PRAGMA table_info(book_of_ra_real_features)").all<{name:string}>();
+  const featureNames=new Set((featureColumns.results||[]).map(column=>column.name));
+  if(!featureNames.has("bonus_balance_cents"))await db.prepare("ALTER TABLE book_of_ra_real_features ADD COLUMN bonus_balance_cents INTEGER NOT NULL DEFAULT 0").run();
+  if(!featureNames.has("bonus_funded_spins"))await db.prepare("ALTER TABLE book_of_ra_real_features ADD COLUMN bonus_funded_spins INTEGER NOT NULL DEFAULT 0").run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS book_of_ra_bonus_grants (
+    id TEXT PRIMARY KEY,
+    reward_id TEXT NOT NULL UNIQUE,
+    user_id TEXT NOT NULL,
+    amount_cents INTEGER NOT NULL CHECK(amount_cents=1000),
+    created_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   )`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS book_of_ra_real_rounds (
@@ -262,16 +276,22 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
       .bind(user.id).first<{ available_units: string; reserved_units: string }>();
     if (!wallet) return json({ error: "SOL wallet was not found." }, 500);
 
-    const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol FROM book_of_ra_real_features WHERE user_id=? LIMIT 1")
-      .bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName | null }>();
+    const featureRow = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol, bonus_balance_cents AS bonusBalanceCents, bonus_funded_spins AS bonusFundedSpins FROM book_of_ra_real_features WHERE user_id=? LIMIT 1")
+      .bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName | null; bonusBalanceCents:number; bonusFundedSpins:number }>();
     const freeSpinsBefore = Number(featureRow?.freeSpins || 0);
+    const bonusBalanceCentsBefore = Math.max(0,Number(featureRow?.bonusBalanceCents||0));
+    const bonusFundedSpinsBefore = Math.max(0,Number(featureRow?.bonusFundedSpins||0));
     if (action === "buyBonus" && freeSpinsBefore > 0) return json({ error: "Finish the current free-spin round before buying another bonus." }, 409);
     const freeSpinBetBefore = Math.max(20, Math.min(100, Number(featureRow?.freeSpinBet || 20)));
     let activeExpanding: SymbolName | null = featureRow?.expandingSymbol || null;
     const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
     const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
     const stakeUsdCents = action === "buyBonus" ? bet * BUY_BONUS_MULTIPLIER : isFreeSpin ? 0 : bet;
-    const stakeUnits = usdCentsToLamports(stakeUsdCents, solUsd, true);
+    // Promotional credits are ring-fenced to this slot and never enter the withdrawable SOL wallet.
+    // A round is bonus-funded only when the full stake can be covered by the bonus balance.
+    const usesBonusCredits = !isFreeSpin && stakeUsdCents>0 && bonusBalanceCentsBefore>=stakeUsdCents;
+    const isBonusFundedFreeSpin = isFreeSpin && bonusFundedSpinsBefore>0;
+    const stakeUnits = usesBonusCredits ? 0n : usdCentsToLamports(stakeUsdCents, solUsd, true);
 
     let symbols = spinReels();
     if (action === "buyBonus") {
@@ -294,14 +314,20 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
 
     const available = BigInt(wallet.available_units || "0");
     const reserved = BigInt(wallet.reserved_units || "0");
-    if (available < stakeUnits) {
-      return json({ error: "Insufficient available SOL balance for this wager. Deposit and verify SOL first." }, 400);
+    if (!usesBonusCredits && available < stakeUnits) {
+      return json({ error: "Insufficient available SOL balance or Book of Temple bonus credits for this wager. Deposit and verify SOL first." }, 400);
     }
-    const nextAvailable = available - stakeUnits + payoutUnits;
+    const cashPayoutUsdCents = usesBonusCredits || isBonusFundedFreeSpin ? 0 : payoutUsdCents;
+    const settledPayoutUnits = usdCentsToLamports(cashPayoutUsdCents, solUsd, false);
+    const nextAvailable = available - stakeUnits + settledPayoutUnits;
+    const nextBonusBalanceCents = Math.max(0,bonusBalanceCentsBefore-(usesBonusCredits?stakeUsdCents:0)+((usesBonusCredits||isBonusFundedFreeSpin)?payoutUsdCents:0));
+    const nextBonusFundedSpins = Math.max(0,bonusFundedSpinsBefore-(isBonusFundedFreeSpin?1:0)+((usesBonusCredits||isBonusFundedFreeSpin)?awardedFreeSpins:0));
     const roundId = randomToken(16);
     const result = {
       id: roundId, symbols, outcome: evaluated.outcome, bet: effectiveBet,
       stake: stakeUsdCents, payout: payoutUsdCents, mode: action,
+      bonusFunded: usesBonusCredits || isBonusFundedFreeSpin,
+      bonusBalanceCents: nextBonusBalanceCents,
       wins: evaluated.wins, winningPositions: evaluated.winningPositions,
       awardedFreeSpins, freeSpinsRemaining: freeSpinsAfter, expandingSymbol: activeExpanding
     };
@@ -314,9 +340,9 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
       env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) SELECT ?,?,'SOL','wager','confirmed',?,NULL,NULL,?,?,?,? WHERE ? > 0 AND EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?)")
         .bind(randomToken(16), user.id, stakeUnits.toString(), requestId + ":wager", now, now, metadata, stakeUnits.toString(), requestId, user.id),
       env.DB.prepare("INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json) SELECT ?,?,'SOL','payout','confirmed',?,NULL,NULL,?,?,?,? WHERE ? > 0 AND EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?)")
-        .bind(randomToken(16), user.id, payoutUnits.toString(), requestId + ":payout", now, now, metadata, payoutUnits.toString(), requestId, user.id),
-      env.DB.prepare("INSERT INTO book_of_ra_real_features (user_id,free_spins,free_spin_bet,expanding_symbol,updated_at) SELECT ?,?,?,?,? WHERE EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,free_spin_bet=excluded.free_spin_bet,expanding_symbol=excluded.expanding_symbol,updated_at=excluded.updated_at")
-        .bind(user.id, freeSpinsAfter, freeSpinBetAfter, activeExpanding, now, requestId, user.id)
+        .bind(randomToken(16), user.id, settledPayoutUnits.toString(), requestId + ":payout", now, now, metadata, settledPayoutUnits.toString(), requestId, user.id),
+      env.DB.prepare("INSERT INTO book_of_ra_real_features (user_id,free_spins,free_spin_bet,expanding_symbol,updated_at,bonus_balance_cents,bonus_funded_spins) SELECT ?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=?) ON CONFLICT(user_id) DO UPDATE SET free_spins=excluded.free_spins,free_spin_bet=excluded.free_spin_bet,expanding_symbol=excluded.expanding_symbol,updated_at=excluded.updated_at,bonus_balance_cents=excluded.bonus_balance_cents,bonus_funded_spins=excluded.bonus_funded_spins")
+        .bind(user.id, freeSpinsAfter, freeSpinBetAfter, activeExpanding, now, nextBonusBalanceCents, nextBonusFundedSpins, requestId, user.id)
     ];
     await env.DB.batch(statements);
     const saved = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1").bind(requestId, user.id).first<{ result_json: string }>();
@@ -331,7 +357,7 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
       balance: lamportsToUsdCents(finalWallet?.available_units || "0", solUsd),
       balanceSol: Number(finalWallet?.available_units || "0") / 1e9,
       freeSpins: freeSpinsAfter, freeSpinBet: freeSpinBetAfter,
-      expandingSymbol: activeExpanding, mode: "real", solUsd
+      expandingSymbol: activeExpanding, bonusBalanceCents:nextBonusBalanceCents, bonusFundedSpins:nextBonusFundedSpins, mode: "real", solUsd
     });
   } catch (error) {
     const previous = await env.DB.prepare("SELECT result_json FROM book_of_ra_real_rounds WHERE request_id=? AND user_id=? LIMIT 1").bind(requestId, user.id).first<{ result_json: string }>().catch(() => null);
@@ -370,7 +396,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       const now = new Date().toISOString();
       await env.DB.prepare("INSERT OR IGNORE INTO wallet_balances (user_id,asset,available_units,reserved_units,updated_at) VALUES (?,'SOL','0','0',?)").bind(user.id, now).run();
       const wallet = await env.DB.prepare("SELECT available_units,reserved_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1").bind(user.id).first<{ available_units: string; reserved_units: string }>();
-      const features = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol FROM book_of_ra_real_features WHERE user_id=? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName | null }>();
+      const features = await env.DB.prepare("SELECT free_spins AS freeSpins, free_spin_bet AS freeSpinBet, expanding_symbol AS expandingSymbol, bonus_balance_cents AS bonusBalanceCents, bonus_funded_spins AS bonusFundedSpins FROM book_of_ra_real_features WHERE user_id=? LIMIT 1").bind(user.id).first<{ freeSpins: number; freeSpinBet: number; expandingSymbol: SymbolName | null; bonusBalanceCents:number; bonusFundedSpins:number }>();
       return json({
         balance: lamportsToUsdCents(wallet?.available_units || "0", solUsd),
         balanceSol: Number(wallet?.available_units || "0") / 1e9,
@@ -379,6 +405,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         freeSpins: Number(features?.freeSpins || 0),
         freeSpinBet: Number(features?.freeSpinBet || 20),
         expandingSymbol: features?.expandingSymbol || null,
+        bonusBalanceCents: Number(features?.bonusBalanceCents || 0),
+        bonusFundedSpins: Number(features?.bonusFundedSpins || 0),
         solUsd, mode: "real"
       });
     } catch (error) {
