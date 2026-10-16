@@ -79,13 +79,7 @@ function App() {
   const [profileMessage, setProfileMessage] = useState("");
   const [bonusBusy, setBonusBusy] = useState<string | null>(null);
   const [freeSpinBusy, setFreeSpinBusy] = useState(false);
-  const [spinBusy, setSpinBusy] = useState(false);
   const [templeSlotBusy, setTempleSlotBusy] = useState(false);
-  const [spinError, setSpinError] = useState("");
-  const [spinNotice, setSpinNotice] = useState("");
-  const [spinRound, setSpinRound] = useState<{ id: string; gameTitle: string; symbols: string[]; outcome: string; createdAt: string } | null>(null);
-  const [spinHistory, setSpinHistory] = useState<Array<{ id: string; gameTitle: string; symbols: string[]; outcome: string; createdAt: string }>>([]);
-  const [spinBalance, setSpinBalance] = useState<number | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletError, setWalletError] = useState("");
   const walletAsset = "SOL" as const;
@@ -228,51 +222,11 @@ function App() {
     } catch (error) { setProfileMessage(error instanceof Error ? error.message : "Could not claim free spins."); }
     finally { setFreeSpinBusy(false); }
   };
-  const playFreeSpin = async () => {
+  const playFreeSpin = () => {
     if (!authUser) { setModal("signin"); return; }
-    if (!selectedGame || spinBusy || (spinBalance ?? profileData?.freeSpins?.available ?? 0) < 1) return;
-    setSpinBusy(true); setSpinError(""); setSpinNotice("");
-    try {
-      const requestId = typeof crypto.randomUUID === "function" ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join("");
-      const response = await fetch("/api/games/spin", {
-        method: "POST", credentials: "same-origin", cache: "no-store",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameTitle: selectedGame.title, requestId })
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Could not complete the free spin.");
-      if (data.spin) {
-        setSpinRound(data.spin);
-        setSpinNotice(data.message || (data.spin.outcome === "triple-match" ? "Three matching symbols!" : data.spin.outcome === "pair-match" ? "Two matching symbols!" : "No match this time."));
-      }
-      if (typeof data.availableSpins === "number") setSpinBalance(data.availableSpins);
-      else setSpinBalance(current => Math.max(0, (current ?? profileData?.freeSpins?.available ?? 0) - (data.replayed ? 0 : 1)));
-      setSpinHistory(current => data.spin && !current.some(round => round.id === data.spin.id) ? [data.spin, ...current].slice(0, 12) : current);
-      const refreshed = await fetch("/api/profile", { credentials: "same-origin", cache: "no-store" });
-      const refreshedData = await refreshed.json().catch(() => ({}));
-      if (refreshed.ok) setProfileData(refreshedData.profile);
-    } catch (error) {
-      setSpinError(error instanceof Error ? error.message : "Could not complete the free spin.");
-    } finally { setSpinBusy(false); }
+    const temple = games.find(game => game.title === "Temple of Ra");
+    if (temple) openGame(temple, "real");
   };
-  useEffect(() => {
-    if (modal !== "game" || !selectedGame || !authUser) {
-      setSpinRound(null); setSpinNotice(""); setSpinError(""); setSpinBalance(null); setSpinHistory([]);
-      return;
-    }
-    let cancelled = false;
-    fetch("/api/games/spin", { credentials: "same-origin", cache: "no-store" })
-      .then(async response => {
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || "Could not load free spins.");
-        if (!cancelled) {
-          setSpinBalance(Number(data.availableSpins || 0));
-          setSpinHistory(Array.isArray(data.history) ? data.history : []);
-        }
-      })
-      .catch(error => { if (!cancelled) setSpinError(error instanceof Error ? error.message : "Could not load free spins."); });
-    return () => { cancelled = true; };
-  }, [modal, selectedGame?.title, authUser?.id]);
   const uploadAvatar = async (file?: File) => {
     if (!file || !authUser) return;
     if (!file.type.startsWith("image/")) { setProfileMessage("Choose an image file."); return; }
@@ -480,7 +434,7 @@ function App() {
       </article>
     </main> : <main>
       <section className="hero-slot-slider" id="featured">
-        <div className="hero-slider-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> FEATURED &amp; NEWLY OPENED</div><h1>Find your next <em>big game.</em></h1><p>New releases and featured MAXWIN originals, moving from right to left.</p></div><button className="btn btn-gold" type="button" onClick={() => document.getElementById("lobby")?.scrollIntoView({behavior:"smooth"})}>Explore games</button></div>
+        <div className="hero-slider-heading"><div><div className="eyebrow"><span className="eyebrow-dot"/> FEATURED &amp; NEWLY OPENED</div><h1>Find your next <em>big game.</em></h1><p>New releases and featured MAXWIN originals, moving from left to right.</p></div><button className="btn btn-gold" type="button" onClick={() => document.getElementById("lobby")?.scrollIntoView({behavior:"smooth"})}>Explore games</button></div>
         <div className="hero-slider-viewport"><div className="hero-slider-track">{[...heroSlides,...heroSlides].map((slide,index) => { const game=games.find(item=>item.title===slide.gameTitle); return <button className="hero-slide-card" type="button" key={slide.title+"-"+index} onClick={() => {if(game)openGame(game,slide.mode);}} aria-label={(slide.badge==="JUST OPENED"?"Newly opened: ":"Featured: ")+slide.title}><img src={slide.image} alt={slide.title+" slot artwork"} loading={index<3?"eager":"lazy"} /><span className={"hero-slide-badge"+(slide.badge==="JUST OPENED"?" is-new":"")}>{slide.badge}</span><span className="hero-slide-shade"/><span className="hero-slide-copy"><small>MAXWIN ORIGINALS</small><strong>{slide.title}</strong><span>{slide.mode==="real"?"PLAY FOR REAL":"PLAY DEMO"} <b>›</b></span></span></button>;})}</div></div>
       </section>
       <section className="quick-strip"><div><span className="quick-icon"><Wallet size={18}/></span><span><b>Crypto architecture</b><small>Payments integration pending</small></span></div><div><span className="quick-icon"><ShieldCheck size={18}/></span><span><b>Security by design</b><small>Backend controls to be implemented</small></span></div><div><span className="quick-icon"><CircleHelp size={18}/></span><span><b>Clear game information</b><small>Rules shown before real play</small></span></div></section>
@@ -532,7 +486,7 @@ function App() {
       {profileBusy && <p>Saving photo…</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("choose") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}
       <div className="profile-account-info"><span>Email</span><b>{authUser.email}</b><span>Account created</span><b>{new Date(authUser.createdAt).toLocaleDateString()}</b></div>
       <section className="profile-wallet"><h3>Wallet balances</h3>{walletLoading && <p>Loading balances…</p>}{walletError && <p className="auth-error">{walletError}</p>}<div className="profile-balance-grid">{(["SOL"] as const).map(asset => <div key={asset}><span>{asset}</span><b>{(Number(walletData?.balances?.[asset]?.availableUnits || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })}</b><small>Available</small></div>)}</div>{walletData?.transactions?.length ? <div className="profile-transactions"><b>Recent wallet activity</b>{walletData.transactions.slice(0, 4).map((tx: any) => <div key={tx.id}><span>{tx.kind} · {tx.asset}<small>{tx.status} · {new Date(tx.created_at).toLocaleDateString()}</small></span><strong>{(Number(tx.amount_units || "0") / 1e9).toLocaleString(undefined, { maximumFractionDigits: 9 })}</strong></div>)}</div> : <p className="profile-muted">Deposits and transactions appear here after verified processing is active.</p>}</section>
-      <section className="free-spins-panel"><div className="free-spins-heading"><span className="free-spins-icon"><Sparkles size={20}/></span><div><small>MAXWIN REWARDS</small><h3>Free Spins</h3></div><strong>{profileData?.freeSpins?.available ?? 0}</strong></div><p className="free-spins-desc">Welcome spins are awarded once after registration. Claim 30 more every 15 days. Your balance is stored on your account; playable spins require the game engine integration to be enabled.</p><div className="free-spins-next"><span>Next 30-spin reward</span><b>{profileData?.freeSpins?.nextRecurringAt ? new Date(profileData.freeSpins.nextRecurringAt).toLocaleDateString() : "Pending setup"}</b></div><button type="button" className="bonus-claim free-spins-claim" disabled={freeSpinBusy || !profileData?.freeSpins?.nextRecurringAt || new Date(profileData.freeSpins.nextRecurringAt).getTime() > Date.now()} onClick={() => void claimRecurringSpins()}>{freeSpinBusy ? "Claiming…" : "Claim 30 Free Spins"}</button><small className="auth-note">Total awarded: {profileData?.freeSpins?.totalAwarded ?? 0} · Free spins cannot currently be wagered or redeemed.</small></section>
+      <section className="free-spins-panel"><div className="free-spins-heading"><span className="free-spins-icon"><Sparkles size={20}/></span><div><small>MAXWIN REWARDS</small><h3>Free Spins</h3></div><strong>{profileData?.freeSpins?.available ?? 0}</strong></div><p className="free-spins-desc">Welcome spins are awarded once after registration and can only be used in Temple of Ra Real Play. Claim 30 more every 15 days; bonus-funded wins stay non-withdrawable.</p><div className="free-spins-next"><span>Next 30-spin reward</span><b>{profileData?.freeSpins?.nextRecurringAt ? new Date(profileData.freeSpins.nextRecurringAt).toLocaleDateString() : "Pending setup"}</b></div><button type="button" className="bonus-claim free-spins-claim" disabled={freeSpinBusy || !profileData?.freeSpins?.nextRecurringAt || new Date(profileData.freeSpins.nextRecurringAt).getTime() > Date.now()} onClick={() => void claimRecurringSpins()}>{freeSpinBusy ? "Claiming…" : "Claim 30 Free Spins"}</button><small className="auth-note">Total awarded: {profileData?.freeSpins?.totalAwarded ?? 0} · Available only in Temple of Ra Real Play, not Demo mode.</small></section>
       <section className="profile-bonuses referral-profile"><h3>Refer friends · Earn $10</h3><p>Invite 10 new players. Each must make at least one confirmed deposit. Once all 10 qualify, request one $10 reward.</p>
         {referralData && <><div className="profile-account-info"><span>Registered referrals</span><b>{referralData.total}/10</b><span>With confirmed deposit</span><b>{referralData.qualified}/10</b></div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}><input aria-label="Your referral link" readOnly value={referralData.referralUrl} style={{flex:"1 1 240px",minWidth:0}}/><button className="btn btn-outline" type="button" onClick={() => { void navigator.clipboard?.writeText(referralData.referralUrl).then(()=>setProfileMessage("Referral link copied.")).catch(()=>setProfileMessage("Copy failed; select the link and copy it manually.")); }}>Copy link</button></div>
@@ -544,17 +498,10 @@ function App() {
       <section className="profile-bonuses"><h3>Bonuses</h3>{profileData?.bonuses?.length ? profileData.bonuses.map(bonus => <div className="bonus-row" key={bonus.id}><span><b>{bonus.title}</b><small>{new Date(bonus.created_at).toLocaleDateString()}</small></span><strong>{bonus.amount}</strong><em>{bonus.status}</em>{bonus.status === "available" && <button className="bonus-claim" disabled={bonusBusy !== null} onClick={() => void requestBonus(bonus.id)}>{bonusBusy === bonus.id ? "Requesting…" : "Request bonus"}</button>}</div>) : <p>Your bonus offers and rewards will appear here when they are added to your account.</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("not found") || profileMessage.toLowerCase().includes("already") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}</section>
       <small className="auth-note">Wallet balances and transaction history are stored server-side. SOL deposits require on-chain verification; withdrawals are manually approved and sent.</small>
     </div> : selectedGame && selectedPlayMode === "real" && selectedGame.title !== "Temple of Ra" ? <div className="auth-form"><div className="modal-status"><span className="status-dot"/><span><b>REAL-MONEY PLAY IS LOCKED</b><small>No deposits or cash wagers are accepted. Licensing, age/jurisdiction controls, audited game outcomes, wallet settlement and withdrawals must be verified before real-money play can be enabled.</small></span></div><button className="btn btn-gold modal-done" type="button" onClick={() => setModal(null)}>Back to lobby</button></div> : selectedGame?.title === "AI NEON DYNASTY" && authUser ? <AIDynasty onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "AI NEON DYNASTY" ? <div className="auth-form"><p>Log in to play AI NEON DYNASTY. Demo credits have no cash value.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Temple of Ra" && authUser ? <BookOfRaSlot mode={selectedPlayMode} onBusyChange={setTempleSlotBusy} onRequestDeposit={() => { setReturnToGameAfterDeposit(true); setModal("deposit"); }} onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Temple of Ra" ? <div className="auth-form"><p>Log in to play Temple of Ra and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Golden Vault" && authUser ? <GoldenVault onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Golden Vault" ? <div className="auth-form"><p>Log in to play Golden Vault. Demo credits have no cash value.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Moon Temple" && authUser ? <MoonTemple onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Moon Temple" ? <div className="auth-form"><p>Log in to play Moon Temple and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Royal Fortune" && authUser ? <RoyalFortune onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Royal Fortune" ? <div className="auth-form"><p>Log in to play Royal Fortune and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame ? <div className="auth-form spin-game-panel">
-      <div className="spin-game-provider"><span className={"game-art spin-mini-art art-" + selectedGame.art}><span className="art-symbol">{selectedGame.art === "royal" ? "♛" : selectedGame.art === "neon" ? "✦" : selectedGame.art === "vault" ? "◈" : selectedGame.art === "moon" ? "☾" : selectedGame.art === "lucky" ? "7" : selectedGame.art === "cosmic" ? "✧" : selectedGame.art === "crown" ? "♕" : "✺"}</span></span><span><b>{selectedGame.title}</b><small>MAXWIN promotional slot · Demo mode</small></span></div>
-      {!authUser ? <><p>Log in to use free spins stored on your MAXWIN account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></> : <>
-        <div className="spin-balance-bar"><span>FREE SPINS AVAILABLE</span><strong>{spinBalance ?? profileData?.freeSpins?.available ?? "…"}</strong></div>
-        <div className="spin-reels" aria-live="polite" aria-label="Slot result">{(spinRound?.symbols || ["✦", "♛", "✦"]).map((symbol, index) => <div className={"spin-reel" + (spinRound ? " spin-reel-result" : "")} key={spinRound?.id + "-" + index}>{symbol}</div>)}</div>
-        {spinNotice && <p className={"spin-result-message " + (spinRound?.outcome === "triple-match" ? "spin-result-win" : "")} role="status">{spinNotice}</p>}
-        {spinError && <p className="auth-error" role="alert">{spinError}</p>}
-        <button className="btn btn-gold modal-done spin-play-button" type="button" onClick={() => void playFreeSpin()} disabled={spinBusy || (spinBalance ?? profileData?.freeSpins?.available ?? 0) < 1}>{spinBusy ? "Spinning…" : (spinBalance ?? profileData?.freeSpins?.available ?? 0) < 1 ? "No free spins left" : "SPIN · USE 1 FREE SPIN"}</button>
-        <small className="auth-note spin-demo-note">Promotional demo only. Results have no cash value, no monetary payout, and cannot be redeemed. Each spin is generated and recorded server-side. Switching slots does not reset your balance.</small>
-        {spinHistory.length > 0 && <section className="spin-history"><h3>Recent spins</h3>{spinHistory.slice(0,5).map(round => <div key={round.id}><span>{round.gameTitle}<small>{new Date(round.createdAt).toLocaleString()}</small></span><strong>{round.symbols.join(" ")}</strong></div>)}</section>}
-      </>}
-    </div> : <><p>{authUser ? "You are signed in. Your account is active, but financial features remain disabled." : "Authentication, real-money payments, certified game outcomes, and financial transactions are not yet implemented. MAXWIN will not accept wagers or claim to process payments at this stage."}</p>{authUser && modal === "game" && !selectedGame && <div className="modal-status"><span className="status-dot"/><span><b>{authUser.username}</b><small>{authUser.email}</small></span></div>}<div className="modal-status"><span className="status-dot"/><span><b>Real-money play disabled</b><small>No funds are being accepted or transferred.</small></span></div><button className="btn btn-gold modal-done" onClick={() => setModal(null)}>Understood</button></>}</section></div>}
+       <div className="spin-game-provider"><span className={"game-art spin-mini-art art-" + selectedGame.art}><span className="art-symbol">{selectedGame.art === "royal" ? "♛" : selectedGame.art === "neon" ? "✦" : selectedGame.art === "vault" ? "◈" : selectedGame.art === "moon" ? "☾" : selectedGame.art === "lucky" ? "7" : selectedGame.art === "cosmic" ? "✧" : selectedGame.art === "crown" ? "♕" : "✺"}</span></span><span><b>{selectedGame.title}</b><small>DEMO MODE · FREE SPINS DISABLED</small></span></div>
+       <p>Registration and recurring free spins can only be played in Temple of Ra Real Play. They cannot be used in this demo slot.</p>
+       <button className="btn btn-gold modal-done" type="button" onClick={playFreeSpin}>{authUser ? "OPEN TEMPLE OF RA · REAL PLAY" : "LOG IN TO CONTINUE"}</button>
+     </div> : <><p>{authUser ? "You are signed in. Your account is active, but financial features remain disabled." : "Authentication, real-money payments, certified game outcomes, and financial transactions are not yet implemented. MAXWIN will not accept wagers or claim to process payments at this stage."}</p>{authUser && modal === "game" && !selectedGame && <div className="modal-status"><span className="status-dot"/><span><b>{authUser.username}</b><small>{authUser.email}</small></span></div>}<div className="modal-status"><span className="status-dot"/><span><b>Real-money play disabled</b><small>No funds are being accepted or transferred.</small></span></div><button className="btn btn-gold modal-done" onClick={() => setModal(null)}>Understood</button></>}</section></div>}
     {welcomePromoOpen && !authUser && <div className="welcome-promo-backdrop" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) closeWelcomePromo(); }}>
       <section className="welcome-promo" role="dialog" aria-modal="true" aria-labelledby="welcome-promo-title">
         <button className="welcome-promo-close" type="button" aria-label="Close welcome offer" onClick={closeWelcomePromo}><X size={19}/></button>
