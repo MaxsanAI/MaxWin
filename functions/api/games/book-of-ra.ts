@@ -280,10 +280,13 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
     const freeSpinsBefore = Number(featureRow?.freeSpins || 0);
     const bonusBalanceCentsBefore = Math.max(0,Number(featureRow?.bonusBalanceCents||0));
     const bonusFundedSpinsBefore = Math.max(0,Number(featureRow?.bonusFundedSpins||0));
-    if (action === "buyBonus" && freeSpinsBefore > 0) return json({ error: "Finish the current free-spin round before buying another bonus." }, 409);
+    const security = await env.DB.prepare("SELECT bonus_frozen AS bonusFrozen, free_spins_frozen AS freeSpinsFrozen FROM user_security WHERE user_id=? LIMIT 1").bind(user.id).first<{bonusFrozen:number;freeSpinsFrozen:number}>();
+    const bonusFrozen = Number(security?.bonusFrozen || 0) === 1;
+    const freeSpinsFrozen = Number(security?.freeSpinsFrozen || 0) === 1;
+    if (action === "buyBonus" && freeSpinsBefore > 0 && !freeSpinsFrozen) return json({ error: "Finish the current free-spin round before buying another bonus." }, 409);
     const freeSpinBetBefore = Math.max(20, Math.min(100, Number(featureRow?.freeSpinBet || 20)));
     let activeExpanding: SymbolName | null = featureRow?.expandingSymbol || null;
-    const isFreeSpin = action === "spin" && freeSpinsBefore > 0;
+    const isFreeSpin = action === "spin" && freeSpinsBefore > 0 && !freeSpinsFrozen && !(bonusFrozen && bonusFundedSpinsBefore > 0);
     const effectiveBet = isFreeSpin ? freeSpinBetBefore : bet;
     const available = BigInt(wallet.available_units || "0");
     const reserved = BigInt(wallet.reserved_units || "0");
@@ -292,8 +295,8 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
     if (action === "buyBonus" && (stakeUsdCents <= 0 || available <= 0n)) return json({ error: "A positive available SOL wallet balance is required to buy the bonus." }, 400);
     // Promotional credits are ring-fenced to this slot and never pay for a Buy Bonus purchase.
     // Other rounds can use promotional credits only when they cover the full stake.
-    const usesBonusCredits = action !== "buyBonus" && !isFreeSpin && stakeUsdCents > 0 && bonusBalanceCentsBefore >= stakeUsdCents;
-    const isBonusFundedFreeSpin = isFreeSpin && bonusFundedSpinsBefore > 0;
+    const usesBonusCredits = !bonusFrozen && action !== "buyBonus" && !isFreeSpin && stakeUsdCents > 0 && bonusBalanceCentsBefore >= stakeUsdCents;
+    const isBonusFundedFreeSpin = !bonusFrozen && isFreeSpin && bonusFundedSpinsBefore > 0;
     const stakeUnits = usesBonusCredits ? 0n : usdCentsToLamports(stakeUsdCents, solUsd, true);
 
     let symbols = spinReels();
@@ -302,7 +305,7 @@ async function handleRealAction(request: Request, env: Env, user: { id: string }
     }
     const bookCount = symbols.filter(s => s === "book").length;
     let awardedFreeSpins = 0;
-    if (bookCount >= 3) {
+    if (bookCount >= 3 && !freeSpinsFrozen) {
       awardedFreeSpins = bookCount >= 5
         ? BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.fivePlusBooks
         : bookCount === 4 ? BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.fourBooks : BOOK_OF_SUNRISE_MATH.freeSpinsByBookCount.threeBooks;
