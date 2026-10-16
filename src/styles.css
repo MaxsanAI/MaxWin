@@ -4416,88 +4416,61 @@ html, body {
 .game-mode-picker .game-mode-real small{font-size:7px;line-height:1;letter-spacing:.25px}
 @media(max-width:720px){.game-mode-picker .game-mode-real{font-size:8px;padding:5px 2px}.game-mode-picker .game-mode-real small{font-size:6.5px}}
 
-
-/* Temple of Ra: remove only the outer cabinet frame; preserve all slot dimensions and spacing. */
-.book-of-ra-slot .bra-cabinet{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
-.book-of-ra-slot .bra-cabinet:before{display:none!important}
-
-/* Temple of Ra: remove the enclosing game-modal frame too; keep its existing size and layout. */
-.modal-slot:has(>.book-of-ra-slot){
-  border:0!important;
-  outline:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
+/* Temple of Ra desktop: one full-viewport scroll container, with the scrollbar at the far-right edge. */
+.book-of-ra-slot .bra-cabinet {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
+.book-of-ra-slot .bra-cabinet::before { display: none !important; }
 
-/* Temple of Ra desktop: place the vertical scrollbar at the viewport's far-right edge. */
 @media (min-width: 721px) {
-  .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
-    display: block !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    padding: 12px 14px !important;
-    align-items: initial !important;
-  }
-  .modal-slot:has(.book-of-ra-slot) {
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    margin: 0 auto !important;
-  }
-}
-
-
-/* Temple of Ra desktop: remove the inner game-content scrollbar; use the full-width backdrop scrollbar instead. */
-@media (min-width: 721px) {
-  .modal-slot:has(.book-of-ra-slot) > .rf-game {
-    height: auto !important;
-    max-height: none !important;
-    min-height: max-content !important;
-    flex: 0 0 auto !important;
-    overflow: visible !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
-  }
-  .modal-slot:has(.book-of-ra-slot) .book-of-ra-slot {
-    overflow: visible !important;
-  }
-}
-
-
-/* Temple of Ra desktop scroll recovery: force a viewport-edge scrollbar and let the entire game modal grow with its content. */
-@media (min-width: 721px) {
-  .modal-backdrop:has(.modal-slot:has(.book-of-ra-slot)) {
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) {
     position: fixed !important;
     inset: 0 !important;
     width: 100vw !important;
     height: 100dvh !important;
     display: block !important;
     overflow-x: hidden !important;
-    overflow-y: scroll !important;
-    padding: 12px 14px !important;
+    overflow-y: auto !important;
+    padding: 12px 0 24px !important;
     box-sizing: border-box !important;
+    align-items: initial !important;
+    justify-items: initial !important;
   }
-  .modal-slot:has(>.book-of-ra-slot) {
+
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) .modal-slot {
     display: flex !important;
+    flex-direction: column !important;
     width: min(1100px, calc(100vw - 28px)) !important;
-    height: max-content !important;
-    min-height: max-content !important;
+    height: auto !important;
+    min-height: 0 !important;
     max-height: none !important;
-    overflow: visible !important;
     margin: 0 auto !important;
+    overflow: visible !important;
+    border: 0 !important;
+    outline: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
     box-sizing: border-box !important;
   }
-  .modal-slot:has(>.book-of-ra-slot) > .rf-game {
+
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) .modal-slot > .rf-game {
     display: flex !important;
-    height: max-content !important;
-    min-height: max-content !important;
-    max-height: none !important;
     flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
     overflow: visible !important;
   }
-  .modal-slot:has(>.book-of-ra-slot) .book-of-ra-slot {
+
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) .book-of-ra-slot {
     flex: 0 0 auto !important;
+    height: auto !important;
+    max-height: none !important;
     overflow: visible !important;
   }
 }
