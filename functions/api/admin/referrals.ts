@@ -125,6 +125,11 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
       env.DB.prepare("SELECT available_units,reserved_units FROM wallet_balances WHERE user_id=? AND asset='SOL' LIMIT 1")
         .bind(reward.referrer_user_id).first<{available_units:string;reserved_units:string}>()
     ]);
+    if(!posted && updatedReward?.status==="paid" && updatedReward.wallet_transaction_id){
+      const alreadyPosted=await env.DB.prepare("SELECT id,amount_units FROM wallet_transactions WHERE id=? AND user_id=? AND kind='adjustment' AND status='confirmed' AND idempotency_key=? LIMIT 1")
+        .bind(updatedReward.wallet_transaction_id,reward.referrer_user_id,idempotencyKey).first<{id:string;amount_units:string}>();
+      if(alreadyPosted)return json({ok:true,status:"paid",credited:true,alreadyCredited:true,walletTransactionId:alreadyPosted.id,creditedUnits:alreadyPosted.amount_units,message:"This referral reward was credited by a concurrent request and verified in the wallet ledger. No second credit was created."});
+    }
     if(!posted||updatedReward?.status!=="paid"||updatedReward.wallet_transaction_id!==transactionId||updatedReward.credited_units!==amountUnits||!balance){
       return json({error:"The wallet credit could not be verified from the committed ledger and balance records. Do not retry blindly; refresh admin data and inspect the referral reward and wallet ledger."},409);
     }
