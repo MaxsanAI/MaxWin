@@ -8,6 +8,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureFreeSpinSchema(env.DB);
     await ensureRealSlotFeatureSchema(env.DB);
+    const security = await env.DB.prepare("SELECT free_spins_frozen FROM user_security WHERE user_id=? LIMIT 1").bind(user.id).first<{free_spins_frozen:number}>();
+    if (Number(security?.free_spins_frozen || 0) === 1) return json({ error: "Free spins are temporarily paused on your account. Please contact support." }, 403);
     const now = new Date();
     const fallbackNext = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString();
     await env.DB.prepare("INSERT OR IGNORE INTO free_spin_wallets (user_id, available_spins, total_awarded, next_recurring_at, updated_at) VALUES (?, 0, 0, ?, ?)")
