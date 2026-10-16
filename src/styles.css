@@ -4380,8 +4380,9 @@ html, body {
 .hero-slider-heading p{margin:0;color:var(--muted,#a9aec5);font-size:14px}
 .hero-slider-viewport{width:100%;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%)}
 .hero-slider-track{display:flex;align-items:stretch;gap:18px;width:max-content;padding:6px clamp(18px,4vw,58px) 15px;animation:maxwin-slot-marquee 38s linear infinite reverse;will-change:transform}
-@media(min-width:651px){.hero-slider-track{animation:maxwin-slot-marquee-desktop 32s linear infinite;transform:translate3d(0,0,0);backface-visibility:hidden}}
+@media(min-width:651px){.hero-slider-track{animation:maxwin-slot-marquee-desktop 18s linear infinite!important;transform:translate3d(0,0,0);backface-visibility:hidden;perspective:1000px}}
 @keyframes maxwin-slot-marquee-desktop{from{transform:translate3d(0,0,0)}to{transform:translate3d(calc(-50% - 9px),0,0)}}
+@media(min-width:651px){.hero-slider-track>.hero-slide-card{transition:border-color .2s,box-shadow .2s!important;backface-visibility:hidden;transform:translateZ(0)!important}.hero-slider-track>.hero-slide-card:hover{transform:translateZ(0)!important}}
 
 .hero-slide-card{position:relative;display:block;flex:0 0 clamp(275px,34vw,470px);height:clamp(205px,24vw,315px);overflow:hidden;text-align:left;border:1px solid rgba(221,190,111,.25);border-radius:20px;background:#10152b;color:#fff;padding:0;cursor:pointer;isolation:isolate;box-shadow:0 15px 38px rgba(0,0,0,.25);transition:transform .25s,border-color .25s,box-shadow .25s}
 .hero-slide-card:hover{transform:translateY(-3px);border-color:rgba(232,197,111,.75);box-shadow:0 20px 48px rgba(0,0,0,.34)}
