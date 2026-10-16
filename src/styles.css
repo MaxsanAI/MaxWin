@@ -4693,3 +4693,9 @@ html, body {
 .theme-light .hero-slide-copy small {
   color: #e2d5ff !important;
 }
+
+
+/* Clear availability state for unreleased MAXWIN slot concepts. */
+.game-card:has(.game-coming-soon) .game-card-preview { cursor: not-allowed; }
+.game-coming-soon { display:flex; align-items:center; justify-content:center; min-height:42px; width:100%; box-sizing:border-box; padding:11px 14px; border:1px solid rgba(218,183,103,.55); border-radius:10px; background:linear-gradient(110deg,rgba(202,160,73,.16),rgba(119,85,177,.18)); color:#e8cb83; font-size:12px; font-weight:900; letter-spacing:.16em; text-align:center; }
+.theme-light .game-coming-soon { color:#67439c; border-color:rgba(111,72,161,.35); background:linear-gradient(110deg,rgba(218,188,116,.2),rgba(160,129,211,.16)); }
