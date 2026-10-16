@@ -21,6 +21,7 @@ function requestId(){return typeof crypto.randomUUID==="function"?crypto.randomU
 export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDeposit, mode = "demo" }: { onBackToLobby: () => void; onBusyChange?: (busy: boolean) => void; onRequestDeposit?: () => void; mode?: "demo" | "real" }){
  const [balance,setBalance]=useState<number|null>(null);
  const [walletSol,setWalletSol]=useState<number|null>(null);
+ const [slotBonusCents,setSlotBonusCents]=useState(0);
  const [realModeLocked,setRealModeLocked]=useState(false);
  const [bet,setBet]=useState(20);
  const [result,setResult]=useState<SpinResult|null>(null);
@@ -172,7 +173,7 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
   let live=true;
   fetch("/api/games/book-of-ra?mode="+mode,{cache:"no-store",credentials:"same-origin"}).then(async r=>{
    const d=await r.json();
-   if(live&&r.ok){setBalance(Number(d.balance));setWalletSol(typeof d.balanceSol==="number"?d.balanceSol:null);setFreeSpins(Number(d.freeSpins||0));if(d.expandingSymbol)setExpandingSymbol(d.expandingSymbol);setRealModeLocked(false);}
+   if(live&&r.ok){setBalance(Number(d.balance));setWalletSol(typeof d.balanceSol==="number"?d.balanceSol:null);setSlotBonusCents(Number(d.bonusBalanceCents||0));setFreeSpins(Number(d.freeSpins||0));if(d.expandingSymbol)setExpandingSymbol(d.expandingSymbol);setRealModeLocked(false);}
    else if(live){setRealModeLocked(mode==="real"&&r.status===423);setError(d.error||(mode==="real"?"Could not load the real SOL wallet.":"Could not load the demo balance."));}
   }).catch(()=>{if(live)setError("Could not connect to the Temple of Ra game service.");});
   return ()=>{live=false;if(rollTimer.current)clearInterval(rollTimer.current);};
@@ -191,6 +192,7 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
     if(!live||!response.ok)return;
     setBalance(Number(data.balance));
     setWalletSol(typeof data.balanceSol==="number"?data.balanceSol:null);
+    setSlotBonusCents(Number(data.bonusBalanceCents||0));
     setFreeSpins(Number(data.freeSpins||0));
     setRealModeLocked(false);
    }catch{}
@@ -210,8 +212,8 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
  const play=async(action:"spin"|"buyBonus")=>{
   if(busy||bonusFinish!==null)return;
   if(balance===null){if(mode==="real"){onRequestDeposit?.();return;}setError("Demo balance is still loading. Please wait and retry.");return;}
-  if(action==="buyBonus"&&balance<bet*50){if(mode==="real"){setBuyConfirm(false);onRequestDeposit?.();}else setError("Not enough demo credits for Buy Bonus.");return;}
-  if(action==="spin"&&freeSpins<=0&&balance<bet){if(mode==="real"){onRequestDeposit?.();}else setError("Not enough demo credits.");return;}
+  if(action==="buyBonus"&&balance<bet*50&&(mode!=="real"||slotBonusCents<bet*50)){if(mode==="real"){setBuyConfirm(false);onRequestDeposit?.();}else setError("Not enough demo credits for Buy Bonus.");return;}
+  if(action==="spin"&&freeSpins<=0&&balance<bet&&(mode!=="real"||slotBonusCents<bet)){if(mode==="real"){onRequestDeposit?.();}else setError("Not enough demo credits.");return;}
   if(mode==="real"&&pendingRealRound.current&&(pendingRealRound.current.action!==action||pendingRealRound.current.bet!==bet)){
    setError("A previous real-money round may still be processing. Retry that same action before starting another round.");
    return;
@@ -287,7 +289,7 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
     bonusTotalThisRound+=Number(data.result.payout||0);
     bonusWinTotal.current=bonusTotalThisRound;
    }
-   setResult(data.result);setBalance(Number(data.balance));setWalletSol(typeof data.balanceSol==="number"?data.balanceSol:null);setFreeSpins(Number(data.freeSpins||0));
+   setResult(data.result);setBalance(Number(data.balance));setWalletSol(typeof data.balanceSol==="number"?data.balanceSol:null);setSlotBonusCents(Number(data.bonusBalanceCents||data.result.bonusBalanceCents||0));setFreeSpins(Number(data.freeSpins||0));
    setExpandingSymbol((data.expandingSymbol||null) as SymbolName|null);
    if(Number(data.result.awardedFreeSpins)>0 && data.expandingSymbol){
     if(!isBonusSpin){bonusWinTotal.current=0;setBonusFinish(null);}
@@ -368,9 +370,9 @@ export default function BookOfRaSlot({ onBackToLobby, onBusyChange, onRequestDep
   <div className="rf-main-controls bra-main-controls">
    <div className="rf-bet-control rf-bet-side"><label htmlFor="bra-bet">TOTAL BET</label><div><button type="button" aria-label="Decrease bet" disabled={busy||freeSpins>0||bet<=20} onClick={()=>setBet(v=>Math.max(20,v-10))}>−</button><strong id="bra-bet">{formatUSD(bet)}</strong><button type="button" aria-label="Increase bet" disabled={busy||freeSpins>0||bet>=100} onClick={()=>setBet(v=>Math.min(100,v+10))}>+</button></div><small>Per spin</small></div>
    <div className="rf-speed-panel bra-inline-speed"><span><Gauge size={14}/> SPEED</span><div>{(["slow","normal","turbo"] as const).map(s=><button type="button" key={s} className={speed===s?"active":""} onClick={()=>setSpeed(s)} disabled={busy}>{s.toUpperCase()}</button>)}</div></div>
-   <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||(mode==="demo"&&balance===null)} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {mode==="real"&&freeSpins===0&&(balance===null||balance<bet)?"DEPOSIT NOW":freeSpins>0?"FREE SPIN":"SPIN"}<small>{mode==="real"&&freeSpins===0&&(balance===null||balance<bet)?"ADD FUNDS TO CONTINUE":freeSpins>0?"BONUS ROUND":formatUSD(bet)}</small></>}</button>
-   <div className="rf-credit-panel rf-balance-side"><span>{mode==="real"?"WALLET BALANCE":"DEMO BALANCE"}</span><strong>{balance===null?"—":formatUSD(balance)}</strong><small>{mode==="real"?(walletSol===null?"USD equivalent":walletSol.toFixed(6)+" SOL available"):"Demo credits"}</small></div>
-   <button className="rf-buy-button bra-buy-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null||balance<bet*50||freeSpins>0} onClick={()=>setBuyConfirm(true)}><Sparkles size={16}/><span>BUY BONUS<small>{"50× BET · "+formatUSD(bet*50)+(mode==="real"?" WALLET COST":" DEMO")}</small></span></button>
+   <button className="rf-spin-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||(mode==="demo"&&balance===null)} onClick={()=>void play("spin")}>{busy?<><span className="rf-spinner"/> SPINNING…</>:<><span><Zap size={16}/></span> {mode==="real"&&freeSpins===0&&(balance===null||(balance<bet&&slotBonusCents<bet))?"ADD CREDITS":freeSpins>0?"FREE SPIN":"SPIN"}<small>{mode==="real"&&freeSpins===0&&(balance===null||(balance<bet&&slotBonusCents<bet))?"ADD FUNDS TO CONTINUE":freeSpins>0?"BONUS ROUND":formatUSD(bet)}</small></>}</button>
+   <div className="rf-credit-panel rf-balance-side"><span>{mode==="real"?"WALLET BALANCE":"DEMO BALANCE"}</span><strong>{balance===null?"—":formatUSD(balance)}</strong><small>{mode==="real"?(walletSol===null?"USD equivalent":walletSol.toFixed(6)+" SOL available"):"Demo credits"}</small>{mode==="real"&&slotBonusCents>0&&<small style={{display:"block",marginTop:5,color:"#f5d17b"}}>BOOK OF TEMPLE BONUS · {formatUSD(slotBonusCents)}<br/>Non-withdrawable slot credits</small>}</div>
+   <button className="rf-buy-button bra-buy-button" type="button" disabled={busy||bonusReveal!==null||scatterReveal!==null||bonusFinish!==null||balance===null||(balance<bet*50&&(mode!=="real"||slotBonusCents<bet*50))||freeSpins>0} onClick={()=>setBuyConfirm(true)}><Sparkles size={16}/><span>BUY BONUS<small>{"50× BET · "+formatUSD(bet*50)+(mode==="real"?" WALLET COST":" DEMO")}</small></span></button>
   </div>
   {mode==="real"&&balance!==null&&balance<20&&<section role="status" style={{margin:"14px 0 8px",padding:"16px",borderRadius:"16px",border:"1px solid rgba(246,196,83,.48)",background:"linear-gradient(135deg,rgba(105,67,20,.34),rgba(32,24,59,.94) 60%,rgba(21,31,58,.96))",boxShadow:"0 8px 28px rgba(0,0,0,.22)",display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"space-between",gap:"12px"}}>
    <div style={{display:"flex",alignItems:"flex-start",gap:"11px",flex:"1 1 220px"}}>
