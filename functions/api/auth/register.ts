@@ -1,5 +1,6 @@
 import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, randomToken, readJson, SESSION_MAX_AGE } from "./_shared";
 import { grantWelcomeFreeSpins } from "../profile/_free-spins";
+import { attachReferral, ensureReferralSchema } from "../referrals/_shared";
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!env.DB) return json({ error: "Account service is not configured yet.", diagnostic: "D1 binding env.DB is missing." }, 503);
@@ -24,6 +25,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   try {
     await ensureAuthSchema(env.DB);
+    await ensureReferralSchema(env.DB);
     const duplicate = await env.DB.prepare("SELECT id FROM users WHERE username_key = ? OR email = ? LIMIT 1")
       .bind(username.toLowerCase(), email).first<{ id: string }>();
     if (duplicate) return json({ error: "That username or email is already registered." }, 409);
@@ -34,6 +36,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const createdAt = new Date().toISOString();
     await env.DB.prepare("INSERT INTO users (id, username, username_key, email, password_hash, password_salt, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
       .bind(id, username, username.toLowerCase(), email, passwordHash, salt, createdAt).run();
+    await attachReferral(env.DB, id, body.referralUsername);
     await grantWelcomeFreeSpins(env.DB, id, new Date(createdAt));
     const token = await createSession(env.DB, id);
     return json({ authenticated: true, user: { id, username, email, createdAt } }, 201, {
