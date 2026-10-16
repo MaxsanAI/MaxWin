@@ -1,5 +1,6 @@
 import { Env, ensureWalletSchema, json } from "../auth/_shared";
 import { ensureFreeSpinSchema } from "../profile/_free-spins";
+import { ensureReferralSchema, refreshReferralEligibility } from "../referrals/_shared";
 
 async function authorize(request: Request, env: Env): Promise<boolean> {
   const expected = env.MAXWIN_ADMIN_KEY || "";
@@ -32,6 +33,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     await ensureWalletSchema(env.DB);
     await ensureFreeSpinSchema(env.DB);
     await ensureAdminBonusSchema(env.DB);
+    await ensureReferralSchema(env.DB);
+    await refreshReferralEligibility(env.DB);
     const [users, walletTx, withdrawals, balances, spins, bonuses, recentTx, recentWithdrawals] = await Promise.all([
       env.DB.prepare("SELECT COUNT(*) AS count FROM users").first<{ count: number }>(),
       env.DB.prepare("SELECT COUNT(*) AS count FROM wallet_transactions").first<{ count: number }>(),
@@ -42,6 +45,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       env.DB.prepare("SELECT t.id, t.user_id AS userId, u.username, t.asset, t.kind, t.status, t.amount_units AS amountUnits, t.tx_hash AS txHash, t.address, t.created_at AS createdAt FROM wallet_transactions t JOIN users u ON u.id=t.user_id ORDER BY t.created_at DESC LIMIT 30").all(),
       env.DB.prepare("SELECT w.id, w.user_id AS userId, u.username, w.asset, w.amount_units AS amountUnits, w.destination_address AS address, w.status, w.tx_hash AS txHash, w.created_at AS createdAt FROM withdrawal_requests w JOIN users u ON u.id=w.user_id ORDER BY w.created_at DESC LIMIT 30").all()
     ]);
+    const referralRows = await env.DB.prepare("SELECT u.id AS userId,u.username,
+      (SELECT COUNT(*) FROM referrals r WHERE r.referrer_user_id=u.id) AS referrals,
+      (SELECT COUNT(*) FROM referrals r WHERE r.referrer_user_id=u.id AND EXISTS (SELECT 1 FROM wallet_transactions t WHERE t.user_id=r.referred_user_id AND t.kind='deposit' AND t.status='confirmed')) AS qualified,
+      (SELECT status FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS rewardStatus,
+      (SELECT choice FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS choice,
+      (SELECT id FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS rewardId,
+      (SELECT updated_at FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS updatedAt
+      FROM users u WHERE EXISTS(SELECT 1 FROM referrals r WHERE r.referrer_user_id=u.id) OR EXISTS(SELECT 1 FROM referral_rewards rr WHERE rr.referrer_user_id=u.id)
+      ORDER BY qualified DESC, referrals DESC LIMIT 500").all();
     const pendingDeposits = await env.DB.prepare("SELECT COUNT(*) AS count FROM wallet_transactions WHERE kind='deposit' AND status IN ('pending','confirming')").first<{ count: number }>();
     const pendingWithdrawals = await env.DB.prepare("SELECT COUNT(*) AS count FROM withdrawal_requests WHERE status IN ('pending','approved','processing')").first<{ count: number }>();
     return json({
@@ -67,6 +79,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
         pendingDeposits: Number(pendingDeposits?.count || 0),
         pendingWithdrawals: Number(pendingWithdrawals?.count || 0)
       },
+      referrals: referralRows.results || [],
       recentTransactions: recentTx.results || [],
       recentWithdrawals: recentWithdrawals.results || [],
       notice: "Book of Ra real-mode spins and wallet settlement are enabled in the game API. SOL deposits are credited only after on-chain verification. Withdrawals remain manual: approve the request, send SOL yourself, then record the finalized transaction signature."
