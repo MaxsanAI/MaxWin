@@ -4476,16 +4476,28 @@ html, body {
 }
 
 
-/* Temple of Ra: Anubis temple artwork behind the complete slot and its controls. */
+/* Temple of Ra: use the Anubis artwork as the FULL game-screen background, behind the slot and every control. */
+.modal-backdrop:has(.modal-slot .book-of-ra-slot) {
+  background-color: #080b19 !important;
+  background-image:
+    linear-gradient(180deg, rgba(5, 7, 19, 0.16), rgba(5, 7, 19, 0.24)),
+    url("/images/book-of-ra/anubis-temple-bg.jpg") !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+.modal-backdrop:has(.modal-slot .book-of-ra-slot) .modal-slot {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
 .book-of-ra-slot {
   position: relative !important;
   isolation: isolate;
   border-radius: 18px;
-  background-color: #080b19 !important;
-  background-image:
-    linear-gradient(180deg, rgba(5, 7, 19, 0.22), rgba(5, 7, 19, 0.38)),
-    url("/images/book-of-ra/anubis-temple-bg.jpg") !important;
-  background-size: cover !important;
-  background-position: center top !important;
-  background-repeat: no-repeat !important;
+  background: transparent !important;
+  background-image: none !important;
 }
