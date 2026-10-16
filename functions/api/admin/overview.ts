@@ -45,7 +45,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       env.DB.prepare("SELECT t.id, t.user_id AS userId, u.username, t.asset, t.kind, t.status, t.amount_units AS amountUnits, t.tx_hash AS txHash, t.address, t.created_at AS createdAt FROM wallet_transactions t JOIN users u ON u.id=t.user_id ORDER BY t.created_at DESC LIMIT 30").all(),
       env.DB.prepare("SELECT w.id, w.user_id AS userId, u.username, w.asset, w.amount_units AS amountUnits, w.destination_address AS address, w.status, w.tx_hash AS txHash, w.created_at AS createdAt FROM withdrawal_requests w JOIN users u ON u.id=w.user_id ORDER BY w.created_at DESC LIMIT 30").all()
     ]);
-    const referralRows = await env.DB.prepare("SELECT u.id AS userId,u.username,
+    const referralRows = await env.DB.prepare(`SELECT u.id AS userId,u.username,
       (SELECT COUNT(*) FROM referrals r WHERE r.referrer_user_id=u.id) AS referrals,
       (SELECT COUNT(*) FROM referrals r WHERE r.referrer_user_id=u.id AND EXISTS (SELECT 1 FROM wallet_transactions t WHERE t.user_id=r.referred_user_id AND t.kind='deposit' AND t.status='confirmed')) AS qualified,
       (SELECT status FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS rewardStatus,
@@ -57,7 +57,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       (SELECT sol_usd_at_credit FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS solUsdAtCredit,
       (SELECT updated_at FROM referral_rewards rr WHERE rr.referrer_user_id=u.id ORDER BY rr.created_at DESC LIMIT 1) AS updatedAt
       FROM users u WHERE EXISTS(SELECT 1 FROM referrals r WHERE r.referrer_user_id=u.id) OR EXISTS(SELECT 1 FROM referral_rewards rr WHERE rr.referrer_user_id=u.id)
-      ORDER BY qualified DESC, referrals DESC LIMIT 500").all();
+      ORDER BY qualified DESC, referrals DESC LIMIT 500`).all();
     const pendingDeposits = await env.DB.prepare("SELECT COUNT(*) AS count FROM wallet_transactions WHERE kind='deposit' AND status IN ('pending','confirming')").first<{ count: number }>();
     const pendingWithdrawals = await env.DB.prepare("SELECT COUNT(*) AS count FROM withdrawal_requests WHERE status IN ('pending','approved','processing')").first<{ count: number }>();
     return json({
