@@ -103,7 +103,7 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
       env.DB.prepare(`INSERT INTO wallet_transactions (id,user_id,asset,kind,status,amount_units,tx_hash,address,idempotency_key,created_at,updated_at,metadata_json)
         SELECT ?,?,'SOL','adjustment','confirmed',?,NULL,NULL,?,?,?,?
         WHERE EXISTS (SELECT 1 FROM referral_rewards WHERE id=? AND referrer_user_id=? AND status='approved' AND choice='wallet')
-        ON CONFLICT(user_id,idempotency_key) DO NOTHING`)
+        ON CONFLICT(user_id,idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING`)
         .bind(transactionId,reward.referrer_user_id,amountUnits,idempotencyKey,now,now,metadata,rewardId,reward.referrer_user_id),
       env.DB.prepare(`UPDATE wallet_balances SET available_units=CAST(available_units AS INTEGER)+?,updated_at=?
         WHERE user_id=? AND asset='SOL' AND changes()=1
