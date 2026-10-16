@@ -1,5 +1,5 @@
 import { Env, getUser, json } from "../auth/_shared";
-import { ensureFreeSpinSchema } from "./_free-spins";
+import { ensureFreeSpinSchema, ensureRealSlotFeatureSchema, migrateLegacyFreeSpinsToRealSlot } from "./_free-spins";
 
 async function ensureProfileSchema(db: D1Database): Promise<void> {
   await db.prepare(`CREATE TABLE IF NOT EXISTS user_profiles (
@@ -27,16 +27,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureProfileSchema(env.DB);
     await ensureFreeSpinSchema(env.DB);
+    await ensureRealSlotFeatureSchema(env.DB);
     const now = new Date();
     const fallbackNext = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString();
     await env.DB.prepare("INSERT OR IGNORE INTO free_spin_wallets (user_id, available_spins, total_awarded, next_recurring_at, updated_at) VALUES (?, 0, 0, ?, ?)").bind(user.id, fallbackNext, now.toISOString()).run();
-    const [profile, bonuses, spinWallet, spinGrants] = await Promise.all([
+    await migrateLegacyFreeSpinsToRealSlot(env.DB, user.id);
+    await env.DB.prepare("INSERT OR IGNORE INTO book_of_ra_real_features (user_id, free_spins, free_spin_bet, expanding_symbol, updated_at, bonus_balance_cents, bonus_funded_spins) VALUES (?, 0, 20, NULL, ?, 0, 0)").bind(user.id, now.toISOString()).run();
+    const [profile, bonuses, spinWallet, slotFeatures, spinGrants] = await Promise.all([
       env.DB.prepare("SELECT avatar_data_url AS avatarDataUrl FROM user_profiles WHERE user_id = ? LIMIT 1").bind(user.id).first<{ avatarDataUrl: string | null }>(),
       env.DB.prepare("SELECT id, title, amount, status, created_at FROM user_bonuses WHERE user_id = ? ORDER BY created_at DESC LIMIT 30").bind(user.id).all(),
       env.DB.prepare("SELECT available_spins AS availableSpins, total_awarded AS totalAwarded, next_recurring_at AS nextRecurringAt FROM free_spin_wallets WHERE user_id = ? LIMIT 1").bind(user.id).first<{ availableSpins: number; totalAwarded: number; nextRecurringAt: string }>(),
+      env.DB.prepare("SELECT free_spins AS availableSpins FROM book_of_ra_real_features WHERE user_id = ? LIMIT 1").bind(user.id).first<{ availableSpins: number }>(),
       env.DB.prepare("SELECT id, grant_type AS grantType, spins, created_at AS createdAt FROM free_spin_grants WHERE user_id = ? ORDER BY created_at DESC LIMIT 10").bind(user.id).all()
     ]);
-    return json({ profile: { avatarDataUrl: profile?.avatarDataUrl || null, bonuses: bonuses.results || [], freeSpins: { available: spinWallet?.availableSpins || 0, totalAwarded: spinWallet?.totalAwarded || 0, nextRecurringAt: spinWallet?.nextRecurringAt || null, grants: spinGrants.results || [] } } });
+    return json({ profile: { avatarDataUrl: profile?.avatarDataUrl || null, bonuses: bonuses.results || [], freeSpins: { available: slotFeatures?.availableSpins || 0, totalAwarded: spinWallet?.totalAwarded || 0, nextRecurringAt: spinWallet?.nextRecurringAt || null, grants: spinGrants.results || [] } } });
   } catch (error) {
     console.error("[MAXWIN profile] Load failed:", error instanceof Error ? error.message : String(error));
     return json({ error: "Could not load your profile." }, 500);
