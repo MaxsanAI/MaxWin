@@ -4379,7 +4379,7 @@ html, body {
 .hero-slider-heading h1 em{font-style:normal;color:#e9c36c}
 .hero-slider-heading p{margin:0;color:var(--muted,#a9aec5);font-size:14px}
 .hero-slider-viewport{width:100%;overflow:hidden;mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%)}
-.hero-slider-track{display:flex;align-items:stretch;gap:18px;width:max-content;padding:6px clamp(18px,4vw,58px) 15px;animation:maxwin-slot-marquee 38s linear infinite reverse;will-change:transform}
+.hero-slider-track{display:flex;align-items:stretch;gap:18px;width:max-content;padding:6px clamp(18px,4vw,58px) 15px;animation:maxwin-slot-marquee 38s linear infinite;will-change:transform}
 @media(min-width:651px){.hero-slider-track{animation:maxwin-slot-marquee-desktop 18s linear infinite!important;transform:translate3d(0,0,0);backface-visibility:hidden;perspective:1000px}}
 @keyframes maxwin-slot-marquee-desktop{from{transform:translate3d(0,0,0)}to{transform:translate3d(calc(-50% - 9px),0,0)}}
 @media(min-width:651px){.hero-slider-track>.hero-slide-card{transition:border-color .2s,box-shadow .2s!important;backface-visibility:hidden;transform:translateZ(0)!important}.hero-slider-track>.hero-slide-card:hover{transform:translateZ(0)!important}}
@@ -4402,13 +4402,13 @@ html, body {
  .hero-slider-heading h1{font-size:31px}
  .hero-slider-heading p{max-width:255px;font-size:12px;line-height:1.45}
  .hero-slider-heading>.btn{flex:0 0 auto;padding:10px 12px;font-size:11px;white-space:nowrap;align-self:center}
- .hero-slider-track{gap:12px;padding:5px 18px 12px;animation-duration:31s;animation-direction:reverse}
+ .hero-slider-track{gap:12px;padding:5px 18px 12px;animation-duration:31s;animation-direction:normal}
  .hero-slide-card{flex-basis:min(78vw,350px);height:220px;border-radius:16px}
  .hero-slide-copy{left:17px;bottom:17px;max-width:82%}
  .hero-slide-copy strong{font-size:25px}
  .hero-slide-badge{top:12px;left:12px}
 }
-@media(prefers-reduced-motion:reduce){.hero-slider-track{animation:maxwin-slot-marquee 38s linear infinite reverse!important}.hero-slider-viewport{overflow:hidden;mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%)}}
+@media(prefers-reduced-motion:reduce){.hero-slider-track{animation:maxwin-slot-marquee 38s linear infinite!important}.hero-slider-viewport{overflow:hidden;mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%)}}
 
 
 /* Keep the real-play label comfortably inside compact slot cards. */
