@@ -19,7 +19,6 @@ const PAYLINES: number[][] = [
   [2,1,0,1,2]  // Inverted V
 ];
 
-const BUY_BONUS_MULTIPLIER = BOOK_OF_SUNRISE_MATH.buyBonusMultiplier;
 const MAX_WIN_MULTIPLIER = BOOK_OF_SUNRISE_MATH.maxWinMultiplier;
 
 async function ensureSchema(db: D1Database) {
