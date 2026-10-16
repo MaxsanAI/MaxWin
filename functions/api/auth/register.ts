@@ -1,4 +1,4 @@
-import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, randomToken, readJson, SESSION_MAX_AGE } from "./_shared";
+import { createSession, cookie, Env, ensureAuthSchema, hashPassword, json, randomToken, readJson, recordAuthIp, SESSION_MAX_AGE } from "./_shared";
 import { grantWelcomeFreeSpins } from "../profile/_free-spins";
 import { attachReferral, ensureReferralSchema } from "../referrals/_shared";
 
@@ -36,6 +36,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const createdAt = new Date().toISOString();
     await env.DB.prepare("INSERT INTO users (id, username, username_key, email, password_hash, password_salt, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
       .bind(id, username, username.toLowerCase(), email, passwordHash, salt, createdAt).run();
+    await recordAuthIp(env.DB, request, id, "register");
     await attachReferral(env.DB, id, body.referralUsername);
     await grantWelcomeFreeSpins(env.DB, id, new Date(createdAt));
     const token = await createSession(env.DB, id);
