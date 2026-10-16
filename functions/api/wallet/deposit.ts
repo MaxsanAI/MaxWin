@@ -28,6 +28,7 @@ async function ensureDepositSchema(db: D1Database): Promise<void> {
   const columnNames = new Set((columns.results || []).map(column => column.name));
   if (!columnNames.has("usd_target")) await db.prepare("ALTER TABLE wallet_deposit_requests ADD COLUMN usd_target INTEGER").run();
   if (!columnNames.has("sol_usd_at_request")) await db.prepare("ALTER TABLE wallet_deposit_requests ADD COLUMN sol_usd_at_request REAL").run();
+  if (!columnNames.has("cancelled_at")) await db.prepare("ALTER TABLE wallet_deposit_requests ADD COLUMN cancelled_at TEXT").run();
   await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_wallet_deposit_request_tx_hash ON wallet_deposit_requests(tx_hash) WHERE tx_hash IS NOT NULL").run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_wallet_deposit_request_user_status ON wallet_deposit_requests(user_id, status, created_at DESC)").run();
 }
@@ -133,8 +134,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
         return json({ error: "This quote cannot be changed because it has already been used or confirmed." }, 409);
       }
       await env.DB.prepare(
-        "UPDATE wallet_deposit_requests SET status='expired', updated_at=? WHERE id=? AND user_id=? AND tx_hash IS NULL AND status='pending'"
-      ).bind(new Date().toISOString(), requestId, user.id).run();
+        "UPDATE wallet_deposit_requests SET status='expired', cancelled_at=?, updated_at=? WHERE id=? AND user_id=? AND tx_hash IS NULL AND status='pending'"
+      ).bind(new Date().toISOString(), new Date().toISOString(), requestId, user.id).run();
       return json({ok:true, message:"Deposit quote closed. A new amount can now be selected."});
     }
 
@@ -265,9 +266,12 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     await ensureWalletSchema(env.DB);
     await ensureDepositSchema(env.DB);
+    const now = new Date().toISOString();
+    await env.DB.prepare("UPDATE wallet_deposit_requests SET status='expired', updated_at=? WHERE user_id=? AND status='pending' AND expires_at<=? AND tx_hash IS NULL")
+      .bind(now, user.id, now).run();
     const row = await env.DB.prepare(
-      "SELECT id, amount_units, usd_target, expires_at FROM wallet_deposit_requests WHERE user_id = ? AND status IN ('pending','expired') AND tx_hash IS NULL ORDER BY created_at DESC LIMIT 1"
-    ).bind(user.id).first<{ id: string; amount_units: string; usd_target: number | null; expires_at: string }>();
+      "SELECT id, amount_units, usd_target, expires_at FROM wallet_deposit_requests WHERE user_id = ? AND tx_hash IS NULL AND ((status='pending' AND expires_at>?) OR (status='expired' AND expires_at<=? AND cancelled_at IS NULL)) ORDER BY created_at DESC LIMIT 1"
+    ).bind(user.id, now, now).first<{ id: string; amount_units: string; usd_target: number | null; expires_at: string }>();
     return json({
       ok: true,
       request: row ? {
