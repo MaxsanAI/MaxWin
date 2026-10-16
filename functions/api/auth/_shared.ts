@@ -40,6 +40,12 @@ export async function ensureAuthSchema(db: D1Database): Promise<void> {
   )`).run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)").run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS user_security (user_id TEXT PRIMARY KEY, account_status TEXT NOT NULL DEFAULT 'active' CHECK (account_status IN ('active','suspended')), risk_level TEXT NOT NULL DEFAULT 'normal' CHECK (risk_level IN ('normal','review','high')), bonus_frozen INTEGER NOT NULL DEFAULT 0 CHECK (bonus_frozen IN (0,1)), free_spins_frozen INTEGER NOT NULL DEFAULT 0 CHECK (free_spins_frozen IN (0,1)), admin_note TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS user_ip_events (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, ip_address TEXT NOT NULL, ip_hash TEXT NOT NULL, event_type TEXT NOT NULL CHECK (event_type IN ('register','login')), created_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)").run();
+  await db.prepare("CREATE INDEX IF NOT EXISTS idx_user_ip_hash_created ON user_ip_events(ip_hash, created_at DESC)").run();
+  await db.prepare("CREATE INDEX IF NOT EXISTS idx_user_ip_user_created ON user_ip_events(user_id, created_at DESC)").run();
+  await db.prepare("CREATE TABLE IF NOT EXISTS admin_user_audit (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, action TEXT NOT NULL, details TEXT NOT NULL DEFAULT '', admin_key_fingerprint TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)").run();
+  await db.prepare("CREATE INDEX IF NOT EXISTS idx_admin_user_audit_user_created ON admin_user_audit(user_id, created_at DESC)").run();
 }
 
 export async function ensureWalletSchema(db: D1Database): Promise<void> {
@@ -99,14 +105,23 @@ export async function isAdminTestAccount(db: D1Database, userId: string): Promis
 }
 
 export async function getUser(request: Request, db: D1Database): Promise<PublicUser | null> {
+  await ensureAuthSchema(db);
   const rawCookie = request.headers.get("Cookie") || "";
   const match = rawCookie.match(/(?:^|;\s*)maxwin_session=([a-f0-9]{64})(?:;|$)/);
   if (!match) return null;
   const tokenHash = await sha256(match[1]);
   const row = await db.prepare(
-    "SELECT u.id, u.username, u.email, u.created_at AS createdAt FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ? LIMIT 1"
+    "SELECT u.id, u.username, u.email, u.created_at AS createdAt FROM sessions s JOIN users u ON u.id = s.user_id LEFT JOIN user_security sec ON sec.user_id=u.id WHERE s.token_hash = ? AND s.expires_at > ? AND COALESCE(sec.account_status, 'active') = 'active' LIMIT 1"
   ).bind(tokenHash, new Date().toISOString()).first<PublicUser>();
   return row || null;
+}
+
+export async function recordAuthIp(db: D1Database, request: Request, userId: string, eventType: "register" | "login"): Promise<void> {
+  const ip = (request.headers.get("CF-Connecting-IP") || request.headers.get("True-Client-IP") || "").trim().slice(0,64);
+  if (!ip) return;
+  const now = new Date().toISOString();
+  await db.prepare("INSERT OR IGNORE INTO user_security (user_id,updated_at) VALUES (?,?)").bind(userId,now).run();
+  await db.prepare("INSERT INTO user_ip_events (id,user_id,ip_address,ip_hash,event_type,created_at) VALUES (?,?,?,?,?,?)").bind(randomToken(12),userId,ip,await sha256(ip),eventType,now).run();
 }
 
 export function json(data: unknown, status = 200, headers: HeadersInit = {}): Response {
