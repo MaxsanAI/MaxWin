@@ -4476,14 +4476,14 @@ html, body {
 }
 
 
-/* Temple of Ra: desktop-only Anubis background, stretched edge-to-edge to reveal both side statues and columns. */
+/* Temple of Ra: desktop-only Anubis background fills the full screen with a slight zoom-out compromise. */
 @media (min-width: 721px) {
   .modal-backdrop:has(.modal-slot .book-of-ra-slot) {
     background-color: #080b19 !important;
     background-image:
       linear-gradient(180deg, rgba(5, 7, 19, 0.10), rgba(5, 7, 19, 0.18)),
       url("/images/book-of-ra/anubis-temple-bg.jpg") !important;
-    background-size: auto 88% !important;
+    background-size: 100% 100% !important;
     background-position: center center !important;
     background-repeat: no-repeat !important;
     background-attachment: fixed !important;
