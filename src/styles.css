@@ -4514,3 +4514,77 @@ html, body {
   background: transparent !important;
   background-image: none !important;
 }
+
+/* Temple of Ra desktop refinement: slightly narrower stage, nudged right, more breathing room for hero artwork, subtle temple magic. */
+@media (min-width: 721px) {
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot) .modal-slot {
+    width: min(1100px, calc(100vw - 28px)) !important;
+    transform: translateX(12px) !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  .modal-slot .book-of-ra-slot .bra-cabinet {
+    width: min(790px, 100%) !important;
+    max-width: 790px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .modal-slot .book-of-ra-slot .bra-main-controls,
+  .modal-slot .book-of-ra-slot .bra-secondary-controls {
+    width: min(790px, 100%) !important;
+    max-width: 790px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .modal-slot .book-of-ra-slot .bra-lobby-button {
+    transform: translateX(12px) !important;
+  }
+
+  /* Keep the full symbol artwork visible instead of cropping the pharaoh, Anubis and scarab. */
+  .modal-slot .book-of-ra-slot .bra-final-column .bra-reel .rf-symbol-art img,
+  .modal-slot .book-of-ra-slot .bra-strip-symbol img {
+    width: 88% !important;
+    height: 88% !important;
+    max-width: 88% !important;
+    max-height: 88% !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    margin: auto !important;
+  }
+
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot)::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 18% 44%, rgba(255, 199, 91, .13), transparent 32%),
+      radial-gradient(ellipse at 82% 37%, rgba(177, 133, 255, .11), transparent 34%),
+      linear-gradient(115deg, transparent 34%, rgba(255, 226, 157, .055) 48%, transparent 61%);
+    background-size: 140% 140%, 140% 140%, 220% 100%;
+    background-position: 0% 50%, 100% 50%, -100% 0;
+    opacity: .72;
+    animation: temple-ra-mystic-glow 16s ease-in-out infinite alternate;
+  }
+
+  @keyframes temple-ra-mystic-glow {
+    0% {
+      background-position: 0% 50%, 100% 50%, -100% 0;
+      opacity: .48;
+    }
+    100% {
+      background-position: 14% 44%, 86% 56%, 100% 0;
+      opacity: .82;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop:has(.modal-slot .book-of-ra-slot)::before {
+    animation: none !important;
+  }
+}
