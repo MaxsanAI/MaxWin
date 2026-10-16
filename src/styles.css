@@ -4670,19 +4670,26 @@ html, body {
 }
 
 
-/* Keep the featured artwork distinct from the light homepage background. */
+
+
+/* Stronger separation for bright slot covers in the light-theme featured slider. */
 .theme-light .hero-slide-card {
   background: #10152b !important;
-  border: 1px solid rgba(184, 145, 255, .42) !important;
-  box-shadow: 0 14px 34px rgba(35, 27, 65, .2) !important;
+  border: 1px solid rgba(184, 145, 255, .55) !important;
+  box-shadow: 0 14px 34px rgba(35, 27, 65, .24) !important;
 }
 .theme-light .hero-slide-card > img {
-  filter: brightness(.82) contrast(1.08) saturate(1.08);
+  filter: brightness(.62) contrast(1.16) saturate(1.12) !important;
 }
 .theme-light .hero-slide-shade {
-  background: linear-gradient(90deg, rgba(5, 8, 21, .95) 0%, rgba(7, 10, 23, .7) 43%, rgba(7, 10, 23, .12) 100%), linear-gradient(0deg, rgba(5, 7, 17, .48), transparent 60%) !important;
+  background:
+    linear-gradient(0deg, rgba(5, 7, 18, .48), rgba(5, 7, 18, .28)),
+    linear-gradient(90deg, rgba(5, 8, 21, .96) 0%, rgba(7, 10, 23, .72) 46%, rgba(7, 10, 23, .2) 100%) !important;
 }
-.theme-light .hero-slider-viewport {
-  padding-top: 3px;
-  padding-bottom: 5px;
+.theme-light .hero-slide-copy strong {
+  color: #fff !important;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, .9) !important;
+}
+.theme-light .hero-slide-copy small {
+  color: #e2d5ff !important;
 }
