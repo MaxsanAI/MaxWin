@@ -42,7 +42,7 @@ const gameSlugs: Record<string,string> = {
   "Midnight Spin":"midnight-spin"
 };
 const getGameFromPath = (pathname:string):Game|null => {
-  const slug = pathname.replace(/\\/+$/, "").match(/^\\/games\\/([^/]+)$/)?.[1];
+  const slug = pathname.replace(/\/+$/, "").match(/^\/games\/([^/]+)$/)?.[1];
   if (!slug) return null;
   const title = Object.entries(gameSlugs).find(([,value])=>value===slug)?.[0];
   return title ? games.find(game=>game.title===title) || null : null;
