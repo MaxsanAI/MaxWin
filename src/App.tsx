@@ -116,7 +116,6 @@ function App() {
   const [depositMessage, setDepositMessage] = useState("");
   const [depositBusy, setDepositBusy] = useState(false);
   const [depositRequest, setDepositRequest] = useState<{ id: string; amountSol: string; usdTarget: number; expiresAt: string } | null>(null);
-  const depositRenewingRef = useRef<string | null>(null);
   const [depositNow, setDepositNow] = useState(() => Date.now());
   const depositExpiryMs = depositRequest ? Date.parse(depositRequest.expiresAt) : NaN;
   const depositSecondsLeft = depositRequest && Number.isFinite(depositExpiryMs) ? Math.max(0, Math.ceil((depositExpiryMs - depositNow) / 1000)) : null;
@@ -164,7 +163,7 @@ function App() {
     return () => window.clearInterval(interval);
   }, [modal, depositRequest?.expiresAt]);
   useEffect(() => {
-    if (modal !== "deposit" || !authUser || !depositRequest) return;
+    if (modal !== "deposit" || !authUser) return;
     let cancelled = false;
     let scanning = false;
     const scan = async () => {
@@ -191,7 +190,7 @@ function App() {
     void scan();
     const interval = window.setInterval(() => void scan(), 8000);
     return () => { cancelled = true; window.clearInterval(interval); };
-  }, [modal, authUser?.id, depositRequest?.id]);
+  }, [modal, authUser?.id]);
   useEffect(() => {
     if (modal !== "deposit" || !authUser) return;
     let cancelled = false;
@@ -299,13 +298,11 @@ function App() {
     }
   };
   useEffect(() => {
-    if (modal !== "deposit" || !authUser || !depositRequest || depositSecondsLeft !== 0 || depositBusy) return;
-    const expiredRequestId = depositRequest.id;
-    if (depositRenewingRef.current === expiredRequestId) return;
-    depositRenewingRef.current = expiredRequestId;
-    setDepositMessage("Quote expired. Automatically preparing a fresh SOL deposit quote…");
-    void createDepositRequest();
-  }, [modal, authUser?.id, depositRequest?.id, depositSecondsLeft, depositBusy, depositUsd, walletData?.deposits?.SOL?.address, solUsdRate]);
+    if (modal !== "deposit" || !depositRequest || depositSecondsLeft !== 0 || depositBusy) return;
+    setDepositRequest(null);
+    setDepositSignature("");
+    setDepositMessage("Quote expired. Choose a deposit amount to start again. If you already sent SOL before expiry, MAXWIN will keep checking the transaction.");
+  }, [modal, depositRequest?.id, depositSecondsLeft, depositBusy]);
 
   const submitDeposit = async () => {
     const signature = depositSignature.trim();
@@ -523,11 +520,10 @@ function App() {
         <label>SOL deposit address<input readOnly value={walletData?.deposits?.SOL?.address || ""} placeholder={walletLoading ? "Loading…" : "Deposit address not configured"} /></label>
         {walletData?.deposits?.SOL?.address ? <button type="button" className="btn btn-gold modal-done" onClick={() => { void navigator.clipboard?.writeText(walletData.deposits.SOL.address); }}>Copy SOL deposit address</button> : <p className="auth-note">Set SOL_DEPOSIT_ADDRESS in Cloudflare Pages → Settings → Variables and secrets. Use only an address controlled by you.</p>}
         <button type="button" className="btn btn-gold modal-done" onClick={() => void createDepositRequest()} disabled={depositBusy || Boolean(depositRequest) || !walletData?.deposits?.SOL?.address || !solUsdRate}>{depositBusy ? "Preparing request…" : depositRequest ? "Verify or clear the current request first" : "Create SOL deposit request"}</button>
-        {depositRequest && <div className="modal-status"><span className="status-dot"/><span><b>Send exactly {depositRequest.amountSol} SOL</b><small>For the ${depositRequest.usdTarget} deposit quote · expires {new Date(depositRequest.expiresAt).toLocaleTimeString()}</small><small>{depositSecondsLeft === null ? "Calculating expiry…" : depositSecondsLeft === 0 ? "QUOTE EXPIRED — automatically refreshing this deposit quote…" : `Time remaining: ${String(Math.floor(depositSecondsLeft / 60)).padStart(2, "0")}:${String((depositSecondsLeft % 60)).padStart(2, "0")}`}</small></span></div>}
+        {depositRequest && <div className="modal-status"><span className="status-dot"/><span><b>Send exactly {depositRequest.amountSol} SOL</b><small>For the ${depositRequest.usdTarget} deposit quote · expires {new Date(depositRequest.expiresAt).toLocaleTimeString()}</small><small>{depositSecondsLeft === null ? "Calculating expiry…" : depositSecondsLeft === 0 ? "QUOTE EXPIRED — choose an amount to start again." : `Time remaining: ${String(Math.floor(depositSecondsLeft / 60)).padStart(2, "0")}:${String((depositSecondsLeft % 60)).padStart(2, "0")}`}</small></span></div>}
         {depositRequest && <button type="button" className="auth-switch" disabled={depositBusy} onClick={() => void cancelDepositRequest()}>{depositBusy ? "Updating quote…" : "Change deposit amount"}</button>}
         {depositRequest && <label>Transaction signature (fallback only)<input value={depositSignature} onChange={e => setDepositSignature(e.target.value)} placeholder="Only if automatic detection fails" autoComplete="off" spellCheck={false} /></label>}
         {depositRequest && <button type="button" className="btn btn-gold modal-done" onClick={() => void submitDeposit()} disabled={depositBusy || !depositSignature.trim()}>{depositBusy ? "Verifying on Solana…" : depositSecondsLeft === 0 ? "Verify on-chain transaction" : "Verify deposit and credit wallet"}</button>}
-        {depositRequest && depositSecondsLeft === 0 && <small className="auth-note">A fresh quote is being prepared automatically. If you already sent SOL before this quote expired, MAXWIN can still match that transfer to the original quote.</small>}
         {depositMessage && <p className={depositMessage.toLowerCase().includes("credited") || depositMessage.toLowerCase().includes("verified") || depositMessage.toLowerCase().includes("request created") ? "auth-note" : "auth-error"} role="status">{depositMessage}</p>}
         <p className="auth-note">Send the exact SOL amount shown before the quote expires. MAXWIN checks the finalized Solana transaction and prevents duplicate credits. Keep your transaction signature until the deposit appears in your wallet.</p>
       </div> : <form className="auth-form" onSubmit={e => { e.preventDefault(); void submitWithdrawal(); }}>
