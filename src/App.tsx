@@ -565,7 +565,7 @@ function App() {
         <small className="welcome-promo-note">Promotional offer preview. Free spins activate only when bonus-enabled games and server-side bonus tracking are live. 18+ · Terms apply.</small>
       </section>
     </div>}
-    <div className="bottom-dock"><button onClick={() => authUser ? setModal("profile") : openAuth("signin")}><Wallet size={18}/> Account</button><button onClick={() => document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" })}><Gamepad2 size={18}/> Casino</button><button onClick={() => authUser ? setModal("profile") : openAuth("signin")}>Bonuses</button><button onClick={() => authUser ? setModal("profile") : openAuth("register")}><Crown size={18}/> Join</button></div>
+    <div className="bottom-dock"><button onClick={() => authUser ? setModal("profile") : openAuth("signin")}><Wallet size={18}/> Account</button><button onClick={() => document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" })}><Gamepad2 size={18}/> Casino</button><button onClick={() => authUser ? setModal("profile") : openAuth("signin")}><Sparkles size={18} style={{ color: "#b184ff", filter: "drop-shadow(0 0 7px rgba(155,114,255,.8))" }} />Bonuses</button><button onClick={() => authUser ? setModal("profile") : openAuth("register")}><Crown size={18}/> Join</button></div>
   </div>;
 }
 export default App;
