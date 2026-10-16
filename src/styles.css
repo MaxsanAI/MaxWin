@@ -4474,3 +4474,24 @@ html, body {
     overflow: visible !important;
   }
 }
+
+/* Temple of Ra: Anubis temple artwork behind the complete slot and its controls. */
+.book-of-ra-slot {
+  position: relative !important;
+  isolation: isolate;
+  padding: clamp(10px, 1.6vw, 22px) !important;
+  border-radius: 18px;
+  background-color: #080b19 !important;
+  background-image:
+    linear-gradient(180deg, rgba(5, 7, 19, 0.22), rgba(5, 7, 19, 0.38)),
+    url("/images/book-of-ra/anubis-temple-bg.jpg") !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-repeat: no-repeat !important;
+}
+@media (max-width: 720px) {
+  .book-of-ra-slot {
+    padding: 8px 5px 14px !important;
+    background-position: center top !important;
+  }
+}
