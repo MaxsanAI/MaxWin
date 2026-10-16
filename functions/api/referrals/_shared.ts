@@ -29,6 +29,7 @@ export async function ensureReferralSchema(db: D1Database): Promise<void> {
   if (!names.has("wallet_transaction_id")) await db.prepare("ALTER TABLE referral_rewards ADD COLUMN wallet_transaction_id TEXT").run();
   if (!names.has("credited_units")) await db.prepare("ALTER TABLE referral_rewards ADD COLUMN credited_units TEXT").run();
   if (!names.has("sol_usd_at_credit")) await db.prepare("ALTER TABLE referral_rewards ADD COLUMN sol_usd_at_credit REAL").run();
+  await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_referral_rewards_one_per_referrer ON referral_rewards(referrer_user_id)").run();
   await db.prepare("CREATE UNIQUE INDEX IF NOT EXISTS idx_referral_rewards_wallet_tx ON referral_rewards(wallet_transaction_id) WHERE wallet_transaction_id IS NOT NULL").run();
   await db.prepare("CREATE INDEX IF NOT EXISTS idx_referral_rewards_user ON referral_rewards(referrer_user_id, created_at DESC)").run();
 }
@@ -65,7 +66,7 @@ export async function refreshReferralEligibility(db: D1Database, referrerUserId?
       .bind(owner.referrer_user_id).first();
     if (!existing) {
       const now = new Date().toISOString();
-      await db.prepare("INSERT INTO referral_rewards (id,referrer_user_id,reward_usd,status,created_at,updated_at) VALUES (?,?,10,'eligible',?,?)")
+      await db.prepare("INSERT INTO referral_rewards (id,referrer_user_id,reward_usd,status,created_at,updated_at) VALUES (?,?,10,'eligible',?,?) ON CONFLICT(referrer_user_id) DO NOTHING")
         .bind(randomToken(16), owner.referrer_user_id, now, now).run();
     }
   }
