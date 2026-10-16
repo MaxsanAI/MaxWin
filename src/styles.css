@@ -4420,3 +4420,12 @@ html, body {
 /* Temple of Ra: remove only the outer cabinet frame; preserve all slot dimensions and spacing. */
 .book-of-ra-slot .bra-cabinet{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 .book-of-ra-slot .bra-cabinet:before{display:none!important}
+
+/* Temple of Ra: remove the enclosing game-modal frame too; keep its existing size and layout. */
+.modal-slot:has(>.book-of-ra-slot){
+  border:0!important;
+  outline:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
