@@ -4622,3 +4622,10 @@ html, body {
     animation: none !important;
   }
 }
+
+
+/* Book of Ra Buy Bonus: premium MAXWIN gold button, isolated to this slot. */
+.book-of-ra-slot .bra-buy-button{border:1px solid #ffe4a2!important;background:linear-gradient(135deg,#fff0b3 0%,#e8b84e 28%,#b77b19 66%,#f6d982 100%)!important;color:#201506!important;box-shadow:0 4px 18px #dca83a35,inset 0 1px 0 #fff8d8!important}
+.book-of-ra-slot .bra-buy-button small{color:#38240a!important}
+.book-of-ra-slot .bra-buy-button:not(:disabled):hover{filter:brightness(1.08)!important;box-shadow:0 6px 22px #e2b34d55,inset 0 1px 0 #fff8d8!important}
+.book-of-ra-slot .bra-buy-button:disabled{filter:saturate(.65)!important}
