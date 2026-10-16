@@ -4668,3 +4668,21 @@ html, body {
     object-position:center center!important;
   }
 }
+
+
+/* Keep the featured artwork distinct from the light homepage background. */
+.theme-light .hero-slide-card {
+  background: #10152b !important;
+  border: 1px solid rgba(184, 145, 255, .42) !important;
+  box-shadow: 0 14px 34px rgba(35, 27, 65, .2) !important;
+}
+.theme-light .hero-slide-card > img {
+  filter: brightness(.82) contrast(1.08) saturate(1.08);
+}
+.theme-light .hero-slide-shade {
+  background: linear-gradient(90deg, rgba(5, 8, 21, .95) 0%, rgba(7, 10, 23, .7) 43%, rgba(7, 10, 23, .12) 100%), linear-gradient(0deg, rgba(5, 7, 17, .48), transparent 60%) !important;
+}
+.theme-light .hero-slider-viewport {
+  padding-top: 3px;
+  padding-bottom: 5px;
+}
