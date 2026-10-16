@@ -82,7 +82,7 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
       const update=await env.DB.prepare("UPDATE referral_rewards SET status='approved',updated_at=?,admin_note=? WHERE id=? AND status='requested'")
         .bind(now,note||null,rewardId).run();
       if(!update.meta||update.meta.changes!==1)return json({error:"Reward status changed concurrently. Refresh and retry."},409);
-      return json({ok:true,status:"approved",message:"Referral reward approved. Wallet rewards can now be credited to the user's SOL wallet; Book of Temple activation is not connected by this endpoint."});
+      return json({ok:true,status:"approved",message:"Referral reward approved. The next admin action credits the SOL wallet or activates the separate Book of Temple slot-credit balance, depending on the user's choice."});
     }
 
     if(action==="reject"){
