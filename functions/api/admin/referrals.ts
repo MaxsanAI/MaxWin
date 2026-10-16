@@ -2,6 +2,29 @@ import { Env, ensureWalletSchema, isAdminTestAccount, json, randomToken, readJso
 import { getSolUsd } from "../_shared/sol-price";
 import { ensureReferralSchema, refreshReferralEligibility } from "../referrals/_shared";
 
+async function ensureBookOfTempleBonusSchema(db:D1Database):Promise<void>{
+  await db.prepare(`CREATE TABLE IF NOT EXISTS book_of_ra_real_features (
+    user_id TEXT PRIMARY KEY,
+    free_spins INTEGER NOT NULL DEFAULT 0,
+    free_spin_bet INTEGER NOT NULL DEFAULT 20,
+    expanding_symbol TEXT,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`).run();
+  const columns=await db.prepare("PRAGMA table_info(book_of_ra_real_features)").all<{name:string}>();
+  const names=new Set((columns.results||[]).map(column=>column.name));
+  if(!names.has("bonus_balance_cents"))await db.prepare("ALTER TABLE book_of_ra_real_features ADD COLUMN bonus_balance_cents INTEGER NOT NULL DEFAULT 0").run();
+  if(!names.has("bonus_funded_spins"))await db.prepare("ALTER TABLE book_of_ra_real_features ADD COLUMN bonus_funded_spins INTEGER NOT NULL DEFAULT 0").run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS book_of_ra_bonus_grants (
+    id TEXT PRIMARY KEY,
+    reward_id TEXT NOT NULL UNIQUE,
+    user_id TEXT NOT NULL,
+    amount_cents INTEGER NOT NULL CHECK(amount_cents=1000),
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`).run();
+}
+
 async function authorized(request:Request,env:Env):Promise<boolean>{
   const expected=env.MAXWIN_ADMIN_KEY||"", supplied=request.headers.get("X-MAXWIN-ADMIN-KEY")||"";
   if(!expected||expected.length!==supplied.length)return false;
@@ -47,8 +70,9 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
   try{
     await ensureWalletSchema(env.DB);
     await ensureReferralSchema(env.DB);
-    const reward=await env.DB.prepare("SELECT id,referrer_user_id,status,choice,wallet_transaction_id FROM referral_rewards WHERE id=? LIMIT 1")
-      .bind(rewardId).first<{id:string;referrer_user_id:string;status:string;choice:string|null;wallet_transaction_id:string|null}>();
+    if(action==="paid")await ensureBookOfTempleBonusSchema(env.DB);
+    const reward=await env.DB.prepare("SELECT id,referrer_user_id,status,choice,wallet_transaction_id,game_bonus_grant_id FROM referral_rewards WHERE id=? LIMIT 1")
+      .bind(rewardId).first<{id:string;referrer_user_id:string;status:string;choice:string|null;wallet_transaction_id:string|null;game_bonus_grant_id:string|null}>();
     if(!reward)return json({error:"Referral reward not found."},404);
     const now=new Date().toISOString();
 
@@ -71,6 +95,12 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
     }
 
     if(reward.status==="paid"){
+      if(reward.choice==="book_of_temple"&&reward.game_bonus_grant_id){
+        const grant=await env.DB.prepare("SELECT id,amount_cents FROM book_of_ra_bonus_grants WHERE id=? AND reward_id=? AND user_id=? LIMIT 1")
+          .bind(reward.game_bonus_grant_id,rewardId,reward.referrer_user_id).first<{id:string;amount_cents:number}>();
+        if(grant)return json({ok:true,alreadyCredited:true,status:"paid",gameBonusGrantId:grant.id,bonusCents:grant.amount_cents,message:"Book of Temple bonus credits were already activated. No second grant was created."});
+        return json({error:"Reward is marked paid but its Book of Temple grant is missing. No additional credits were added; inspect the slot bonus ledger."},409);
+      }
       const posted=reward.wallet_transaction_id
         ? await env.DB.prepare("SELECT id,amount_units FROM wallet_transactions WHERE id=? AND user_id=? AND kind='adjustment' AND status='confirmed' AND idempotency_key=? LIMIT 1")
             .bind(reward.wallet_transaction_id,reward.referrer_user_id,"referral_reward:"+rewardId).first<{id:string;amount_units:string}>()
@@ -79,7 +109,32 @@ export const onRequestPost:PagesFunction<Env>=async({request,env})=>{
       return json({error:"Reward is marked paid but its matching confirmed wallet ledger entry is missing. No additional credit was attempted; investigate the ledger."},409);
     }
     if(reward.status!=="approved")return json({error:"Approve the reward request before crediting it to the wallet."},409);
-    if(reward.choice!=="wallet")return json({error:"This reward was chosen for Book of Temple, not the wallet. The game bonus activation is not connected, so it cannot be marked paid or credited as cash."},409);
+    if(reward.choice==="book_of_temple"){
+      if(reward.status!=="approved")return json({error:"Approve the Book of Temple reward request before activating slot credits."},409);
+      const grantId="referral_"+rewardId;
+      const now=new Date().toISOString();
+      await env.DB.batch([
+        env.DB.prepare("INSERT OR IGNORE INTO book_of_ra_real_features (user_id,free_spins,free_spin_bet,expanding_symbol,updated_at,bonus_balance_cents,bonus_funded_spins) VALUES (?,0,20,NULL,?,0,0)")
+          .bind(reward.referrer_user_id,now),
+        env.DB.prepare(`INSERT INTO book_of_ra_bonus_grants (id,reward_id,user_id,amount_cents,created_at)
+          SELECT ?,?,?,1000,? WHERE EXISTS(SELECT 1 FROM referral_rewards WHERE id=? AND referrer_user_id=? AND status='approved' AND choice='book_of_temple')
+          ON CONFLICT(reward_id) DO NOTHING`)
+          .bind(grantId,rewardId,reward.referrer_user_id,now,rewardId,reward.referrer_user_id),
+        env.DB.prepare("UPDATE book_of_ra_real_features SET bonus_balance_cents=bonus_balance_cents+1000,updated_at=? WHERE user_id=? AND changes()=1 AND EXISTS(SELECT 1 FROM book_of_ra_bonus_grants WHERE id=? AND reward_id=? AND user_id=?)")
+          .bind(now,reward.referrer_user_id,grantId,rewardId,reward.referrer_user_id),
+        env.DB.prepare("UPDATE referral_rewards SET status='paid',game_bonus_grant_id=?,credited_units='1000',updated_at=?,admin_note=? WHERE id=? AND referrer_user_id=? AND status='approved' AND choice='book_of_temple' AND changes()=1 AND EXISTS(SELECT 1 FROM book_of_ra_bonus_grants WHERE id=? AND reward_id=? AND user_id=?)")
+          .bind(grantId,now,note||"Activated $10 non-withdrawable Book of Temple slot credits",rewardId,reward.referrer_user_id,grantId,rewardId,reward.referrer_user_id)
+      ]);
+      const [grant,updatedReward,feature]=await Promise.all([
+        env.DB.prepare("SELECT id,amount_cents FROM book_of_ra_bonus_grants WHERE id=? AND reward_id=? AND user_id=? LIMIT 1").bind(grantId,rewardId,reward.referrer_user_id).first<{id:string;amount_cents:number}>(),
+        env.DB.prepare("SELECT status,game_bonus_grant_id,choice FROM referral_rewards WHERE id=? AND referrer_user_id=? LIMIT 1").bind(rewardId,reward.referrer_user_id).first<{status:string;game_bonus_grant_id:string|null;choice:string|null}>(),
+        env.DB.prepare("SELECT bonus_balance_cents FROM book_of_ra_real_features WHERE user_id=? LIMIT 1").bind(reward.referrer_user_id).first<{bonus_balance_cents:number}>()
+      ]);
+      if(!grant||updatedReward?.status!=="paid"||updatedReward.game_bonus_grant_id!==grantId||updatedReward.choice!=="book_of_temple"||!feature||Number(feature.bonus_balance_cents)<1000)
+        return json({error:"The Book of Temple bonus could not be verified after activation. Refresh admin data and inspect the slot bonus ledger before retrying."},409);
+      return json({ok:true,status:"paid",credited:true,gameBonusGrantId:grant.id,bonusCents:grant.amount_cents,bonusBalanceCents:feature.bonus_balance_cents,message:"$10 was added to the user's non-withdrawable Book of Temple bonus-credit balance and verified against the slot bonus grant ledger."});
+    }
+    if(reward.choice!=="wallet")return json({error:"Unknown referral reward destination."},409);
     if(await isAdminTestAccount(env.DB,reward.referrer_user_id))return json({error:"Referral cash rewards cannot be credited to a simulated test account."},403);
 
     const idempotencyKey="referral_reward:"+rewardId;
