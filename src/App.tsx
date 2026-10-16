@@ -30,6 +30,27 @@ const heroSlides = [
   { title: "Royal Fortune", badge: "FEATURED", image: "/images/royal-fortune/royal-fortune-cover-desktop.jpg", gameTitle: "Royal Fortune", mode: "demo" as const },
 ];
 const categories = ["All Games", "Slots", "Jackpots", "Classic"];
+const gameSlugs: Record<string,string> = {
+  "Royal Fortune":"royal-fortune",
+  "AI NEON DYNASTY":"ai-neon-dynasty",
+  "Golden Vault":"golden-vault",
+  "Temple of Ra":"temple-of-ra",
+  "Moon Temple":"moon-temple",
+  "Lucky 7s":"lucky-7s",
+  "Cosmic Gems":"cosmic-gems",
+  "Crown of Gold":"crown-of-gold",
+  "Midnight Spin":"midnight-spin"
+};
+const getGameFromPath = (pathname:string):Game|null => {
+  const slug = pathname.replace(/\\/+$/, "").match(/^\\/games\\/([^/]+)$/)?.[1];
+  if (!slug) return null;
+  const title = Object.entries(gameSlugs).find(([,value])=>value===slug)?.[0];
+  return title ? games.find(game=>game.title===title) || null : null;
+};
+const getGamePath = (game:Game,mode:"demo"|"real"="demo") => {
+  const path = "/games/"+(gameSlugs[game.title] || game.title.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""));
+  return mode==="real" && game.title==="Temple of Ra" ? path+"?mode=real" : path;
+};
 function App() {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     try { return localStorage.getItem("maxwin-theme") === "light" ? "light" : "dark"; }
@@ -59,9 +80,9 @@ function App() {
   const [active, setActive] = useState("All Games");
   const [search, setSearch] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [modal, setModal] = useState<"signin" | "register" | "deposit" | "withdraw" | "game" | "profile" | null>(null);
-  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  const [selectedPlayMode, setSelectedPlayMode] = useState<"demo" | "real">("demo");
+  const [modal, setModal] = useState<"signin" | "register" | "deposit" | "withdraw" | "game" | "profile" | null>(() => getGameFromPath(window.location.pathname) ? "game" : null);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(() => getGameFromPath(window.location.pathname));
+  const [selectedPlayMode, setSelectedPlayMode] = useState<"demo" | "real">(() => new URLSearchParams(window.location.search).get("mode") === "real" && getGameFromPath(window.location.pathname)?.title === "Temple of Ra" ? "real" : "demo");
   const [returnToGameAfterDeposit, setReturnToGameAfterDeposit] = useState(false);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [authCheckDone, setAuthCheckDone] = useState(false);
@@ -357,7 +378,7 @@ function App() {
       setAuthUser(data.user as AuthUser);
       setAuthPassword("");
       setAuthError("");
-      setModal(null);
+      setModal(selectedGame && getGameFromPath(window.location.pathname) ? "game" : null);
     } catch {
       setAuthError("Account API is not available yet. Check the Cloudflare deployment and database binding.");
     } finally {
@@ -374,9 +395,36 @@ function App() {
     setModal(null);
   };
   const filtered = useMemo(() => games.filter(g => (active === "All Games" || g.category === active) && g.title.toLowerCase().includes(search.toLowerCase())), [active, search]);
-  const openGame = (game: Game, playMode: "demo" | "real" = "demo") => { setSelectedGame(game); setSelectedPlayMode(playMode); setModal("game"); };
+  useEffect(() => {
+    const syncGameRoute = () => {
+      const routeGame = getGameFromPath(window.location.pathname);
+      if (routeGame) {
+        setSelectedGame(routeGame);
+        setSelectedPlayMode(new URLSearchParams(window.location.search).get("mode") === "real" && routeGame.title === "Temple of Ra" ? "real" : "demo");
+        setModal("game");
+      } else {
+        setSelectedGame(null);
+        setSelectedPlayMode("demo");
+        setModal(current => current === "game" ? null : current);
+      }
+    };
+    window.addEventListener("popstate", syncGameRoute);
+    return () => window.removeEventListener("popstate", syncGameRoute);
+  }, []);
+  const returnToLobby = () => {
+    if (getGameFromPath(window.location.pathname)) window.history.pushState({}, "", "/");
+    setSelectedGame(null);
+    setSelectedPlayMode("demo");
+    setModal(null);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  };
+  const openGame = (game: Game, playMode: "demo" | "real" = "demo") => {
+    window.history.pushState({}, "", getGamePath(game, playMode));
+    setSelectedGame(game); setSelectedPlayMode(playMode); setModal("game");
+  };
   const closeModal = () => {
     if (modal === "deposit" && returnToGameAfterDeposit) { setReturnToGameAfterDeposit(false); setModal("game"); return; }
+    if ((modal === "signin" || modal === "register") && selectedGame && getGameFromPath(window.location.pathname)) { setModal("game"); return; }
     if (modal === "game" && selectedGame?.title === "Temple of Ra" && templeSlotBusy) return;
     const isDemoSlot = modal === "game" && selectedPlayMode === "demo" && Boolean(authUser);
     const gameToReset = selectedGame?.title === "Royal Fortune"
@@ -386,12 +434,12 @@ function App() {
         : selectedGame?.title === "Golden Vault"
           ? "/api/games/golden-vault"
           : null;
-    if (!isDemoSlot || !gameToReset) { setModal(null); return; }
+    if (!isDemoSlot || !gameToReset) { if (modal === "game" && selectedGame) returnToLobby(); else setModal(null); return; }
     void fetch(gameToReset, {
       method: "POST", credentials: "same-origin", cache: "no-store",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "resetDemo" })
-    }).finally(() => setModal(null));
+    }).finally(returnToLobby);
   };
   if (window.location.pathname.replace(/\/+$/, "") === "/admin") return <AdminPanel />;
   if (window.location.pathname.replace(/\/+$/, "") === "/admin/support") return <SupportAdmin />;
@@ -497,7 +545,7 @@ function App() {
       <div className="profile-actions"><button className="btn btn-gold" onClick={() => setModal("deposit")}>Deposit</button><button className="btn btn-outline" onClick={() => setModal("withdraw")}>Withdraw</button></div>
       <section className="profile-bonuses"><h3>Bonuses</h3>{profileData?.bonuses?.length ? profileData.bonuses.map(bonus => <div className="bonus-row" key={bonus.id}><span><b>{bonus.title}</b><small>{new Date(bonus.created_at).toLocaleDateString()}</small></span><strong>{bonus.amount}</strong><em>{bonus.status}</em>{bonus.status === "available" && <button className="bonus-claim" disabled={bonusBusy !== null} onClick={() => void requestBonus(bonus.id)}>{bonusBusy === bonus.id ? "Requesting…" : "Request bonus"}</button>}</div>) : <p>Your bonus offers and rewards will appear here when they are added to your account.</p>}{profileMessage && <p className={profileMessage.toLowerCase().includes("could not") || profileMessage.toLowerCase().includes("not found") || profileMessage.toLowerCase().includes("already") ? "auth-error" : "profile-success"} role="status">{profileMessage}</p>}</section>
       <small className="auth-note">Wallet balances and transaction history are stored server-side. SOL deposits require on-chain verification; withdrawals are manually approved and sent.</small>
-    </div> : selectedGame && selectedPlayMode === "real" && selectedGame.title !== "Temple of Ra" ? <div className="auth-form"><div className="modal-status"><span className="status-dot"/><span><b>REAL-MONEY PLAY IS LOCKED</b><small>No deposits or cash wagers are accepted. Licensing, age/jurisdiction controls, audited game outcomes, wallet settlement and withdrawals must be verified before real-money play can be enabled.</small></span></div><button className="btn btn-gold modal-done" type="button" onClick={() => setModal(null)}>Back to lobby</button></div> : selectedGame?.title === "AI NEON DYNASTY" && authUser ? <AIDynasty onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "AI NEON DYNASTY" ? <div className="auth-form"><p>Log in to play AI NEON DYNASTY. Demo credits have no cash value.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Temple of Ra" && authUser ? <BookOfRaSlot mode={selectedPlayMode} onBusyChange={setTempleSlotBusy} onRequestDeposit={() => { setReturnToGameAfterDeposit(true); setModal("deposit"); }} onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Temple of Ra" ? <div className="auth-form"><p>Log in to play Temple of Ra and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Golden Vault" && authUser ? <GoldenVault onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Golden Vault" ? <div className="auth-form"><p>Log in to play Golden Vault. Demo credits have no cash value.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Moon Temple" && authUser ? <MoonTemple onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Moon Temple" ? <div className="auth-form"><p>Log in to play Moon Temple and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Royal Fortune" && authUser ? <RoyalFortune onBackToLobby={() => { setSelectedGame(null); setModal(null); document.getElementById("lobby")?.scrollIntoView({ behavior: "smooth" }); }} /> : selectedGame?.title === "Royal Fortune" ? <div className="auth-form"><p>Log in to play Royal Fortune and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame ? <div className="auth-form spin-game-panel">
+    </div> : selectedGame && selectedPlayMode === "real" && selectedGame.title !== "Temple of Ra" ? <div className="auth-form"><div className="modal-status"><span className="status-dot"/><span><b>REAL-MONEY PLAY IS LOCKED</b><small>No deposits or cash wagers are accepted. Licensing, age/jurisdiction controls, audited game outcomes, wallet settlement and withdrawals must be verified before real-money play can be enabled.</small></span></div><button className="btn btn-gold modal-done" type="button" onClick={() => setModal(null)}>Back to lobby</button></div> : selectedGame?.title === "AI NEON DYNASTY" && authUser ? <AIDynasty onBackToLobby={returnToLobby} /> : selectedGame?.title === "AI NEON DYNASTY" ? <div className="auth-form"><p>Log in to play AI NEON DYNASTY. Demo credits have no cash value.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Temple of Ra" && authUser ? <BookOfRaSlot mode={selectedPlayMode} onBusyChange={setTempleSlotBusy} onRequestDeposit={() => { setReturnToGameAfterDeposit(true); setModal("deposit"); }} onBackToLobby={returnToLobby} /> : selectedGame?.title === "Temple of Ra" ? <div className="auth-form"><p>Log in to play Temple of Ra and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Golden Vault" && authUser ? <GoldenVault onBackToLobby={returnToLobby} /> : selectedGame?.title === "Golden Vault" ? <div className="auth-form"><p>Log in to play Golden Vault. Demo credits have no cash value.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Moon Temple" && authUser ? <MoonTemple onBackToLobby={returnToLobby} /> : selectedGame?.title === "Moon Temple" ? <div className="auth-form"><p>Log in to play Moon Temple and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame?.title === "Royal Fortune" && authUser ? <RoyalFortune onBackToLobby={returnToLobby} /> : selectedGame?.title === "Royal Fortune" ? <div className="auth-form"><p>Log in to play Royal Fortune and keep your demo-credit balance on your account.</p><button className="btn btn-gold modal-done" type="button" onClick={() => openAuth("signin")}>Log in to play</button></div> : selectedGame ? <div className="auth-form spin-game-panel">
        <div className="spin-game-provider"><span className={"game-art spin-mini-art art-" + selectedGame.art}><span className="art-symbol">{selectedGame.art === "royal" ? "♛" : selectedGame.art === "neon" ? "✦" : selectedGame.art === "vault" ? "◈" : selectedGame.art === "moon" ? "☾" : selectedGame.art === "lucky" ? "7" : selectedGame.art === "cosmic" ? "✧" : selectedGame.art === "crown" ? "♕" : "✺"}</span></span><span><b>{selectedGame.title}</b><small>DEMO MODE · FREE SPINS DISABLED</small></span></div>
        <p>Registration and recurring free spins can only be played in Temple of Ra Real Play. They cannot be used in this demo slot.</p>
        <button className="btn btn-gold modal-done" type="button" onClick={playFreeSpin}>{authUser ? "OPEN TEMPLE OF RA · REAL PLAY" : "LOG IN TO CONTINUE"}</button>
