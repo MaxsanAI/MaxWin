@@ -1,13 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#171127"/>
+      <stop offset=".55" stop-color="#090b18"/>
+      <stop offset="1" stop-color="#251044"/>
+    </linearGradient>
+    <linearGradient id="purple" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d46aff"/>
+      <stop offset=".48" stop-color="#8b35ff"/>
+      <stop offset="1" stop-color="#4d1b9e"/>
+    </linearGradient>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fff0a6"/>
-      <stop offset=".38" stop-color="#f6c84c"/>
-      <stop offset=".72" stop-color="#d99a20"/>
+      <stop offset="0" stop-color="#fff1b0"/>
+      <stop offset=".38" stop-color="#f7ca50"/>
+      <stop offset=".72" stop-color="#d99420"/>
       <stop offset="1" stop-color="#fff0a6"/>
     </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="70%" r="60%">
+      <stop offset="0" stop-color="#9b36ff" stop-opacity=".65"/>
+      <stop offset="1" stop-color="#9b36ff" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <path d="M8 18 L19 28 L29 10 L39 28 L52 16 L48 43 Q32 49 16 43 Z" fill="url(#gold)" stroke="#ffe9a0" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M17 37 Q32 41 48 37" fill="none" stroke="#8b5a08" stroke-width="2" stroke-linecap="round"/>
-  <path d="M14 50 H50" fill="none" stroke="url(#gold)" stroke-width="4" stroke-linecap="round"/>
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="url(#background)" stroke="#6e35a8" stroke-opacity=".8" stroke-width="1.5"/>
+  <ellipse cx="32" cy="43" rx="25" ry="19" fill="url(#glow)"/>
+  <path d="M13 39 Q32 50 51 39 L47 48 Q32 57 17 48 Z" fill="url(#purple)" stroke="#c17bff" stroke-width="1"/>
+  <path d="M17 42 Q32 49 47 42" fill="none" stroke="#f0c5ff" stroke-opacity=".65" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M9 16 L20 26 L30 9 L40 26 L54 14 L49 39 Q32 46 15 39 Z" fill="url(#gold)" stroke="#fff0b0" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M17 34 Q32 39 47 34" fill="none" stroke="#8b5a08" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M17 43 Q32 48 47 43" fill="none" stroke="#211033" stroke-opacity=".9" stroke-width="1.4" stroke-linecap="round"/>
 </svg>
